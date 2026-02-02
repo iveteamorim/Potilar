@@ -1,0 +1,24 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#DCEFF8"/>
+      <stop offset="60%" stop-color="#F8EAD4"/>
+      <stop offset="100%" stop-color="#FDF6EC"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" rx="48" fill="url(#bg)"/>
+  <circle cx="1010" cy="110" r="140" fill="#F5A524" opacity="0.18"/>
+  <circle cx="200" cy="520" r="180" fill="#3AA3D9" opacity="0.16"/>
+  <rect x="120" y="120" width="110" height="110" rx="28" fill="#0F3F5B"/>
+  <path d="M175 145c18 0 33 15 33 33 0 23-23 44-33 53-10-9-33-30-33-53 0-18 15-33 33-33Z" fill="#FFFFFF" opacity="0.2"/>
+  <path d="M154 176 175 160l21 16v24a5 5 0 0 1-5 5h-8v-16h-16v16h-8a5 5 0 0 1-5-5v-24Z" fill="#FFFFFF"/>
+  <text x="260" y="200" font-family="Sora, Arial, sans-serif" font-size="56" font-weight="700" fill="#0F3F5B">
+    RN Lar
+  </text>
+  <text x="260" y="260" font-family="Manrope, Arial, sans-serif" font-size="26" font-weight="500" fill="#1A4A66">
+    Divulgação imobiliária no interior do RN
+  </text>
+  <text x="260" y="320" font-family="Manrope, Arial, sans-serif" font-size="22" font-weight="500" fill="#2C5873">
+    Anúncios, visibilidade e atendimento digital
+  </text>
+</svg>

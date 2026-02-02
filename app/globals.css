@@ -1,0 +1,32 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  @apply bg-sand-50 text-slate-900 antialiased;
+}
+
+.dark body {
+  @apply bg-slate-950 text-slate-100;
+}
+
+.section-padding {
+  @apply px-4 py-16 sm:px-6 lg:px-8;
+}
+
+.glass-card {
+  @apply rounded-3xl bg-white/80 backdrop-blur-xl shadow-soft border border-white/40;
+}
+
+.dark .glass-card {
+  @apply bg-slate-900/70 border-slate-800;
+}
