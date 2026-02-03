@@ -1,4 +1,4 @@
-  QAºimport HeroSearch from '@/components/HeroSearch';
+import HeroSearch from '@/components/HeroSearch';
 import PropertyCard from '@/components/PropertyCard';
 import PropertyMap from '@/components/PropertyMap';
 import Testimonials from '@/components/Testimonials';
