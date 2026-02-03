@@ -1,11 +1,11 @@
-import HeroSearch from '@/components/HeroSearch';
+  QAºimport HeroSearch from '@/components/HeroSearch';
 import PropertyCard from '@/components/PropertyCard';
 import PropertyMap from '@/components/PropertyMap';
 import Testimonials from '@/components/Testimonials';
 import { properties } from '@/data/properties';
 import Link from 'next/link';
 
-export default function HomePage() {
+export default function HomePage() {>XD"
   const featured = properties.slice(0, 4);
 
   return (
@@ -37,7 +37,7 @@ export default function HomePage() {
               },
               {
                 title: 'Ganhe visibilidade local',
-                text: 'Seu anúncio aparece em destaque para pessoas que buscam no RN.'
+                text: 'Seu anúncio aparece em destaque para pessoas que buscam no interior do RN.'
               },
               {
                 title: 'Conexão direta',
@@ -53,7 +53,7 @@ export default function HomePage() {
         </div>
       </section>
       <section className="section-padding bg-sand-100/70 dark:bg-slate-900">
-        <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[1fr_1.2fr]">
+                              <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[1fr_1.2fr]">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-ocean-600">Atendimento digital</p>
             <h2 className="mt-4 text-3xl font-semibold text-slate-900 dark:text-white">
@@ -61,7 +61,7 @@ export default function HomePage() {
             </h2>
             <p className="mt-4 text-sm text-slate-600 dark:text-slate-300">
               Nossa equipe local oferece suporte na divulgação e conecta proprietários e interessados com clareza e
-              agilidade, sempre pelo atendimento digital no RN.
+              agilidade, sempre pelo atendimento digital.
             </p>
             <Link
               href="/contato"
@@ -87,9 +87,7 @@ export default function HomePage() {
           <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">Perguntas frequentes</h2>
           <div className="mt-6 grid gap-6 md:grid-cols-2">
             <div className="glass-card p-6">
-              <h3 className="text-base font-semibold text-slate-900 dark:text-white">
-                A RN Lar participa da negociação?
-              </h3>
+              <h3 className="text-base font-semibold text-slate-900 dark:text-white">A RN Lar faz intermediação?</h3>
               <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
                 Não. Atuamos como plataforma de divulgação e atendimento digital. A negociação acontece diretamente entre
                 proprietários e interessados.
@@ -105,23 +103,13 @@ export default function HomePage() {
             <div className="glass-card p-6">
               <h3 className="text-base font-semibold text-slate-900 dark:text-white">Tem custos para anunciar?</h3>
               <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-                A publicação inicial pode ser gratuita com informações completas e fotos. Destaques e impulsionamentos
-                são informados via WhatsApp e variam conforme tipo de imóvel e região.
+                Os valores são informados pelo WhatsApp e variam conforme tipo de imóvel e região.
               </p>
             </div>
             <div className="glass-card p-6">
               <h3 className="text-base font-semibold text-slate-900 dark:text-white">Vocês acompanham visitas?</h3>
               <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
                 Oferecemos suporte digital e conexão entre as partes. Visitas presenciais são combinadas diretamente.
-              </p>
-            </div>
-            <div className="glass-card p-6">
-              <h3 className="text-base font-semibold text-slate-900 dark:text-white">
-                Como funciona a publicação gratuita?
-              </h3>
-              <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-                A publicação gratuita inclui 1 anúncio por proprietário com informações completas e no mínimo 3 fotos.
-                O destaque é opcional e funciona por tempo (7–15 dias), conforme disponibilidade.
               </p>
             </div>
           </div>
