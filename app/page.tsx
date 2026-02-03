@@ -5,7 +5,7 @@ import Testimonials from '@/components/Testimonials';
 import { properties } from '@/data/properties';
 import Link from 'next/link';
 
-export default function HomePage() {>XD"
+export default function HomePage() {
   const featured = properties.slice(0, 4);
 
   return (
