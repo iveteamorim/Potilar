@@ -5,6 +5,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { cities } from '@/data/cities';
 
 export type Filters = {
+  q: string;
   propertyType: string;
   transaction: string;
   city: string;
@@ -14,11 +15,12 @@ export type Filters = {
   bedrooms: string;
   bathrooms: string;
   parking: string;
-  petFriendly: boolean;
-  condo: boolean;
+  minArea: string;
+  petFriendly: string;
 };
 
 const defaultFilters: Filters = {
+  q: '',
   propertyType: '',
   transaction: '',
   city: '',
@@ -28,8 +30,8 @@ const defaultFilters: Filters = {
   bedrooms: '',
   bathrooms: '',
   parking: '',
-  petFriendly: false,
-  condo: false
+  minArea: '',
+  petFriendly: ''
 };
 
 export default function PropertyFilters() {
@@ -40,6 +42,7 @@ export default function PropertyFilters() {
   const initial = useMemo(() => {
     return {
       propertyType: searchParams.get('propertyType') ?? '',
+      q: searchParams.get('q') ?? '',
       transaction: searchParams.get('transaction') ?? '',
       city: searchParams.get('city') ?? '',
       sort: searchParams.get('sort') ?? '',
@@ -48,8 +51,8 @@ export default function PropertyFilters() {
       bedrooms: searchParams.get('bedrooms') ?? '',
       bathrooms: searchParams.get('bathrooms') ?? '',
       parking: searchParams.get('parking') ?? '',
-      petFriendly: searchParams.get('petFriendly') === 'true',
-      condo: searchParams.get('condo') === 'true'
+      minArea: searchParams.get('minArea') ?? '',
+      petFriendly: searchParams.get('petFriendly') ?? ''
     } satisfies Filters;
   }, [searchParams]);
 
@@ -76,20 +79,31 @@ export default function PropertyFilters() {
 
   const activeChips = [
     filters.propertyType && `Tipo: ${filters.propertyType}`,
+    filters.q && `Busca: ${filters.q}`,
     filters.transaction && `Negociação: ${filters.transaction}`,
     filters.city && `Cidade: ${filters.city}`,
-    filters.sort && `Ordenação: ${filters.sort === 'price-asc' ? 'Mais barato' : 'Mais caro'}`,
     filters.minPrice && `Min: R$ ${filters.minPrice}`,
     filters.maxPrice && `Max: R$ ${filters.maxPrice}`,
     filters.bedrooms && `Quartos: ${filters.bedrooms}+`,
     filters.bathrooms && `Banheiros: ${filters.bathrooms}+`,
     filters.parking && `Garagem: ${filters.parking}+`,
-    filters.petFriendly && 'Aceita pet',
-    filters.condo && 'Condomínio'
+    filters.minArea && `Area: ${filters.minArea}+ m2`,
+    filters.petFriendly === '1' && 'Aceita pet'
   ].filter(Boolean) as string[];
 
   return (
-    <div className="glass-card grid gap-4 p-6">
+    <div className="glass-card grid gap-4 p-4 sm:p-6">
+      <input
+        value={filters.q}
+        onChange={(event) => {
+          const value = event.target.value;
+          setFilters((prev) => ({ ...prev, q: value }));
+          updateParam('q', value);
+        }}
+        type="search"
+        placeholder="Buscar por cidade, bairro, titulo ou caracteristicas"
+        className="w-full rounded-2xl border border-sand-200 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-900"
+      />
       <div className="grid gap-3 md:grid-cols-4">
         <select
           value={filters.propertyType}
@@ -104,6 +118,7 @@ export default function PropertyFilters() {
           <option value="Casa">Casa</option>
           <option value="Terreno">Terreno</option>
           <option value="Apartamento">Apartamento</option>
+          <option value="Kitnet/Conjugado">Kitnet/Conjugado</option>
         </select>
         <select
           value={filters.transaction}
@@ -116,37 +131,25 @@ export default function PropertyFilters() {
         >
           <option value="">Negociação</option>
           <option value="Aluguel">Aluguel</option>
+          <option value="Temporada">Temporada</option>
           <option value="Compra">Compra</option>
         </select>
-        <select
+        <input
+          list="filter-rn-cities"
           value={filters.city}
           onChange={(event) => {
             const value = event.target.value;
             setFilters((prev) => ({ ...prev, city: value }));
             updateParam('city', value);
           }}
+          placeholder="Cidade"
           className="rounded-2xl border border-sand-200 bg-white px-4 py-2 text-sm dark:border-slate-700 dark:bg-slate-900"
-        >
-          <option value="">Cidade</option>
+        />
+        <datalist id="filter-rn-cities">
           {cities.map((cityName) => (
-            <option key={cityName} value={cityName}>
-              {cityName}
-            </option>
+            <option key={cityName} value={cityName} />
           ))}
-        </select>
-        <select
-          value={filters.sort}
-          onChange={(event) => {
-            const value = event.target.value;
-            setFilters((prev) => ({ ...prev, sort: value }));
-            updateParam('sort', value);
-          }}
-          className="rounded-2xl border border-sand-200 bg-white px-4 py-2 text-sm dark:border-slate-700 dark:bg-slate-900"
-        >
-          <option value="">Ordenar</option>
-          <option value="price-asc">Mais barato</option>
-          <option value="price-desc">Mais caro</option>
-        </select>
+        </datalist>
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
@@ -219,30 +222,32 @@ export default function PropertyFilters() {
           <option value="2">2+</option>
         </select>
       </div>
-      <div className="flex flex-wrap gap-4 text-sm text-slate-600 dark:text-slate-300">
-        <label className="flex items-center gap-2">
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div>
+          <label className="text-xs font-semibold text-slate-600 dark:text-slate-300">Area minima (m2)</label>
+          <input
+            value={filters.minArea}
+            onChange={(event) => {
+              const value = event.target.value;
+              setFilters((prev) => ({ ...prev, minArea: value }));
+              updateParam('minArea', value);
+            }}
+            type="number"
+            min="0"
+            className="mt-2 w-full rounded-2xl border border-sand-200 bg-white px-4 py-2 text-sm dark:border-slate-700 dark:bg-slate-900"
+          />
+        </div>
+        <label className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200">
           <input
             type="checkbox"
-            checked={filters.petFriendly}
+            checked={filters.petFriendly === '1'}
             onChange={(event) => {
-              const value = event.target.checked;
+              const value = event.target.checked ? '1' : '';
               setFilters((prev) => ({ ...prev, petFriendly: value }));
-              updateParam('petFriendly', value ? 'true' : '');
+              updateParam('petFriendly', value);
             }}
           />
           Aceita pet
-        </label>
-        <label className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            checked={filters.condo}
-            onChange={(event) => {
-              const value = event.target.checked;
-              setFilters((prev) => ({ ...prev, condo: value }));
-              updateParam('condo', value ? 'true' : '');
-            }}
-          />
-          Condomínio
         </label>
       </div>
       {activeChips.length > 0 && (

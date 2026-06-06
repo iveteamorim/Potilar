@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { Instagram, Mail, MessageCircle } from 'lucide-react';
 import Logo from './Logo';
 
 export default function Footer() {
@@ -8,35 +9,67 @@ export default function Footer() {
         <div>
           <Logo />
           <p className="mt-2">
-            Plataforma digital focada no Rio Grande do Norte. Atendimento humano, transparente e sem
-            burocracia na divulgação de imóveis.
+            Plataforma digital focada no Rio Grande do Norte, com contato direto entre anunciantes e interessados.
           </p>
         </div>
         <div>
-          <p className="text-base font-semibold text-slate-900 dark:text-white">Navegação</p>
-          <div className="mt-2 flex flex-col gap-2">
-            <Link href="/imoveis">Imóveis</Link>
-            <Link href="/sobre">Sobre nós</Link>
+          <p className="text-base font-semibold text-slate-900 dark:text-white">Navegacao</p>
+          <div className="mt-2 grid grid-cols-2 gap-x-6 gap-y-2">
+            <Link href="/imoveis">Imoveis</Link>
+            <Link href="/planos">Planos e Precos</Link>
             <Link href="/contato">Contato</Link>
+            <Link href="/imobiliarias">Imobiliarias</Link>
+            <Link href="/seguranca">Seguranca</Link>
+            <Link href="/faq">FAQ</Link>
+            <Link href="/termos-de-uso">Termos de Uso</Link>
+            <Link href="/privacidade">Privacidade</Link>
           </div>
         </div>
         <div>
           <p className="text-base font-semibold text-slate-900 dark:text-white">Contato</p>
-          <p>WhatsApp: (84) 99999-9999</p>
-          <p>Email: contato@rnlar.com.br</p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <a
+              href="https://wa.me/5521969724141?text=Ola%2C%20vim%20pelo%20site%20Potilar%20e%20quero%20falar%20com%20atendimento."
+              target="_blank"
+              rel="noreferrer"
+              aria-label="WhatsApp Potilar"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-green-200 bg-white text-green-600 transition hover:border-green-400 hover:bg-green-50 dark:border-slate-800 dark:bg-slate-900"
+            >
+              <MessageCircle className="h-5 w-5" aria-hidden="true" />
+            </a>
+            <a
+              href="https://www.instagram.com/potilar.imoveis"
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Instagram Potilar"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-sand-200 bg-white text-sun-500 transition hover:border-sun-300 hover:bg-sun-50 dark:border-slate-800 dark:bg-slate-900"
+            >
+              <Instagram className="h-5 w-5" aria-hidden="true" />
+            </a>
+            <Link
+              href="/contato"
+              aria-label="Fale conosco"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-sand-200 bg-white text-ocean-700 transition hover:border-ocean-300 hover:bg-ocean-50 dark:border-slate-800 dark:bg-slate-900"
+            >
+              <Mail className="h-5 w-5" aria-hidden="true" />
+            </Link>
+          </div>
           <Link
             href="/anunciar"
             className="mt-3 inline-flex rounded-full border border-sand-200 px-4 py-2 text-xs font-semibold text-ocean-700"
           >
-            Anunciar meu imóvel
+            Anunciar meu imovel
           </Link>
         </div>
       </div>
       <div className="mx-auto mt-8 max-w-6xl px-4 text-xs text-slate-500 sm:px-6">
-        © 2026 RN Lar. Todos os direitos reservados.
+        &copy; 2026 Potilar. Todos os direitos reservados.
         <p className="mt-3">
-          A RN Lar atua como plataforma digital de divulgação e atendimento imobiliário. A negociação e a formalização
-          dos negócios são realizadas diretamente entre proprietários e interessados.
+          A Potilar atua como plataforma digital de divulgacao imobiliaria. A negociacao e a formalizacao dos negocios
+          sao realizadas diretamente entre proprietarios e interessados.
+        </p>
+        <p className="mt-3">
+          Contas, anuncios, dados profissionais e pagamentos podem passar por revisao manual de seguranca, normalmente em ate 24 horas.
         </p>
       </div>
     </footer>

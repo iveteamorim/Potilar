@@ -1,0 +1,12 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/expire-listings",
+      "schedule": "0 9 * * *"
+    },
+    {
+      "path": "/api/cron/update-fipezap",
+      "schedule": "0 10 5 * *"
+    }
+  ]
+}

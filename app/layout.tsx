@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
+import { Analytics } from '@vercel/analytics/react';
 import { BASE_URL } from '@/lib/config';
 import { Manrope, Sora } from 'next/font/google';
+import 'leaflet/dist/leaflet.css';
 import './globals.css';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import Header from '@/components/Header';
@@ -20,31 +22,43 @@ const sora = Sora({
 });
 
 export const metadata: Metadata = {
-  title: 'RN Lar | Plataforma digital de divulgação imobiliária',
+  metadataBase: new URL(BASE_URL),
+  title: {
+    default: 'Potilar | Imoveis no Rio Grande do Norte',
+    template: '%s | Potilar'
+  },
   description:
-    'Divulgação de casas, lotes e aluguéis no Rio Grande do Norte. Plataforma digital com atendimento e suporte local.',
+    'Compre, alugue, anuncie e encontre casas, apartamentos, terrenos e imoveis de temporada no Rio Grande do Norte.',
+  alternates: {
+    canonical: '/'
+  },
   icons: {
-    icon: '/favicon.svg'
+    icon: [
+      { url: '/favicon-48.png', sizes: '48x48', type: 'image/png' },
+      { url: '/favicon-192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/favicon.svg', type: 'image/svg+xml' }
+    ],
+    apple: '/favicon-192.png'
   },
   openGraph: {
-    title: 'RN Lar | Divulgação imobiliária no RN',
-    description:
-      'Anúncios de casas, terrenos e aluguéis com atendimento digital e conexão local no RN.',
+    title: 'Potilar | Imoveis no RN',
+    description: 'Anuncios de casas, terrenos e alugueis com contato direto no Rio Grande do Norte.',
+    url: BASE_URL,
+    siteName: 'Potilar',
     type: 'website',
     locale: 'pt_BR',
     images: [
       {
-        url: `${BASE_URL}/og-home.svg`,
-        alt: 'RN Lar'
+        url: `${BASE_URL}/POTILAR-LOGO.png`,
+        alt: 'Potilar'
       }
     ]
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'RN Lar | Divulgação imobiliária no RN',
-    description:
-      'Anúncios de casas, terrenos e aluguéis com atendimento digital e conexão local no RN.',
-    images: [`${BASE_URL}/og-home.svg`]
+    title: 'Potilar | Imoveis no RN',
+    description: 'Anuncios de casas, terrenos e alugueis com contato direto no Rio Grande do Norte.',
+    images: [`${BASE_URL}/POTILAR-LOGO.png`]
   }
 };
 
@@ -53,14 +67,43 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const organizationJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: 'Potilar',
+    url: BASE_URL,
+    logo: `${BASE_URL}/POTILAR-LOGO.png`,
+    description: 'Portal de imoveis no Rio Grande do Norte.'
+  };
+  const websiteJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: 'Potilar',
+    url: BASE_URL,
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: `${BASE_URL}/imoveis?busca={search_term_string}`,
+      'query-input': 'required name=search_term_string'
+    }
+  };
+
   return (
     <html lang="pt-BR" className={`${manrope.variable} ${sora.variable}`}>
       <body className="font-sans">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
+        />
         <ThemeProvider>
           <Header />
           {children}
           <Footer />
           <ChatWidget />
+          <Analytics />
         </ThemeProvider>
       </body>
     </html>

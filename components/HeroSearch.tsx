@@ -1,8 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
-import { Search } from 'lucide-react';
-import Link from 'next/link';
+import { MapPin, Search } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { cities } from '@/data/cities';
@@ -11,128 +9,103 @@ export default function HeroSearch() {
   const router = useRouter();
   const [propertyType, setPropertyType] = useState('Casa');
   const [transaction, setTransaction] = useState('Aluguel');
-  const [maxPrice, setMaxPrice] = useState('');
-  const [bedrooms, setBedrooms] = useState('1');
   const [city, setCity] = useState('');
 
   function handleSearch() {
     const params = new URLSearchParams();
     if (propertyType) params.set('propertyType', propertyType);
     if (transaction) params.set('transaction', transaction);
-    if (maxPrice) params.set('maxPrice', maxPrice);
-    if (bedrooms) params.set('bedrooms', bedrooms);
     if (city) params.set('city', city);
     router.push(`/imoveis?${params.toString()}`);
   }
 
   return (
-    <section className="section-padding bg-hero-glow">
-      <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[1.1fr_0.9fr]">
-        <motion.div
-          initial={false}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="flex flex-col justify-center"
-        >
-          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-ocean-600">Seu imóvel em destaque</p>
-          <h1 className="mt-4 text-4xl font-semibold leading-tight text-slate-900 dark:text-white sm:text-5xl">
-            Agora ficou mais fácil encontrar seu lar no RN.
+    <section className="relative border-b border-sand-200 bg-slate-950 text-white dark:border-slate-800">
+      <div
+        className="absolute inset-0 bg-cover bg-center opacity-70"
+        style={{
+          backgroundImage:
+            "url('https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1800&q=80')"
+        }}
+      />
+      <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/75 to-slate-950/25" />
+
+      <div className="relative mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8 lg:py-20">
+        <div className="max-w-3xl">
+          <p className="inline-flex items-center gap-2 bg-white/95 px-3 py-2 text-xs font-bold uppercase tracking-[0.16em] text-ocean-800">
+            <MapPin className="h-4 w-4" aria-hidden="true" />
+            Imoveis no Rio Grande do Norte
+          </p>
+          <h1 className="mt-6 text-4xl font-semibold leading-[1.04] sm:text-5xl lg:text-6xl">
+            Encontre seu lugar no RN.
           </h1>
-          <p className="mt-4 text-base text-slate-600 dark:text-slate-300">Casas, lotes e aluguel perto de você.</p>
-          <div className="mt-6 flex flex-wrap items-center gap-3">
-            <Link
-              href="/anunciar"
-              className="rounded-full bg-ocean-600 px-5 py-3 text-sm font-semibold text-white shadow-soft transition hover:bg-ocean-700"
-            >
-              Anunciar meu imóvel
-            </Link>
-            <Link href="/contato" className="text-sm font-semibold text-ocean-700">
-              Falar com atendimento
-            </Link>
-          </div>
-        </motion.div>
-        <motion.div
-          initial={false}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1, duration: 0.6 }}
-          className="glass-card p-6"
-        >
-          <form className="grid gap-4">
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div>
-                <label className="text-xs font-semibold text-slate-600 dark:text-slate-300">Tipo de imóvel</label>
-                <select
-                  value={propertyType}
-                  onChange={(event) => setPropertyType(event.target.value)}
-                  className="mt-2 w-full rounded-2xl border border-sand-200 bg-white px-4 py-3 text-sm text-slate-700 shadow-sm focus:border-ocean-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
-                >
-                  <option value="Casa">Casa</option>
-                  <option value="Terreno">Terreno</option>
-                  <option value="Apartamento">Apartamento</option>
-                </select>
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-slate-600 dark:text-slate-300">Negociação</label>
-                <select
-                  value={transaction}
-                  onChange={(event) => setTransaction(event.target.value)}
-                  className="mt-2 w-full rounded-2xl border border-sand-200 bg-white px-4 py-3 text-sm text-slate-700 shadow-sm focus:border-ocean-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
-                >
-                  <option value="Aluguel">Aluguel</option>
-                  <option value="Compra">Compra</option>
-                </select>
-              </div>
-            </div>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div>
-                <label className="text-xs font-semibold text-slate-600 dark:text-slate-300">Preço máximo</label>
-                <input
-                  type="number"
-                  placeholder="R$ 250.000"
-                  value={maxPrice}
-                  onChange={(event) => setMaxPrice(event.target.value)}
-                  className="mt-2 w-full rounded-2xl border border-sand-200 bg-white px-4 py-3 text-sm text-slate-700 shadow-sm focus:border-ocean-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
-                />
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-slate-600 dark:text-slate-300">Quartos</label>
-                <select
-                  value={bedrooms}
-                  onChange={(event) => setBedrooms(event.target.value)}
-                  className="mt-2 w-full rounded-2xl border border-sand-200 bg-white px-4 py-3 text-sm text-slate-700 shadow-sm focus:border-ocean-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
-                >
-                  <option value="1">1+</option>
-                  <option value="2">2+</option>
-                  <option value="3">3+</option>
-                  <option value="4">4+</option>
-                </select>
-              </div>
-            </div>
+        </div>
+
+        <div className="mt-8 border-t-4 border-green-500 bg-white/95 p-4 text-slate-950 shadow-[0_24px_70px_rgba(15,23,42,0.35)] sm:p-5">
+          <div className="grid gap-3 lg:grid-cols-[auto_auto_1fr_auto] lg:items-end">
             <div>
-              <label className="text-xs font-semibold text-slate-600 dark:text-slate-300">Cidade</label>
+              <label className="sr-only">Negociacao</label>
+              <div className="grid grid-cols-3 border border-slate-950/20 bg-white">
+                {(['Aluguel', 'Compra', 'Temporada'] as const).map((option) => (
+                  <button
+                    key={option}
+                    type="button"
+                    onClick={() => setTransaction(option)}
+                    className={`px-4 py-3 text-sm font-bold transition ${
+                      transaction === option
+                      ? 'bg-ocean-800 text-white'
+                        : 'text-slate-800 hover:bg-sand-50'
+                    }`}
+                  >
+                    {option}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="sr-only">Tipo de imovel</label>
               <select
+                value={propertyType}
+                onChange={(event) => setPropertyType(event.target.value)}
+                className="h-12 w-full min-w-40 border border-slate-950/20 bg-white px-4 text-sm font-semibold text-slate-900 outline-none focus:border-ocean-700"
+              >
+                <option value="Casa">Casa</option>
+                <option value="Terreno">Terreno</option>
+                <option value="Apartamento">Apartamento</option>
+                <option value="Kitnet/Conjugado">Kitnet/Conjugado</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="sr-only">Cidade</label>
+              <input
+                list="hero-rn-cities"
                 value={city}
                 onChange={(event) => setCity(event.target.value)}
-                className="mt-2 w-full rounded-2xl border border-sand-200 bg-white px-4 py-3 text-sm text-slate-700 shadow-sm focus:border-ocean-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
-              >
-                <option value="">Selecione uma cidade</option>
+                placeholder="Cidade"
+                className="h-12 w-full border border-slate-950/20 bg-white px-4 text-sm font-semibold text-slate-900 outline-none focus:border-ocean-700"
+              />
+              <datalist id="hero-rn-cities">
                 {cities.map((cityName) => (
                   <option key={cityName} value={cityName}>
                     {cityName}
                   </option>
                 ))}
-              </select>
+              </datalist>
             </div>
+
             <button
               type="button"
               onClick={handleSearch}
-              className="mt-2 inline-flex items-center justify-center gap-2 rounded-2xl bg-ocean-600 px-5 py-3 text-sm font-semibold text-white shadow-soft transition hover:bg-ocean-700"
+                className="inline-flex h-12 items-center justify-center gap-2 bg-sun-500 px-7 text-base font-bold text-white transition hover:bg-sun-600"
             >
-              <Search className="h-4 w-4" />
-              Buscar imóveis
+              <Search className="h-5 w-5" aria-hidden="true" />
+              Buscar
             </button>
-          </form>
-        </motion.div>
+          </div>
+        </div>
+
       </div>
     </section>
   );

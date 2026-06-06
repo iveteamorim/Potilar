@@ -20,7 +20,7 @@ body {
 }
 
 .section-padding {
-  @apply px-4 py-16 sm:px-6 lg:px-8;
+  @apply px-4 py-10 sm:px-6 sm:py-16 lg:px-8;
 }
 
 .glass-card {
@@ -29,4 +29,23 @@ body {
 
 .dark .glass-card {
   @apply bg-slate-900/70 border-slate-800;
+}
+
+.city-autocomplete::-webkit-calendar-picker-indicator {
+  display: none !important;
+}
+
+.city-autocomplete::-webkit-list-button {
+  display: none !important;
+}
+
+@keyframes shine {
+  0% {
+    transform: translateX(0) skewX(-20deg);
+  }
+
+  55%,
+  100% {
+    transform: translateX(420%) skewX(-20deg);
+  }
 }

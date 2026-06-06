@@ -1,1 +1,1 @@
-export const BASE_URL = 'https://rnlar.com.br';
+export const BASE_URL = 'https://potilar.com.br';

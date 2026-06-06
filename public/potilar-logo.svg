@@ -1,0 +1,19 @@
+<svg width="1200" height="1200" viewBox="0 0 1200 1200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="1200" fill="white"/>
+  <path d="M930 127C1071 241 1143 420 1117 600C1087 810 918 985 708 1030" stroke="#39B54A" stroke-width="24" stroke-linecap="round"/>
+  <path d="M708 1030C494 1076 274 983 159 797C39 609 61 365 212 198C374 18 649 -29 863 84C886 96 908 111 930 127" stroke="#002D62" stroke-width="24" stroke-linecap="round"/>
+  <path d="M422 386L575 253L725 386H777L575 209L370 386H422Z" fill="#002D62"/>
+  <path d="M700 303H751V389H700V303Z" fill="#002D62"/>
+  <path d="M516 399C604 394 655 464 743 447C787 439 817 420 855 423C803 463 759 471 709 466C636 460 579 411 506 418C453 423 410 449 357 443C406 414 455 403 516 399Z" fill="#002D62"/>
+  <path d="M633 430C687 439 720 413 772 407C806 403 835 411 866 429C804 429 770 453 718 451C687 450 660 442 633 430Z" fill="#39B54A"/>
+  <path d="M423 344C418 271 472 209 548 199C625 189 695 240 711 314" stroke="#FDB515" stroke-width="18" stroke-linecap="round"/>
+  <rect x="546" y="326" width="30" height="30" fill="#002D62"/>
+  <rect x="584" y="326" width="30" height="30" fill="#002D62"/>
+  <rect x="546" y="364" width="30" height="30" fill="#002D62"/>
+  <rect x="584" y="364" width="30" height="30" fill="#002D62"/>
+  <text x="110" y="760" fill="#002D62" font-family="Arial Black, Arial, sans-serif" font-size="165" font-weight="900" letter-spacing="2">POTI</text>
+  <text x="660" y="760" fill="#39B54A" font-family="Arial Black, Arial, sans-serif" font-size="165" font-weight="900" letter-spacing="2">LAR</text>
+  <path d="M145 814H255" stroke="#39B54A" stroke-width="8"/>
+  <path d="M945 814H1055" stroke="#39B54A" stroke-width="8"/>
+  <text x="290" y="830" fill="#002D62" font-family="Arial, sans-serif" font-size="35" font-weight="700" letter-spacing="12">IMOVEIS NO RIO GRANDE DO NORTE</text>
+</svg>

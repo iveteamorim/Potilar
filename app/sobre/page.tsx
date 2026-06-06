@@ -2,14 +2,26 @@ import type { Metadata } from 'next';
 import Image from 'next/image';
 
 export const metadata: Metadata = {
-  title: 'Sobre nós | RN Lar',
-  description: 'Conheça a história da RN Lar e nosso compromisso com transparência no RN.'
+  title: 'Sobre nós | Potilar',
+  description: 'Conheça a história da Potilar e nosso compromisso com transparência no Rio Grande do Norte.'
 };
 
 const team = [
-  { name: 'Lívia Costa', role: 'Fundadora & Atendimento', image: 'https://images.unsplash.com/photo-1544723795-3fb6469f5b39' },
-  { name: 'Eduardo Alves', role: 'Consultor Digital', image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e' },
-  { name: 'Camila Rocha', role: 'Suporte ao Cliente', image: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1' }
+  {
+    name: 'Lívia Costa',
+    role: 'Fundadora & Atendimento',
+    image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&crop=faces&w=320&h=320&q=85'
+  },
+  {
+    name: 'Eduardo Alves',
+    role: 'Consultor Digital',
+    image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&crop=faces&w=320&h=320&q=85'
+  },
+  {
+    name: 'Camila Rocha',
+    role: 'Suporte ao Cliente',
+    image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&crop=faces&w=320&h=320&q=85'
+  }
 ];
 
 export default function SobrePage() {
@@ -23,7 +35,7 @@ export default function SobrePage() {
               História local, atendimento humano e tecnologia a favor do RN.
             </h1>
             <p className="mt-4 text-sm text-slate-600 dark:text-slate-300">
-              A RN Lar nasceu para conectar famílias a imóveis acessíveis nas cidades do RN, com processos
+              A Potilar nasceu para conectar famílias a imóveis acessíveis nas cidades do RN, com processos
               digitais, visitas virtuais e acompanhamento transparente. Atendemos com base em valores de proximidade,
               educação financeira e confiança.
             </p>

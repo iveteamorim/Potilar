@@ -1,52 +1,166 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
+import { AlertTriangle, CheckCircle2, Flag, Mail, MessageCircle, Phone, ShieldCheck } from 'lucide-react';
 import { BASE_URL } from '@/lib/config';
 import { notFound } from 'next/navigation';
-import PropertyMap from '@/components/PropertyMap';
+import PropertyMap from '@/components/PropertyMapLoader';
 import PropertyGallery from '@/components/PropertyGallery';
 import PropertyCard from '@/components/PropertyCard';
-import { properties } from '@/data/properties';
+import ShareButtons from '@/components/ShareButtons';
+import FavoriteButton from '@/components/FavoriteButton';
+import ListingViewTracker from '@/components/ListingViewTracker';
+import WhatsAppStatLink from '@/components/WhatsAppStatLink';
+import { getPublicProfilePath } from '@/lib/publicProfile';
+import { properties, type Property } from '@/data/properties';
+import { createClient } from '@/lib/supabase/server';
+import { fetchPublicListingDetail } from '@/lib/fetchApprovedListings';
+import { listingRowToProperty, PUBLIC_LISTING_SELECT_WITH_CONTACT } from '@/lib/listings';
+import { formatListingDateLabel } from '@/lib/dateLabels';
+import { getCleanPropertyTitle } from '@/lib/displayTitle';
+
+const LISTING_SELECT = `owner_id,${PUBLIC_LISTING_SELECT_WITH_CONTACT}`;
+
+function cleanPhone(value?: string) {
+  return value?.replace(/\D/g, '') ?? '';
+}
+
+function getListingCode(listingId: string) {
+  return `POT-${listingId.slice(0, 8).toUpperCase()}`;
+}
+
+function getPublicFirstName(value?: string) {
+  return value?.trim().split(/\s+/)[0] || '';
+}
+
+async function getProperty(slug: string): Promise<Property | null> {
+  const normalizedSlug = decodeURIComponent(slug).toLowerCase();
+  const staticProperty = properties.find((item) => item.slug === normalizedSlug || item.id === normalizedSlug);
+  if (staticProperty) return staticProperty;
+
+  try {
+    const supabase = createClient();
+    const data = await fetchPublicListingDetail(supabase, slug, { withContact: true });
+
+    if (!data) return null;
+
+    return listingRowToProperty({
+      ...data,
+      owner_id: data.owner_id ?? null,
+      area_sqm: data.area_sqm ?? null,
+      condo_fee: data.condo_fee ?? null,
+      is_pet_friendly: data.is_pet_friendly ?? false,
+      is_furnished: data.is_furnished ?? false,
+      price_period: data.price_period ?? null,
+      featured_starts_at: data.featured_starts_at ?? null,
+      featured_expires_at: data.featured_expires_at ?? null,
+      created_at: data.created_at ?? null,
+      updated_at: data.updated_at ?? null
+    } as Parameters<typeof listingRowToProperty>[0]);
+  } catch {
+    return null;
+  }
+}
+
+async function getAdvertiserProfile(ownerId?: string) {
+  if (!ownerId) return null;
+
+  try {
+    const supabase = createClient();
+    const { data } = await supabase
+      .from('profiles')
+      .select('public_slug,company_name,full_name,account_type')
+      .eq('id', ownerId)
+      .in('account_type', ['corretor', 'imobiliaria'])
+      .maybeSingle();
+
+    if (!data?.public_slug) return null;
+    return data;
+  } catch {
+    return null;
+  }
+}
+
+async function getAdvertiserListings(property: Property): Promise<Property[]> {
+  if (!property.ownerId) return [];
+
+  try {
+    const supabase = createClient();
+    const { data, error } = await supabase
+      .from('listings')
+      .select(LISTING_SELECT)
+      .eq('owner_id', property.ownerId)
+      .eq('status', 'approved')
+      .neq('id', property.id)
+      .order('created_at', { ascending: false })
+      .limit(3);
+
+    if (error) return [];
+    return ((data ?? []) as any[]).map((listing) => listingRowToProperty(listing));
+  } catch {
+    return [];
+  }
+}
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
-  const property = properties.find((item) => item.slug === params.slug);
+  const property = await getProperty(params.slug);
 
-  if (!property) return { title: 'Imóvel não encontrado | RN Lar' };
+  if (!property) return { title: 'Imovel nao encontrado' };
+  const displayTitle = getCleanPropertyTitle(property);
 
   return {
-    title: `${property.title} | RN Lar`,
+    title: displayTitle,
     description: property.description,
     alternates: {
       canonical: `${BASE_URL}/imoveis/${property.slug}`
     },
     openGraph: {
-      title: `${property.title} | RN Lar`,
+      title: `${displayTitle} | Potilar`,
       description: property.description,
       type: 'article',
+      url: `${BASE_URL}/imoveis/${property.slug}`,
       images: [
         {
           url: property.images[0],
-          alt: property.title
+          alt: displayTitle
         }
       ]
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${property.title} | RN Lar`,
+      title: `${displayTitle} | Potilar`,
       description: property.description
     }
   };
 }
 
-export default function PropertyDetailPage({ params }: { params: { slug: string } }) {
-  const property = properties.find((item) => item.slug === params.slug);
+export default async function PropertyDetailPage({ params }: { params: { slug: string } }) {
+  const property = await getProperty(params.slug);
 
   if (!property) return notFound();
 
-  const similar = properties.filter((item) => item.id !== property.id).slice(0, 3);
+  const advertiserListings = await getAdvertiserListings(property);
+  const advertiserProfile = await getAdvertiserProfile(property.ownerId);
+  const displayTitle = getCleanPropertyTitle(property);
+  const similar = advertiserListings.length > 0 ? advertiserListings : properties.filter((item) => item.id !== property.id).slice(0, 3);
+  const contactPhone = property.contactPhone || property.contactWhatsapp;
+  const whatsappNumber = cleanPhone(property.contactWhatsapp);
+  const phoneNumber = cleanPhone(contactPhone);
+  const contactName = getPublicFirstName(property.contactName) || 'Anunciante';
+  const hasAdvertiserContact = Boolean(property.contactPhone || property.contactWhatsapp || property.contactEmail);
+  const isSuperFeatured = property.featuredPlan === 'super_30_days';
+  const dateLabel = formatListingDateLabel(property.createdAt, property.updatedAt);
+  const detailUrl = `${BASE_URL}/imoveis/${property.slug}`;
+  const whatsappHref =
+    property.contactWhatsapp && whatsappNumber
+      ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(`Ola, tenho interesse no anuncio ${getListingCode(property.id)}: ${displayTitle}`)}`
+      : `https://wa.me/5521969724141?text=${encodeURIComponent(`Ola, vim pelo site Potilar e tenho interesse no anuncio ${getListingCode(property.id)}: ${displayTitle}`)}`;
+  const reportHref = `https://wa.me/5521969724141?text=${encodeURIComponent(`Ola, quero denunciar ou revisar o anuncio ${getListingCode(property.id)}: ${detailUrl}`)}`;
+  const locationDetails = [property.neighborhood, property.community].filter(Boolean).join(' · ');
 
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Residence',
-    name: property.title,
+    name: displayTitle,
     description: property.description,
     address: {
       '@type': 'PostalAddress',
@@ -61,76 +175,193 @@ export default function PropertyDetailPage({ params }: { params: { slug: string 
     }
   };
 
+  const specItems = [
+    property.bedrooms > 0 && `${property.bedrooms} quarto${property.bedrooms > 1 ? 's' : ''}`,
+    property.bathrooms > 0 && `${property.bathrooms} banheiro${property.bathrooms > 1 ? 's' : ''}`,
+    property.parking > 0 && `${property.parking} vaga${property.parking > 1 ? 's' : ''}`,
+    property.areaSqm && `${property.areaSqm} m2`,
+    property.condoFee &&
+      `Condominio ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(property.condoFee)}`,
+    property.isPetFriendly && 'Aceita pet',
+    property.isFurnished && 'Mobiliado'
+  ].filter(Boolean) as string[];
+
   return (
-    <main className="section-padding">
+    <main className="px-4 py-5 sm:px-6 lg:px-8 lg:py-7">
+      <ListingViewTracker listingId={property.id} />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <div className="mx-auto max-w-6xl space-y-10">
-        <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
+      <div className="mx-auto max-w-6xl space-y-7">
+        <div className="grid gap-5 lg:grid-cols-[1.15fr_0.85fr]">
           <PropertyGallery images={property.images} />
-          <div className="space-y-5">
+          <div className="space-y-3">
+            <FavoriteButton propertyId={property.id} title={displayTitle} variant="inline" />
             <div className="flex flex-wrap gap-2">
+              <span className="inline-flex items-center gap-1 rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-700">
+                <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
+                Anuncio revisado pela Potilar
+              </span>
               <span className="rounded-full bg-sun-500 px-3 py-1 text-xs font-semibold text-white">
                 {property.transaction}
               </span>
               <span className="rounded-full border border-sand-200 px-3 py-1 text-xs font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">
                 {property.propertyType}
               </span>
+              {property.isFeatured && (
+                <span className={`rounded-full px-3 py-1 text-xs font-semibold text-white ${isSuperFeatured ? 'bg-violet-600 shadow-md shadow-violet-500/30' : 'bg-sun-500'}`}>
+                  {isSuperFeatured ? 'Super destaque' : 'Destaque'}
+                </span>
+              )}
             </div>
-            <h1 className="text-3xl font-semibold text-slate-900 dark:text-white">{property.title}</h1>
+            <h1 className="text-2xl font-semibold leading-tight text-slate-900 dark:text-white sm:text-3xl">{displayTitle}</h1>
             <p className="text-sm text-slate-600 dark:text-slate-300">
-              {property.location} · {property.transaction} · {property.propertyType}
+              {property.location} - {property.transaction} - {property.propertyType}
             </p>
-            <p className="text-2xl font-semibold text-ocean-700">
+            {locationDetails && (
+              <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">
+                {locationDetails}
+              </p>
+            )}
+            {dateLabel && (
+              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                {dateLabel}
+              </p>
+            )}
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
+              Codigo do anuncio: {getListingCode(property.id)}
+            </p>
+            {property.addressExtra && (
+              <p className="text-sm font-semibold text-slate-600 dark:text-slate-300">
+                Referencia: {property.addressExtra}
+              </p>
+            )}
+            <p className="text-3xl font-semibold text-ocean-700">
               {new Intl.NumberFormat('pt-BR', {
                 style: 'currency',
                 currency: 'BRL',
                 maximumFractionDigits: 0
               }).format(property.price)}
+              {property.transaction === 'Temporada' && property.pricePeriod ? `/${property.pricePeriod}` : ''}
             </p>
-            <p className="text-sm text-slate-600 dark:text-slate-300">{property.description}</p>
-            <ul className="grid gap-2 text-sm text-slate-600 dark:text-slate-300">
-              {property.features.map((feature) => (
-                <li key={feature} className="flex items-center gap-2">
-                  <span className="h-2 w-2 rounded-full bg-ocean-500" />
-                  {feature}
-                </li>
-              ))}
-            </ul>
-            <form className="glass-card space-y-4 p-5">
-              <h3 className="text-base font-semibold text-slate-900 dark:text-white">Falar com atendimento</h3>
-              <input
-                type="text"
-                placeholder="Seu nome"
-                className="w-full rounded-2xl border border-sand-200 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-900"
-              />
-              <input
-                type="email"
-                placeholder="Seu email"
-                className="w-full rounded-2xl border border-sand-200 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-900"
-              />
-              <textarea
-                rows={3}
-                placeholder="Mensagem"
-                className="w-full rounded-2xl border border-sand-200 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-900"
-              />
-              <button
-                type="button"
-                className="w-full rounded-2xl bg-ocean-600 px-5 py-3 text-sm font-semibold text-white"
-              >
-                Receber informações
-              </button>
-              <a
-                href="https://wa.me/5584999999999"
-                className="block text-center text-sm font-semibold text-ocean-700"
-              >
-                Ou falar com atendimento no WhatsApp
-              </a>
-            </form>
+            {specItems.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {specItems.map((item) => (
+                  <span
+                    key={item}
+                    className="rounded-full border border-sand-200 px-3 py-1 text-xs font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200"
+                  >
+                    {item}
+                  </span>
+                ))}
+              </div>
+            )}
+            {advertiserProfile?.public_slug && (
+              <p className="text-sm text-slate-600 dark:text-slate-300">
+                Anunciante:{' '}
+                <Link
+                  href={getPublicProfilePath(advertiserProfile.public_slug)}
+                  className="font-semibold text-ocean-700 underline"
+                >
+                  {advertiserProfile.company_name || advertiserProfile.full_name}
+                </Link>
+              </p>
+            )}
+            <div className="glass-card space-y-4 p-5">
+              <div>
+                <h3 className="text-base font-semibold text-slate-900 dark:text-white">
+                  {hasAdvertiserContact ? 'Contato do anunciante' : 'Contato Potilar'}
+                </h3>
+                <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">{contactName}</p>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-3">
+                {property.contactWhatsapp && whatsappNumber && (
+                  <WhatsAppStatLink
+                    listingId={property.id}
+                    href={whatsappHref}
+                    className="inline-flex items-center justify-center gap-2 rounded-2xl bg-green-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-green-600/20"
+                  >
+                    <MessageCircle className="h-4 w-4" aria-hidden="true" />
+                    WhatsApp
+                  </WhatsAppStatLink>
+                )}
+                {property.contactPhone && phoneNumber && (
+                  <a
+                    href={`tel:+${phoneNumber}`}
+                    className="inline-flex items-center justify-center gap-2 rounded-2xl border border-ocean-200 px-4 py-3 text-sm font-semibold text-ocean-700 dark:border-slate-700 dark:text-slate-200"
+                  >
+                    <Phone className="h-4 w-4" aria-hidden="true" />
+                    Telefone
+                  </a>
+                )}
+                {property.contactEmail && (
+                  <a
+                    href={`mailto:${property.contactEmail}?subject=${encodeURIComponent(`Interesse no anuncio ${property.title}`)}`}
+                    className="inline-flex items-center justify-center gap-2 rounded-2xl border border-ocean-200 px-4 py-3 text-sm font-semibold text-ocean-700 dark:border-slate-700 dark:text-slate-200"
+                  >
+                    <Mail className="h-4 w-4" aria-hidden="true" />
+                    Email
+                  </a>
+                )}
+                {!hasAdvertiserContact && (
+                  <a
+                    href={whatsappHref}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center justify-center gap-2 rounded-2xl bg-green-600 px-4 py-3 text-sm font-semibold text-white"
+                  >
+                    <MessageCircle className="h-4 w-4" aria-hidden="true" />
+                    WhatsApp Potilar
+                  </a>
+                )}
+              </div>
+              <div className="flex flex-wrap gap-3 border-t border-sand-100 pt-4 text-xs dark:border-slate-800">
+                <a
+                  href={reportHref}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-2 rounded-full border border-red-200 px-4 py-2 font-semibold text-red-700 transition hover:bg-red-50 dark:border-red-900/60 dark:text-red-300 dark:hover:bg-red-950/30"
+                >
+                  <Flag className="h-4 w-4" aria-hidden="true" />
+                  Denunciar anuncio
+                </a>
+                <a
+                  href="/seguranca"
+                  className="inline-flex items-center gap-2 rounded-full border border-ocean-200 px-4 py-2 font-semibold text-ocean-700 transition hover:bg-ocean-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+                >
+                  <ShieldCheck className="h-4 w-4" aria-hidden="true" />
+                  Dicas de seguranca
+                </a>
+              </div>
+            </div>
           </div>
         </div>
+        <section className="grid gap-5 lg:grid-cols-[0.85fr_1.15fr]">
+          <div className="space-y-4">
+            <ShareButtons title={displayTitle} url={detailUrl} />
+          </div>
+          <div className="space-y-4">
+            <p className="text-sm leading-6 text-slate-600 dark:text-slate-300">{property.description}</p>
+            {property.features.length > 0 && (
+              <ul className="grid gap-2 text-sm text-slate-600 dark:text-slate-300 sm:grid-cols-2">
+                {property.features.map((feature) => (
+                  <li key={feature} className="flex items-center gap-2">
+                    <span className="h-2 w-2 rounded-full bg-ocean-500" />
+                    {feature}
+                  </li>
+                ))}
+              </ul>
+            )}
+            <div className="flex gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-100">
+              <AlertTriangle className="mt-0.5 h-5 w-5 flex-shrink-0" aria-hidden="true" />
+              <p>
+                Evite pagamentos antecipados sem visitar o imovel e confirmar os dados do anunciante.
+                A Potilar revisa anuncios, mas a negociacao deve ser feita com cuidado.
+              </p>
+            </div>
+          </div>
+        </section>
         <section className="space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">Mapa do entorno</h2>
@@ -142,13 +373,16 @@ export default function PropertyDetailPage({ params }: { params: { slug: string 
             </a>
           </div>
           <PropertyMap items={[property]} height="320px" center={[property.lat, property.lng]} zoom={13} />
+          <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+            A localizacao exata deve ser confirmada diretamente com o anunciante antes de visitar ou negociar.
+          </p>
         </section>
         {property.tourUrl && (
           <section className="space-y-4">
             <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">Tour 360</h2>
             <div className="aspect-video w-full overflow-hidden rounded-3xl border border-sand-200 bg-sand-50 dark:border-slate-800 dark:bg-slate-900">
               <iframe
-                title="Tour 360 do imóvel"
+                title="Tour 360 do imovel"
                 src={property.tourUrl}
                 className="h-full w-full"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -156,19 +390,38 @@ export default function PropertyDetailPage({ params }: { params: { slug: string 
                 loading="lazy"
               />
             </div>
-            <p className="text-sm text-slate-600 dark:text-slate-300">
-              Tour 360 gratuito via YouTube 360. Caso prefira, podemos substituir por outro provedor.
-            </p>
           </section>
         )}
         <section>
-          <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">Imóveis similares</h2>
+          <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">
+            {advertiserListings.length > 0 ? 'Outros anuncios deste anunciante' : 'Imoveis similares'}
+          </h2>
           <div className="mt-6 grid gap-6 md:grid-cols-3">
             {similar.map((item) => (
               <PropertyCard key={item.id} property={item} />
             ))}
           </div>
         </section>
+      </div>
+      <div className="fixed inset-x-0 bottom-0 z-50 border-t border-sand-200 bg-white/95 p-3 shadow-[0_-12px_30px_rgba(15,23,42,0.12)] backdrop-blur md:hidden">
+        <div className="mx-auto flex max-w-md gap-2">
+          <a
+            href={whatsappHref}
+            className="inline-flex flex-1 items-center justify-center gap-2 rounded-2xl bg-green-600 px-4 py-3 text-sm font-semibold text-white"
+          >
+            <MessageCircle className="h-4 w-4" aria-hidden="true" />
+            WhatsApp
+          </a>
+          {property.contactPhone && phoneNumber && (
+            <a
+              href={`tel:+${phoneNumber}`}
+              className="inline-flex items-center justify-center rounded-2xl border border-ocean-200 px-4 py-3 text-sm font-semibold text-ocean-700"
+              aria-label="Ligar para anunciante"
+            >
+              <Phone className="h-4 w-4" aria-hidden="true" />
+            </a>
+          )}
+        </div>
       </div>
     </main>
   );

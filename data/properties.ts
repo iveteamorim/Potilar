@@ -2,23 +2,39 @@ import { slugify } from '@/lib/slugify';
 
 export type Property = {
   id: string;
+  ownerId?: string;
   slug: string;
   title: string;
-  propertyType: 'Casa' | 'Terreno' | 'Apartamento';
-  transaction: 'Aluguel' | 'Compra';
+  propertyType: 'Casa' | 'Terreno' | 'Apartamento' | 'Kitnet/Conjugado';
+  transaction: 'Aluguel' | 'Compra' | 'Temporada';
   price: number;
+  pricePeriod?: 'dia' | 'semana' | 'mes';
   bedrooms: number;
   bathrooms: number;
   parking: number;
+  areaSqm?: number;
   location: string;
+  neighborhood?: string;
+  community?: string;
+  addressExtra?: string;
   lat: number;
   lng: number;
   isPetFriendly: boolean;
+  isFurnished?: boolean;
   condoFee?: number;
   images: string[];
   tourUrl?: string;
+  isFeatured?: boolean;
+  featuredPlan?: '7_days' | '30_days' | 'super_30_days';
+  contactName?: string;
+  contactPhone?: string;
+  contactWhatsapp?: string;
+  contactEmail?: string;
+  contactMethods?: string[];
   description: string;
   features: string[];
+  createdAt?: string;
+  updatedAt?: string;
 };
 
 const rawProperties: Omit<Property, 'slug'>[] = [
@@ -282,7 +298,12 @@ const rawProperties: Omit<Property, 'slug'>[] = [
   }
 ];
 
-export const properties: Property[] = rawProperties.map((property) => ({
-  ...property,
-  slug: slugify(`${property.title}-${property.location}-${property.id}`)
-}));
+const demoPropertiesEnabled = process.env.NEXT_PUBLIC_ENABLE_DEMO_PROPERTIES === 'true';
+
+/** Imoveis de demonstracao (Unsplash). Desligados por padrao em producao. */
+export const properties: Property[] = demoPropertiesEnabled
+  ? rawProperties.map((property) => ({
+      ...property,
+      slug: slugify(`${property.title}-${property.location}-${property.id}`)
+    }))
+  : [];

@@ -3,18 +3,22 @@
 import { useState } from 'react';
 import { MessageCircle, X } from 'lucide-react';
 
-const quickOptions = [
+type QuickOption =
+  | { label: string; href: string; message?: never }
+  | { label: string; message: string; href?: never };
+
+const quickOptions: QuickOption[] = [
   {
-    label: 'Quero anunciar meu imóvel',
-    message: 'Olá! Quero anunciar meu imóvel na RN Lar.'
+    label: 'Quero anunciar meu imovel',
+    href: '/login?next=/anunciar'
   },
   {
-    label: 'Quero ver imóveis',
-    message: 'Olá! Quero receber informações sobre imóveis disponíveis.'
+    label: 'Quero ver imoveis',
+    href: '/imoveis'
   },
   {
     label: 'Falar com atendimento',
-    message: 'Olá! Quero falar com atendimento.'
+    message: 'Ola, vim pelo site Potilar e quero falar com atendimento.'
   }
 ];
 
@@ -22,7 +26,7 @@ export default function ChatWidget() {
   const [open, setOpen] = useState(false);
 
   function openWhatsApp(message: string) {
-    const url = `https://wa.me/5584999999999?text=${encodeURIComponent(message)}`;
+    const url = `https://wa.me/5521969724141?text=${encodeURIComponent(message)}`;
     window.open(url, '_blank');
   }
 
@@ -32,7 +36,7 @@ export default function ChatWidget() {
         <div className="mb-3 w-72 overflow-hidden rounded-3xl border border-sand-200 bg-white shadow-soft dark:border-slate-800 dark:bg-slate-900">
           <div className="flex items-center justify-between border-b border-sand-200 px-4 py-3 dark:border-slate-800">
             <div>
-              <p className="text-sm font-semibold text-slate-900 dark:text-white">Atendimento RN Lar</p>
+              <p className="text-sm font-semibold text-slate-900 dark:text-white">Atendimento Potilar</p>
               <p className="text-xs text-slate-500">Como podemos ajudar?</p>
             </div>
             <button
@@ -49,7 +53,16 @@ export default function ChatWidget() {
               <button
                 key={option.label}
                 type="button"
-                onClick={() => openWhatsApp(option.message)}
+                onClick={() => {
+                  if (option.href) {
+                    window.location.href = option.href;
+                    return;
+                  }
+
+                  if (option.message) {
+                    openWhatsApp(option.message);
+                  }
+                }}
                 className="w-full rounded-2xl border border-sand-200 px-3 py-2 text-left text-xs font-semibold text-slate-700 transition hover:bg-sand-50 dark:border-slate-800 dark:text-slate-200 dark:hover:bg-slate-800"
               >
                 {option.label}
