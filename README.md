@@ -1,184 +1,227 @@
 # Potilar
 
-Portal imobiliario regional do **Rio Grande do Norte** (Brasil). Publicacao de imoveis, busca, mapa, moderacao, Pix e contas para particulares, corretores e imobiliarias.
+Regional real estate marketplace for Rio Grande do Norte, Brazil.
 
-- **Producao:** [potilar.com.br](https://potilar.com.br)
-- **Stack:** Next.js 14, React, TypeScript, Tailwind, Supabase, Leaflet, Vercel
+Potilar is a production-oriented web platform for publishing, moderating and discovering real estate listings. It combines public search, map discovery, advertiser accounts, Pix payment flows, admin moderation, real estate news and local pricing intelligence.
+
+**Live product:** [potilar.com.br](https://potilar.com.br)  
+**Stack:** Next.js 14, React, TypeScript, Tailwind CSS, Supabase, Leaflet, Vercel
 
 ---
 
-## Como rodar em local
+## Product Scope
+
+Potilar was built as a focused marketplace for a regional market rather than a generic real estate demo. The product supports the main workflow of a local property portal:
+
+- owners, agents and agencies can create accounts and submit listings
+- admins review listings before publication
+- paid listings and highlights use Pix payment references
+- public users can search, filter, favorite and contact advertisers
+- listings appear on a map with Rio Grande do Norte city and neighborhood context
+- news and market content support SEO and user trust
+- listing expiration, highlights and advertiser statistics are part of the lifecycle
+
+---
+
+## Core Features
+
+### Public Marketplace
+
+- Home page with hero search, featured listings, map section and latest news
+- Listing search with filters, pagination and stable ordering
+- Property detail pages with gallery, contact actions and share tools
+- City-level listing pages
+- Public advertiser profiles for agents and agencies
+- Mobile-friendly listing and map experience
+
+### Advertiser Area
+
+- Authentication with Supabase
+- Account types: individual owner, agent and agency
+- CPF, CRECI and advertiser document flows
+- Listing creation and editing
+- Pix payment screen with QR/copy-and-paste reference
+- "Payment sent" confirmation state for the advertiser
+- Listing pause, reactivate and delete controls
+- Favorites and saved search alerts
+- Public profile editor for professional accounts
+
+### Admin
+
+- Listing moderation: approve, reject and pause
+- Pix confirmation for paid listings
+- Highlight activation and expiration tracking
+- Listing image management
+- News administration with AI-assisted article generation
+- Manual review flow for payment and content safety
+
+### Market Intelligence
+
+- "Preco Justo RN" pricing guidance for listing creation
+- FipeZAP sync endpoint for Natal benchmarks
+- Calibrated regional estimates for interior cities
+- Softer confidence messaging for approximate markets
+
+---
+
+## Architecture
+
+```txt
+app/           Next.js App Router pages and route handlers
+components/    Reusable UI: forms, maps, cards, payment panels
+lib/           Business logic: listings, pricing, Pix, Supabase, plans
+data/          Static market data, cities and fallback content
+supabase/      SQL migrations, policies and RPC functions
+scripts/       Operational scripts, including FipeZAP sync
+public/        Static assets and icons
+```
+
+The app uses Supabase for authentication, database access, RLS policies and server-side RPCs. Vercel handles deployment and scheduled jobs.
+
+---
+
+## Main Routes
+
+| Route | Purpose |
+| --- | --- |
+| `/` | Home, search, featured listings, map and latest news |
+| `/imoveis` | Public listing search |
+| `/imoveis/[slug]` | Property detail |
+| `/imoveis/cidade/[city]` | City listing page |
+| `/anunciar` | Create a listing |
+| `/anunciante/[slug]` | Public advertiser profile |
+| `/noticias` | Real estate news |
+| `/planos` | Pricing and plans |
+| `/admin` | Moderation and payment confirmation |
+| `/mi-cuenta` | Advertiser dashboard |
+
+> Note: the account route is currently `/mi-cuenta` for compatibility with the existing product. A Portuguese alias such as `/minha-conta` is planned.
+
+---
+
+## Business Rules
+
+Pricing and product limits are centralized in [`lib/plans.ts`](lib/plans.ts).
+
+| Product | Rule |
+| --- | --- |
+| First individual listing | Free |
+| Additional / seasonal listing | Paid Pix flow |
+| Regular listing duration | 90 days |
+| Seasonal listing duration | 60 days |
+| Highlights | 7 days, 30 days, Super 30 days |
+| Agent plan | Up to 10 active listings |
+| Agency plan | Up to 50 active listings |
+| Agency Plus | Up to 100 active listings |
+
+Paid listings cannot be approved until Pix is confirmed by an admin.
+
+---
+
+## Local Development
 
 ```bash
 npm install
 cp .env.example .env.local
-# Preencha as chaves Supabase em .env.local
 npm run dev
 ```
 
-Abra [http://localhost:3000](http://localhost:3000).
+Open [http://localhost:3000](http://localhost:3000).
+
+Before deployment:
 
 ```bash
-npm run build   # validar antes de deploy
-npm run start   # modo producao local
+npm run build
 ```
 
 ---
 
-## Variaveis de ambiente
+## Environment Variables
 
-| Variavel | Onde | Descricao |
-|----------|------|-----------|
-| `NEXT_PUBLIC_SUPABASE_URL` | Vercel + local | URL do projeto Supabase |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Vercel + local | Chave anon/publica |
-| `SUPABASE_SERVICE_ROLE_KEY` | Vercel (servidor) | Cron de vencimento; nunca no client |
-| `CRON_SECRET` | Vercel | Bearer token para `/api/cron/expire-listings` |
-| `NEXT_PUBLIC_PIX_KEY` | Vercel + local | Chave Pix para recebimento |
-| `NEXT_PUBLIC_PIX_WHATSAPP` | Vercel + local | WhatsApp para comprovantes (ex: `5521969724141`) |
-| `NEXT_PUBLIC_ENABLE_DEMO_PROPERTIES` | Opcional | `true` so para ver imoveis demo em dev |
+Use `.env.example` as the template. Required values include:
+
+| Variable | Scope | Description |
+| --- | --- | --- |
+| `NEXT_PUBLIC_SUPABASE_URL` | client/server | Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | client/server | Supabase anon key |
+| `SUPABASE_SERVICE_ROLE_KEY` | server only | Admin operations and cron jobs |
+| `CRON_SECRET` | server only | Bearer token for cron endpoints |
+| `OPENAI_API_KEY` | server only | AI-assisted news generation |
+| `NEXT_PUBLIC_PIX_KEY` | client/server | Pix receiving key |
+| `NEXT_PUBLIC_PIX_WHATSAPP` | client/server | WhatsApp for payment proof |
+
+Secrets are not committed to the repository.
 
 ---
 
-## SQL no Supabase (ordem sugerida)
+## Supabase Setup
 
-Execute no **SQL Editor** do Supabase se ainda nao rodou:
+SQL files live in [`supabase/`](supabase). For a fresh project, start with:
 
-1. `supabase/schema.sql` — base (se projeto novo)
+1. `supabase/schema.sql`
 2. `supabase/add_profile_account_type.sql`
 3. `supabase/add_payment_lifecycle_fields.sql`
-4. `supabase/update_public_listings_rpc.sql` — mapa com bairro
-5. `supabase/listing_favorites.sql` — favoritos em conta
-6. `supabase/green_block_migrations.sql` — m2, pet, perfis publicos, alertas, stats
-7. `supabase/expire_listings_maintenance.sql` — opcional (cron na Vercel cobre o essencial)
-8. `supabase/backfill_listing_expirations.sql` — se anuncios antigos sem data de vencimento
+4. `supabase/add_payment_proof_fields.sql`
+5. `supabase/fix_public_listings_access.sql`
+6. `supabase/fix_public_news_access.sql`
+7. `supabase/listing_favorites.sql`
+8. `supabase/green_block_migrations.sql`
+9. `supabase/market_benchmarks.sql`
+10. `supabase/owner_listing_controls.sql`
+
+Some SQL files are incremental migrations created while the product evolved. They are kept explicit so production changes are auditable.
 
 ---
 
-## Estrutura do produto
+## Operational Jobs
 
-### Paginas publicas
+### Expire Listings
 
-| Rota | Funcao |
-|------|--------|
-| `/` | Home, buscador, destaques, mapa, noticias |
-| `/imoveis` | Listagem, filtros, paginacao, alertas, mapa |
-| `/imoveis/[slug]` | Ficha do imovel |
-| `/imoveis/cidade/[city]` | Imoveis por cidade |
-| `/anunciante/[slug]` | Perfil publico corretor/imobiliaria |
-| `/anunciar` | Publicar imovel |
-| `/planos`, `/imobiliarias`, `/agentes`, `/seja-parceiro` | Planos e parcerias |
-| `/noticias` | Blog |
+`GET /api/cron/expire-listings`
 
-### Conta (`/mi-cuenta`)
+Pauses expired listings and expired highlights. Protected with `CRON_SECRET`.
 
-| Rota | Funcao |
-|------|--------|
-| `/mi-cuenta` | Painel do anunciante |
-| `/mi-cuenta/pagar/[id]` | Pagamento Pix (QR + copia e cola) |
-| `/mi-cuenta/favoritos` | Favoritos sincronizados |
-| `/mi-cuenta/alertas` | Buscas salvas |
-| `/mi-cuenta/perfil` | Perfil publico profissional |
-| `/mi-cuenta/editar/[id]` | Editar anuncio |
+### Update Market Benchmarks
 
-### Admin
+`GET /api/cron/update-fipezap`
 
-| Rota | Funcao |
-|------|--------|
-| `/admin` | Moderar anuncios, confirmar Pix |
-| `/admin/editar/[id]` | Editar qualquer anuncio |
-| `/admin/news` | Noticias (CMS + rascunhos IA) |
+Syncs FipeZAP benchmark data used by pricing intelligence. Protected with `CRON_SECRET`.
 
-### APIs
+Local script:
 
-| Endpoint | Uso |
-|----------|-----|
-| `POST /api/geocode` | Geocoding ao publicar |
-| `GET/POST /api/favorites` | Favoritos |
-| `GET/POST/PATCH/DELETE /api/alerts` | Alertas de busca |
-| `POST /api/listings/[id]/stats` | Views e cliques WhatsApp |
-| `PATCH /api/profile/public` | Perfil publico |
-| `GET /api/cron/expire-listings` | Pausa anuncios vencidos (cron diario) |
-
----
-
-## Fluxo de negocio
-
-```mermaid
-flowchart TD
-  A[Publicar] --> B{Gratis ou pago?}
-  B -->|Gratis| C[status: pending]
-  B -->|Pago| D[pix_pending + /mi-cuenta/pagar]
-  D --> E[Usuario paga Pix e envia comprovante]
-  E --> F[Admin confirma Pix]
-  F --> C
-  C --> G[Admin aprova]
-  G --> H[approved - busca e mapa]
-```
-
-**Regra:** anuncio pago nao e aprovado sem `payment_status = confirmed`.
-
----
-
-## Monetizacao (`lib/plans.ts`)
-
-| Produto | Precio |
-|---------|--------|
-| 1.o anuncio | Gratis |
-| Anuncio adicional / temporada | R$ 19,90 |
-| Renovacao temporada | R$ 9,90 |
-| Destaque 7 / 30 / Super 30 dias | R$ 9,99 - R$ 49,99 |
-| Plano Corretor | R$ 149,90/mes (ate 10 ativos) |
-| Plano Imobiliaria | R$ 249,90/mes (ate 50 ativos) |
-| Plus | R$ 399,90/mes (ate 100 ativos) |
-
-Pix: painel em `components/PixPaymentPanel.tsx` + `lib/pix.ts` (QR e copia e cola). Confirmacao manual no admin ate integrar Asaas/Mercado Pago.
-
----
-
-## Mapa e localizacao
-
-- Coordenadas por bairro: `lib/locationCoordinates.ts`
-- Geocoding: `app/api/geocode/route.ts` + cache `geocoding_cache.sql`
-- Pins sobrepostos: `spreadOverlappingMarkers` em `PropertyMap.tsx`
-- **Importante:** preencher **bairro** em cada anuncio para pins corretos
-
----
-
-## Deploy (Vercel)
-
-1. Push para GitHub
-2. Projeto Vercel ligado ao repo
-3. Configurar env vars (tabela acima)
-4. `vercel.json` agenda cron diario as 9h UTC para vencimentos
-5. Apos deploy, conferir build: rota `ƒ /mi-cuenta/pagar/[id]` na lista de rotas
-
----
-
-## Pastas principais
-
-```
-app/           Paginas e rotas Next.js
-components/    UI (mapa, filtros, Pix, formularios)
-lib/           Regras de negocio (plans, pix, listings, geocode)
-data/          Tipos e cidades RN
-supabase/      Migracoes SQL
-public/        Assets estaticos
+```bash
+npm run sync:fipezap
 ```
 
 ---
 
-## Pendencias conhecidas (roadmap)
+## Quality and Security Notes
 
-- [ ] Cobro recorrente planos Pro (Asaas quando conta aprovada)
-- [ ] Alertas por email/WhatsApp quando surgir imovel novo
-- [ ] Paginas SEO cidade + bairro + tipo
-- [ ] Paginacao no servidor (hoje carrega todos os approved em memoria)
-- [ ] Redirect `/minha-conta` a partir de `/mi-cuenta`
-- [ ] Remover ou atualizar `/sobre` (fotos genericas)
-- [ ] Webhook Pix automatico (`/api/webhooks/mercadopago` e stub Asaas)
+- Supabase RLS is enabled for sensitive tables.
+- Public listing access uses explicit RPCs for approved listings.
+- Paid listing approval is blocked until Pix confirmation.
+- Service role keys are server-only.
+- `.env*`, `.next`, Vercel files and logs are ignored by Git.
+- User-generated listings pass through moderation before public visibility.
 
 ---
 
-## Licenca
+## Roadmap
 
-Projeto privado Potilar.
+Short-term product evolution:
+
+- Portuguese account alias: `/minha-conta`
+- Server-side pagination for large listing volume
+- City + neighborhood SEO landing pages
+- Email or WhatsApp alerts for saved searches
+- Automated Pix confirmation through Asaas or Mercado Pago
+- Public agency pages with stronger branding
+- More robust map discovery by visible area
+
+---
+
+## Repository Status
+
+This repository represents a real product in active development. The production deployment is connected to Vercel and uses Supabase as the backend.
+
+The project is intentionally product-heavy: it prioritizes business flows, moderation, payment lifecycle and regional market behavior over being a small UI-only demo.
