@@ -1,8 +1,8 @@
 # Potilar
 
-Regional real estate marketplace for Rio Grande do Norte, Brazil.
+Full-stack regional real estate marketplace for Rio Grande do Norte, Brazil.
 
-Potilar is a production-oriented web platform for publishing, moderating and discovering real estate listings. It combines public search, map discovery, advertiser accounts, Pix payment flows, admin moderation, real estate news and local pricing intelligence.
+Potilar is a production-oriented marketplace built with Next.js, Supabase and TypeScript. It includes advertiser accounts, listing moderation, Pix payment workflows, map search, saved alerts, SEO content, AI-assisted news generation and regional pricing guidance.
 
 **Live product:** [potilar.com.br](https://potilar.com.br)  
 **Stack:** Next.js 14, React, TypeScript, Tailwind CSS, Supabase, Leaflet, Vercel
