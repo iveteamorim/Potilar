@@ -11,7 +11,16 @@ import type { Property } from '@/data/properties';
 import Link from 'next/link';
 import agencyMatchImage from '@/components/ayudamosencontrarimobiliaria.jpg';
 import { dedupeNewsArticles, fallbackNewsArticles, formatNewsDate, getNewsImageUrl, withUniqueNewsImages, type NewsArticle } from '@/data/news';
-import { SEO_INTENT_PAGES } from '@/lib/seoIntentPages';
+import { getCitySeoIntentPath } from '@/lib/seoIntentPages';
+
+const popularInteriorSearches = [
+  { label: 'Casas para alugar em Monte Alegre', href: getCitySeoIntentPath('Monte Alegre', 'casas-para-alugar') },
+  { label: 'Terrenos a venda em Caico', href: getCitySeoIntentPath('Caicó', 'terrenos-a-venda') },
+  { label: 'Casas a venda em Nova Cruz', href: getCitySeoIntentPath('Nova Cruz', 'casas-a-venda') },
+  { label: 'Kitnets em Mossoro', href: getCitySeoIntentPath('Mossoró', 'kitnets-para-alugar') },
+  { label: 'Imoveis em Pau dos Ferros', href: getCitySeoIntentPath('Pau dos Ferros', 'casas-a-venda') },
+  { label: 'Temporada em Touros', href: getCitySeoIntentPath('Touros', 'imoveis-para-temporada') }
+];
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -154,13 +163,13 @@ export default async function HomePage() {
           <span className="mr-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
             Buscas populares
           </span>
-          {SEO_INTENT_PAGES.slice(0, 6).map((page) => (
+          {popularInteriorSearches.map((search) => (
             <Link
-              key={page.slug}
-              href={`/imoveis/${page.slug}`}
+              key={search.href}
+              href={search.href}
               className="rounded-full border border-ocean-200 bg-ocean-50 px-4 py-2 text-xs font-semibold text-ocean-800 transition hover:bg-ocean-100 dark:border-ocean-900 dark:bg-ocean-950/30 dark:text-ocean-100"
             >
-              {page.title}
+              {search.label}
             </Link>
           ))}
         </div>

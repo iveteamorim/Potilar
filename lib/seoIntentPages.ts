@@ -1,4 +1,5 @@
 import type { Property } from '@/data/properties';
+import { FEATURED_CITY_NAMES, getCityPagePath } from '@/lib/cityPages';
 
 export type SeoIntentPage = {
   slug: string;
@@ -103,4 +104,28 @@ export function getSeoIntentPage(slug: string) {
 
 export function getSeoIntentPaths() {
   return SEO_INTENT_PAGES.map((page) => `/imoveis/${page.slug}`);
+}
+
+export function getCitySeoIntentPath(cityName: string, intentSlug: string) {
+  return `${getCityPagePath(cityName)}/${intentSlug}`;
+}
+
+export function getFeaturedCitySeoIntentPaths() {
+  return FEATURED_CITY_NAMES.flatMap((cityName) =>
+    SEO_INTENT_PAGES.map((page) => getCitySeoIntentPath(cityName, page.slug))
+  );
+}
+
+export function getCityIntentSeoTitle(cityName: string, page: SeoIntentPage) {
+  const base = page.title.replace(' no RN', '').replace(' no Rio Grande do Norte', '');
+  return `${base} em ${cityName}, RN`;
+}
+
+export function getCityIntentSeoDescription(cityName: string, page: SeoIntentPage, listingCount: number) {
+  const countText =
+    listingCount > 0
+      ? `${listingCount} anuncio${listingCount === 1 ? '' : 's'} publicado${listingCount === 1 ? '' : 's'}`
+      : 'busca local para anuncios';
+
+  return `${countText} de ${page.title.toLowerCase()} em ${cityName}, Rio Grande do Norte. Veja imoveis por cidade, bairro, mapa e contato direto na Potilar.`;
 }

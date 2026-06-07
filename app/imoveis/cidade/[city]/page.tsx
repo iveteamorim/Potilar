@@ -17,6 +17,7 @@ import { listingRowToProperty } from '@/lib/listings';
 import { slugify } from '@/lib/slugify';
 import { createClient } from '@/lib/supabase/server';
 import { orderListingsForDisplay } from '@/lib/propertyOrdering';
+import { SEO_INTENT_PAGES, getCitySeoIntentPath } from '@/lib/seoIntentPages';
 import type { Property } from '@/data/properties';
 
 export const revalidate = 300;
@@ -268,6 +269,23 @@ export default async function CityListingsPage({ params }: { params: { city: str
             </Link>
             .
           </p>
+        </section>
+
+        <section className="rounded-3xl border border-sand-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-950">
+          <h2 className="text-base font-semibold text-slate-900 dark:text-white">
+            Buscas populares em {cityName}
+          </h2>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {SEO_INTENT_PAGES.slice(0, 6).map((intent) => (
+              <Link
+                key={intent.slug}
+                href={getCitySeoIntentPath(cityName, intent.slug)}
+                className="rounded-full border border-ocean-200 px-4 py-2 text-sm font-semibold text-ocean-700"
+              >
+                {intent.title.replace(' no RN', '')}
+              </Link>
+            ))}
+          </div>
         </section>
       </div>
     </main>
