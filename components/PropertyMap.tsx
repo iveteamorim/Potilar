@@ -18,7 +18,6 @@ type Props = {
   center?: [number, number];
   zoom?: number;
   mapActive?: boolean;
-  showLegend?: boolean;
 };
 
 type MapProperty = Property & {
@@ -111,25 +110,6 @@ function MapBoundsFitter({ items }: { items: MapProperty[] }) {
   return null;
 }
 
-function MapLegend() {
-  return (
-    <div className="flex flex-wrap gap-3 text-xs text-slate-600 dark:text-slate-300">
-      <span className="inline-flex items-center gap-1.5">
-        <span className="h-3 w-3 rounded-full bg-ocean-700 ring-2 ring-white dark:ring-slate-900" />
-        Anuncio
-      </span>
-      <span className="inline-flex items-center gap-1.5">
-        <span className="h-3 w-3 rounded-full bg-amber-500 ring-2 ring-white dark:ring-slate-900" />
-        Destaque
-      </span>
-      <span className="inline-flex items-center gap-1.5">
-        <span className="h-3 w-3 rounded-full bg-violet-600 ring-2 ring-white dark:ring-slate-900" />
-        Super destaque
-      </span>
-    </div>
-  );
-}
-
 function selectMarkerProperty(
   event: L.LeafletMouseEvent,
   property: Property,
@@ -147,8 +127,7 @@ export default function PropertyMap({
   height = '360px',
   center,
   zoom = 8,
-  mapActive = true,
-  showLegend = true
+  mapActive = true
 }: Props) {
   const router = useRouter();
   const mapItems = useMemo(
@@ -218,13 +197,6 @@ export default function PropertyMap({
 
   return (
     <div className="space-y-3">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-xs font-semibold text-slate-600 dark:text-slate-300">
-          {mapItems.length} {mapItems.length === 1 ? 'anuncio no mapa' : 'anuncios no mapa'}
-        </p>
-        {showLegend && <MapLegend />}
-      </div>
-
       <div
         className="relative overflow-hidden rounded-3xl border border-sand-200 shadow-soft dark:border-slate-800"
         style={{ height }}
