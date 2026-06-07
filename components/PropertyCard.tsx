@@ -1,6 +1,9 @@
+'use client';
+
 import Image from 'next/image';
 import Link from 'next/link';
-import { BedDouble, Car, Mail, MapPin, MessageCircle, Phone } from 'lucide-react';
+import { useState } from 'react';
+import { BedDouble, Car, ChevronLeft, ChevronRight, Mail, MapPin, MessageCircle, Phone } from 'lucide-react';
 import type { Property } from '@/data/properties';
 import { formatListingDateLabel } from '@/lib/dateLabels';
 import { getCleanPropertyTitle } from '@/lib/displayTitle';
@@ -26,8 +29,10 @@ function cleanPhone(value?: string) {
 }
 
 export default function PropertyCard({ property }: { property: Property }) {
+  const [imageIndex, setImageIndex] = useState(0);
   const isUserListing = property.id.startsWith('user-');
-  const image = property.images[0] ?? '/og-home.svg';
+  const images = property.images.length > 0 ? property.images : ['/og-home.svg'];
+  const image = images[imageIndex] ?? images[0];
   const displayTitle = getCleanPropertyTitle(property);
   const imageAlt = `Anuncio de ${property.propertyType.toLowerCase()} em ${property.location}: ${displayTitle}`;
   const isSuperFeatured = property.featuredPlan === 'super_30_days';
@@ -88,6 +93,18 @@ export default function PropertyCard({ property }: { property: Property }) {
       : null
   ].filter(Boolean);
 
+  function showPreviousImage(event: React.MouseEvent<HTMLButtonElement>) {
+    event.preventDefault();
+    event.stopPropagation();
+    setImageIndex((current) => (current === 0 ? images.length - 1 : current - 1));
+  }
+
+  function showNextImage(event: React.MouseEvent<HTMLButtonElement>) {
+    event.preventDefault();
+    event.stopPropagation();
+    setImageIndex((current) => (current + 1) % images.length);
+  }
+
   const content = (
     <>
       {property.isFeatured && (
@@ -117,6 +134,29 @@ export default function PropertyCard({ property }: { property: Property }) {
             </span>
           )}
         </div>
+        {images.length > 1 && (
+          <>
+            <button
+              type="button"
+              onClick={showPreviousImage}
+              className="absolute left-2 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-slate-800 shadow-md transition hover:bg-white"
+              aria-label="Ver foto anterior"
+            >
+              <ChevronLeft className="h-5 w-5" aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              onClick={showNextImage}
+              className="absolute right-2 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-slate-800 shadow-md transition hover:bg-white"
+              aria-label="Ver proxima foto"
+            >
+              <ChevronRight className="h-5 w-5" aria-hidden="true" />
+            </button>
+            <span className="absolute bottom-3 right-3 rounded-full bg-slate-950/80 px-3 py-1 text-xs font-semibold text-white">
+              {imageIndex + 1}/{images.length}
+            </span>
+          </>
+        )}
       </div>
       <div className="flex flex-1 flex-col gap-4 p-4">
         <div>
