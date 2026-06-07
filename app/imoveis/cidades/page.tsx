@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+﻿import type { Metadata } from 'next';
 import Link from 'next/link';
 import { BASE_URL } from '@/lib/config';
 import { FEATURED_CITY_NAMES, RN_CITY_PAGES, getCityPagePath, groupCitiesAlphabetically } from '@/lib/cityPages';

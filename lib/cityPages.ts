@@ -1,4 +1,4 @@
-import { cities as RN_CITIES } from '@/data/cities';
+﻿import { cities as RN_CITIES } from '@/data/cities';
 import { slugify } from '@/lib/slugify';
 
 export type RnCityPage = {

@@ -1,6 +1,7 @@
 import type { MetadataRoute } from 'next';
 import { getAllCitySlugs } from '@/lib/cityPages';
 import { BASE_URL } from '@/lib/config';
+import { getSeoIntentPaths } from '@/lib/seoIntentPages';
 import { createClient } from '@supabase/supabase-js';
 import { SUPABASE_ANON_KEY, SUPABASE_URL } from '@/lib/supabase/config';
 
@@ -47,6 +48,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     lastModified: new Date()
   }));
 
+  const seoIntentRoutes = getSeoIntentPaths().map((route) => ({
+    url: `${BASE_URL}${route}`,
+    lastModified: new Date(),
+    changeFrequency: 'daily' as const,
+    priority: 0.85
+  }));
+
   const newsRoutes = [
     '/noticias/precos-imoveis-rn',
     '/noticias/cuidados-negociar-imovel-online',
@@ -76,15 +84,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: new Date(article.updated_at || article.published_at || article.created_at || Date.now())
     }));
 
-    if (error) return [...staticRoutes, ...newsRoutes, ...dynamicNewsRoutes, ...cityRoutes];
+    if (error) return [...staticRoutes, ...seoIntentRoutes, ...newsRoutes, ...dynamicNewsRoutes, ...cityRoutes];
 
     const propertyRoutes = ((data ?? []) as SitemapListing[]).map((listing) => ({
       url: `${BASE_URL}/imoveis/${listing.slug}`,
       lastModified: new Date(listing.updated_at || listing.created_at || Date.now())
     }));
 
-    return [...staticRoutes, ...newsRoutes, ...dynamicNewsRoutes, ...cityRoutes, ...propertyRoutes];
+    return [...staticRoutes, ...seoIntentRoutes, ...newsRoutes, ...dynamicNewsRoutes, ...cityRoutes, ...propertyRoutes];
   } catch {
-    return [...staticRoutes, ...newsRoutes, ...buildCityRoutes()];
+    return [...staticRoutes, ...seoIntentRoutes, ...newsRoutes, ...buildCityRoutes()];
   }
 }

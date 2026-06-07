@@ -1,12 +1,13 @@
 import Link from 'next/link';
 import { Instagram, Mail, MessageCircle } from 'lucide-react';
 import { FEATURED_CITY_NAMES, getCityPagePath } from '@/lib/cityPages';
+import { SEO_INTENT_PAGES } from '@/lib/seoIntentPages';
 import Logo from './Logo';
 
 export default function Footer() {
   return (
     <footer className="border-t border-sand-200 bg-sand-50/70 py-10 text-sm text-slate-600 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300">
-      <div className="mx-auto grid max-w-6xl gap-6 px-4 sm:px-6 md:grid-cols-2 lg:grid-cols-4">
+      <div className="mx-auto grid max-w-6xl gap-6 px-4 sm:px-6 md:grid-cols-2 lg:grid-cols-5">
         <div>
           <Logo />
           <p className="mt-2">
@@ -33,6 +34,16 @@ export default function Footer() {
             {FEATURED_CITY_NAMES.slice(0, 8).map((city) => (
               <Link key={city} href={getCityPagePath(city)}>
                 Imoveis em {city}
+              </Link>
+            ))}
+          </div>
+        </div>
+        <div>
+          <p className="text-base font-semibold text-slate-900 dark:text-white">Buscas</p>
+          <div className="mt-2 grid gap-2">
+            {SEO_INTENT_PAGES.slice(0, 6).map((page) => (
+              <Link key={page.slug} href={`/imoveis/${page.slug}`}>
+                {page.title}
               </Link>
             ))}
           </div>

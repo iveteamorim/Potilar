@@ -11,6 +11,7 @@ import type { Property } from '@/data/properties';
 import Link from 'next/link';
 import agencyMatchImage from '@/components/ayudamosencontrarimobiliaria.jpg';
 import { dedupeNewsArticles, fallbackNewsArticles, formatNewsDate, getNewsImageUrl, withUniqueNewsImages, type NewsArticle } from '@/data/news';
+import { SEO_INTENT_PAGES } from '@/lib/seoIntentPages';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -147,6 +148,23 @@ export default async function HomePage() {
   return (
     <main>
       <HeroSearch />
+
+      <section className="border-b border-sand-200 bg-white py-5 dark:border-slate-800 dark:bg-slate-950">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-2 px-4 sm:px-6">
+          <span className="mr-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+            Buscas populares
+          </span>
+          {SEO_INTENT_PAGES.slice(0, 6).map((page) => (
+            <Link
+              key={page.slug}
+              href={`/imoveis/${page.slug}`}
+              className="rounded-full border border-ocean-200 bg-ocean-50 px-4 py-2 text-xs font-semibold text-ocean-800 transition hover:bg-ocean-100 dark:border-ocean-900 dark:bg-ocean-950/30 dark:text-ocean-100"
+            >
+              {page.title}
+            </Link>
+          ))}
+        </div>
+      </section>
 
       <section className="section-padding">
         <div className="mx-auto max-w-6xl">

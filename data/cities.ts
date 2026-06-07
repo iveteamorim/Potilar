@@ -1,4 +1,4 @@
-export const cities = [
+﻿export const cities = [
   'Acari',
   'Açu',
   'Afonso Bezerra',
