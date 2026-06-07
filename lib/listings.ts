@@ -1,5 +1,5 @@
 import type { Property } from '@/data/properties';
-import { isKnownCityCenterCoordinate, resolveListingCoordinates } from './locationCoordinates';
+import { isDefaultListingCoordinate, isKnownCityCenterCoordinate, resolveListingCoordinates } from './locationCoordinates';
 import { formatPlaceName } from './textFormat';
 
 export const PUBLIC_LISTING_SELECT =
@@ -69,10 +69,13 @@ export function listingRowToProperty(row: ListingRow): Property {
     row.title,
     row.description
   );
+  const storedIsDefaultNatal = isDefaultListingCoordinate(row.lat, row.lng);
+  const resolvedIsDefaultNatal = isDefaultListingCoordinate(resolvedFromAddress[0], resolvedFromAddress[1]);
   const hasPreciseStoredCoordinates =
     Number.isFinite(row.lat) &&
     Number.isFinite(row.lng) &&
-    !isKnownCityCenterCoordinate(row.lat, row.lng);
+    !isKnownCityCenterCoordinate(row.lat, row.lng) &&
+    !(storedIsDefaultNatal && !resolvedIsDefaultNatal);
   const [resolvedLat, resolvedLng] = hasPreciseStoredCoordinates ? [row.lat, row.lng] : resolvedFromAddress;
 
   return {

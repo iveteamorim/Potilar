@@ -1,11 +1,40 @@
 # Potilar
 
-Full-stack regional real estate marketplace for Rio Grande do Norte, Brazil.
+**Production regional real estate marketplace** for Rio Grande do Norte, Brazil.
 
-Potilar is a production-oriented marketplace built with Next.js, Supabase and TypeScript. It includes advertiser accounts, listing moderation, Pix payment workflows, map search, saved alerts, SEO content, AI-assisted news generation and regional pricing guidance.
+[![Live](https://img.shields.io/badge/Live-potilar.com.br-0ea5e9?style=flat-square)](https://potilar.com.br)
+[![Next.js](https://img.shields.io/badge/Next.js-14-000?style=flat-square&logo=next.js)](https://nextjs.org)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178c6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org)
+[![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-3ecf8e?style=flat-square&logo=supabase&logoColor=white)](https://supabase.com)
+[![Vercel](https://img.shields.io/badge/Deployed-Vercel-000?style=flat-square&logo=vercel&logoColor=white)](https://vercel.com)
 
-**Live product:** [potilar.com.br](https://potilar.com.br)  
-**Stack:** Next.js 14, React, TypeScript, Tailwind CSS, Supabase, Leaflet, Vercel
+Potilar is a **full-stack product in production** — not a UI mockup. It covers the complete lifecycle of a local property portal: advertiser onboarding, listing moderation, Pix payments, map search, market intelligence, SEO content, and admin operations.
+
+**Author:** [Ivete Amorim](https://github.com/iveteamorim) · Full-stack product engineering (solo build)
+
+---
+
+## Why this project matters
+
+| Dimension | What it demonstrates |
+| --- | --- |
+| **Product ownership** | End-to-end marketplace: auth, listings, payments, admin, SEO, maps |
+| **Backend depth** | Supabase RLS, RPCs for public access, cron jobs, geocoding cache |
+| **Business logic** | Plan limits, listing expiry, Pix confirmation gates, highlight lifecycle |
+| **Regional complexity** | 167+ RN cities on map, FipeZAP benchmarks, interior pricing calibration |
+| **Production ops** | Vercel deploy, env separation, auditable SQL migrations |
+
+---
+
+## Highlights for technical review
+
+- **Auth & roles** — individual owners, agents, agencies; profile and document flows
+- **Payments** — Pix QR / copy-paste, admin confirmation before paid listing approval
+- **Public access layer** — explicit RPCs + RLS fixes for anonymous listing discovery
+- **Map & geo** — Leaflet, city/neighborhood resolution, Nominatim fallback, wrong-pin correction
+- **Preço Justo RN** — pricing intelligence with FipeZAP sync and approximate-market UX
+- **Automation** — cron: expire listings, sync market benchmarks monthly
+- **Admin** — moderation, Pix confirmation, highlights, AI-assisted news generation
 
 ---
 
@@ -220,8 +249,45 @@ Short-term product evolution:
 
 ---
 
-## Repository Status
+## System overview
 
-This repository represents a real product in active development. The production deployment is connected to Vercel and uses Supabase as the backend.
+```mermaid
+flowchart TB
+  subgraph Client
+    UI[Next.js App Router]
+    Map[Leaflet Map]
+  end
+  subgraph Server
+    API[API Routes & Crons]
+    Logic[lib/ business rules]
+  end
+  subgraph Data
+    DB[(Supabase PostgreSQL)]
+    RLS[RLS + RPC]
+    Storage[Listing photos]
+  end
+  subgraph External
+    OSM[Nominatim geocoding]
+    Fipe[FipeZAP benchmarks]
+    AI[OpenAI news assist]
+  end
+  UI --> API
+  Map --> UI
+  API --> Logic
+  Logic --> DB
+  DB --> RLS
+  API --> Storage
+  API --> OSM
+  API --> Fipe
+  API --> AI
+```
 
-The project is intentionally product-heavy: it prioritizes business flows, moderation, payment lifecycle and regional market behavior over being a small UI-only demo.
+---
+
+## Repository status
+
+Production deployment on **Vercel** with **Supabase** backend. Actively maintained.
+
+This repository is intentionally **product-heavy**: business flows, moderation, payment lifecycle, and regional market behavior take priority over being a small UI-only demo.
+
+**Recruiters / hiring managers:** live demo at [potilar.com.br](https://potilar.com.br) · profile & other work at [github.com/iveteamorim](https://github.com/iveteamorim)

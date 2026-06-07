@@ -1,12 +1,11 @@
 import type { MetadataRoute } from 'next';
+import { getAllCitySlugs } from '@/lib/cityPages';
 import { BASE_URL } from '@/lib/config';
-import { slugify } from '@/lib/slugify';
 import { createClient } from '@supabase/supabase-js';
 import { SUPABASE_ANON_KEY, SUPABASE_URL } from '@/lib/supabase/config';
 
 type SitemapListing = {
   slug: string;
-  location: string;
   updated_at: string | null;
   created_at: string | null;
 };
@@ -18,14 +17,20 @@ type SitemapNewsArticle = {
   created_at: string | null;
 };
 
-function cityFromLocation(location: string) {
-  return location.split(',')[0]?.trim() || location.trim();
+function buildCityRoutes() {
+  return getAllCitySlugs().map((citySlug) => ({
+    url: `${BASE_URL}/imoveis/cidade/${citySlug}`,
+    lastModified: new Date(),
+    changeFrequency: 'weekly' as const,
+    priority: 0.8
+  }));
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const routes = [
     '',
     '/imoveis',
+    '/imoveis/cidades',
     '/anunciar',
     '/imobiliarias',
     '/planos',
@@ -53,9 +58,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   try {
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const cityRoutes = buildCityRoutes();
     const { data, error } = await supabase
       .from('listings')
-      .select('slug,location,updated_at,created_at')
+      .select('slug,updated_at,created_at')
       .eq('status', 'approved')
       .order('updated_at', { ascending: false });
 
@@ -70,27 +76,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: new Date(article.updated_at || article.published_at || article.created_at || Date.now())
     }));
 
-    if (error) return [...staticRoutes, ...newsRoutes, ...dynamicNewsRoutes];
+    if (error) return [...staticRoutes, ...newsRoutes, ...dynamicNewsRoutes, ...cityRoutes];
 
     const propertyRoutes = ((data ?? []) as SitemapListing[]).map((listing) => ({
       url: `${BASE_URL}/imoveis/${listing.slug}`,
       lastModified: new Date(listing.updated_at || listing.created_at || Date.now())
     }));
 
-    const cityRoutes = Array.from(
-      new Map(
-        ((data ?? []) as SitemapListing[])
-          .map((listing) => cityFromLocation(listing.location))
-          .filter(Boolean)
-          .map((city) => [slugify(city), city])
-      ).keys()
-    ).map((citySlug) => ({
-      url: `${BASE_URL}/imoveis/cidade/${citySlug}`,
-      lastModified: new Date()
-    }));
-
     return [...staticRoutes, ...newsRoutes, ...dynamicNewsRoutes, ...cityRoutes, ...propertyRoutes];
   } catch {
-    return [...staticRoutes, ...newsRoutes];
+    return [...staticRoutes, ...newsRoutes, ...buildCityRoutes()];
   }
 }

@@ -1,11 +1,12 @@
 import Link from 'next/link';
 import { Instagram, Mail, MessageCircle } from 'lucide-react';
+import { FEATURED_CITY_NAMES, getCityPagePath } from '@/lib/cityPages';
 import Logo from './Logo';
 
 export default function Footer() {
   return (
     <footer className="border-t border-sand-200 bg-sand-50/70 py-10 text-sm text-slate-600 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300">
-      <div className="mx-auto grid max-w-6xl gap-6 px-4 sm:px-6 md:grid-cols-3">
+      <div className="mx-auto grid max-w-6xl gap-6 px-4 sm:px-6 md:grid-cols-2 lg:grid-cols-4">
         <div>
           <Logo />
           <p className="mt-2">
@@ -16,6 +17,7 @@ export default function Footer() {
           <p className="text-base font-semibold text-slate-900 dark:text-white">Navegacao</p>
           <div className="mt-2 grid grid-cols-2 gap-x-6 gap-y-2">
             <Link href="/imoveis">Imoveis</Link>
+            <Link href="/imoveis/cidades">Cidades do RN</Link>
             <Link href="/planos">Planos e Precos</Link>
             <Link href="/contato">Contato</Link>
             <Link href="/imobiliarias">Imobiliarias</Link>
@@ -23,6 +25,16 @@ export default function Footer() {
             <Link href="/faq">FAQ</Link>
             <Link href="/termos-de-uso">Termos de Uso</Link>
             <Link href="/privacidade">Privacidade</Link>
+          </div>
+        </div>
+        <div>
+          <p className="text-base font-semibold text-slate-900 dark:text-white">Cidades</p>
+          <div className="mt-2 grid gap-2">
+            {FEATURED_CITY_NAMES.slice(0, 8).map((city) => (
+              <Link key={city} href={getCityPagePath(city)}>
+                Imoveis em {city}
+              </Link>
+            ))}
           </div>
         </div>
         <div>

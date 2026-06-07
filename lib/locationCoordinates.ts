@@ -45,7 +45,142 @@ const CITY_COORDINATES: Record<string, [number, number]> = {
   'nísia floresta': [-6.0911, -35.2089],
   'nisia floresta': [-6.0911, -35.2089],
   'canguaretama': [-6.38, -35.1289],
-  'nova cruz': [-6.4781, -35.4339]
+  'nova cruz': [-6.4781, -35.4339],
+  // Interior / Serido / Oeste (centros municipais aproximados)
+  'santana do matos': [-5.9469, -36.6503],
+  'santana do serido': [-6.7709, -36.734],
+  'pau dos ferros': [-6.1125, -38.2063],
+  'angicos': [-5.6666, -36.6009],
+  'umarizal': [-5.9855, -37.8186],
+  'equador': [-6.9445, -36.7178],
+  'patu': [-6.1006, -37.6385],
+  'pendencias': [-5.2572, -36.7182],
+  'joao camara': [-5.535, -35.8151],
+  'macau': [-5.1131, -36.6351],
+  'afonso bezerra': [-5.4989, -36.5089],
+  'agua nova': [-6.1967, -38.2933],
+  'alexandria': [-6.4167, -38.0167],
+  'almino afonso': [-6.15, -37.75],
+  'alto do rodrigues': [-5.2833, -36.7667],
+  'antonio martins': [-6.2167, -37.8833],
+  'arez': [-5.7333, -36.2333],
+  'campo grande': [-5.85, -35.5667],
+  'baia formosa': [-6.3667, -35.15],
+  'barauna': [-4.915, -37.1386],
+  'barcelona': [-5.9522, -35.9289],
+  'bodo': [-5.9506, -36.4008],
+  'bom jesus': [-6.0167, -35.5833],
+  'caicara do norte': [-5.1833, -36.05],
+  'caicara do rio do vento': [-5.75, -35.4333],
+  'campo redondo': [-6.2667, -35.9667],
+  'caraubas': [-5.7778, -36.4833],
+  'carnauba dos dantas': [-6.55, -36.6167],
+  'carnaubais': [-5.35, -36.8333],
+  'cerro cora': [-6.045, -35.7167],
+  'coronel ezequiel': [-6.2833, -35.2833],
+  'coronel joao pessoa': [-6.2667, -38.3833],
+  'cruzeta': [-6.5167, -36.7833],
+  'doutor severiano': [-6.0833, -38.3667],
+  'encanto': [-6.1167, -38.3167],
+  'espirito santo': [-6.4667, -35.3167],
+  'felipe guerra': [-5.6333, -37.6833],
+  'fernando pedroza': [-5.4333, -36.3833],
+  'florania': [-6.1667, -36.8667],
+  'francisco dantas': [-6.0833, -38.1167],
+  'frutuoso gomes': [-6.1333, -37.8333],
+  'galinhos': [-5.0833, -36.2667],
+  'governador dix sept rosado': [-5.4583, -37.5208],
+  'grossos': [-4.9667, -37.15],
+  'guamare': [-5.1, -36.3167],
+  'ipanguacu': [-5.5, -36.85],
+  'ipueira': [-6.1333, -37.15],
+  'itaja': [-5.65, -36.8667],
+  'itau': [-5.8333, -37.9833],
+  'jacana': [-6.4333, -36.7833],
+  'jandaira': [-5.35, -36.1333],
+  'janduis': [-6.0167, -37.8833],
+  'januario cicco': [-6.1333, -35.5167],
+  'japi': [-6.4833, -35.9333],
+  'jardim de angicos': [-5.6667, -36.2833],
+  'jardim de piranhas': [-6.3833, -37.35],
+  'jardim do serido': [-6.5833, -36.7667],
+  'joao dias': [-6.2667, -37.8],
+  'jose da penha': [-6.3167, -38.2667],
+  'jucurutu': [-6.0333, -37.0167],
+  'jundia': [-5.9333, -35.5667],
+  'lagoa d anta': [-6.1, -35.7833],
+  'lagoa de pedras': [-6.1833, -35.45],
+  'lagoa de velhos': [-6.0167, -35.8667],
+  'lagoa nova': [-6.1, -36.4833],
+  'lajes': [-5.7667, -36.25],
+  'lajes pintadas': [-6.1167, -36.1167],
+  'lucrecia': [-5.9833, -37.8167],
+  'luis gomes': [-6.4167, -38.3833],
+  'major sales': [-6.4, -38.3333],
+  'marcelino vieira': [-6.2833, -38.1333],
+  'martins': [-5.5167, -37.9167],
+  'maxaranguape': [-5.5117, -35.8194],
+  'messias targino': [-6.0833, -35.65],
+  'montanhas': [-6.0833, -35.35],
+  'monte das gameleiras': [-6.4333, -35.7833],
+  'olho d agua do borges': [-5.9833, -37.1333],
+  'ouro branco': [-6.7, -36.95],
+  'parana': [-6.45, -38.3],
+  'parau': [-6.4667, -35.8667],
+  'parazinho': [-5.2167, -35.8667],
+  'parelhas': [-6.6833, -36.65],
+  'rio do fogo': [-5.2667, -35.3833],
+  'passa e fica': [-6.4333, -35.6167],
+  'passagem': [-6.2833, -35.2167],
+  'santa maria': [-5.85, -35.6833],
+  'pedra grande': [-5.1667, -36.1167],
+  'pedra preta': [-5.5167, -36.1167],
+  'pedro avelino': [-5.45, -36.3833],
+  'pedro velho': [-6.4333, -35.2167],
+  'piloes': [-6.2667, -38.05],
+  'poco branco': [-5.6167, -35.4],
+  'portalegre': [-6.0333, -38.0167],
+  'porto do mangue': [-5.0667, -36.7833],
+  'serra caiada': [-6.1167, -35.7167],
+  'pureza': [-5.4667, -35.5667],
+  'rafael fernandes': [-6.2, -38.1167],
+  'rafael godeiro': [-6.0667, -38.1167],
+  'riacho da cruz': [-5.9333, -38.1333],
+  'riacho de santana': [-6.4667, -38.3167],
+  'riachuelo': [-5.4667, -35.8167],
+  'rodolfo fernandes': [-5.7833, -38.0833],
+  'tibau': [-4.8333, -37.0833],
+  'ruy barbosa': [-5.8833, -35.9167],
+  'sao bento do norte': [-5.1833, -36.0833],
+  'sao bento do trairi': [-6.45, -36.0833],
+  'sao fernando': [-6.3833, -37.1833],
+  'sao francisco do oeste': [-5.9833, -38.05],
+  'sao joao do sabugi': [-6.75, -36.8],
+  'sao jose do campestre': [-6.3167, -35.7167],
+  'sao jose do serido': [-6.4167, -36.8833],
+  'sao miguel': [-6.2167, -38.4833],
+  'sao pedro': [-5.8833, -35.6333],
+  'sao rafael': [-6.95, -36.9],
+  'sao vicente': [-6.2167, -36.6833],
+  'senador georgino avelino': [-6.15, -35.4833],
+  'serra de sao bento': [-6.3833, -35.7],
+  'serra do mel': [-5.1167, -37.05],
+  'serra negra do norte': [-6.6167, -37.3833],
+  'serrinha': [-6.2833, -35.4833],
+  'serrinha dos pintos': [-6.1167, -37.9667],
+  'severiano melo': [-5.7833, -37.95],
+  'sitio novo': [-6.0833, -35.2167],
+  'taboleiro grande': [-5.8833, -35.9167],
+  'taipu': [-5.6167, -35.6],
+  'tenente ananias': [-6.4667, -38.1667],
+  'tenente laurentino cruz': [-6.15, -36.7167],
+  'timbauba dos batistas': [-6.7, -37.25],
+  'triunfo potiguar': [-5.8667, -36.2],
+  'upanema': [-5.6833, -37.2667],
+  'varzea': [-6.35, -35.8833],
+  'venha ver': [-6.3167, -36.7167],
+  'vicosa': [-5.9833, -37.9667],
+  'vila flor': [-6.3167, -35.0833]
 };
 
 const DEFAULT_COORDINATES: [number, number] = [-5.7945, -35.211];
@@ -443,13 +578,34 @@ export function resolveListingCoordinates(...parts: Array<string | null | undefi
     }
   }
 
-  for (const [city, coordinates] of Object.entries(CITY_COORDINATES)) {
+  const cityCoords = resolveCityCoordinates(fullText, location.split(',')[0]?.trim() || location);
+  if (cityCoords) {
+    return cityCoords;
+  }
+
+  return DEFAULT_COORDINATES;
+}
+
+function resolveCityCoordinates(fullText: string, primaryCity?: string): [number, number] | null {
+  const sorted = Object.entries(CITY_COORDINATES).sort(([a], [b]) => b.length - a.length);
+  const primary = primaryCity ? normalize(primaryCity) : '';
+
+  if (primary) {
+    for (const [city, coordinates] of sorted) {
+      const cityNorm = normalize(city);
+      if (primary === cityNorm) {
+        return coordinates;
+      }
+    }
+  }
+
+  for (const [city, coordinates] of sorted) {
     if (fullText.includes(normalize(city))) {
       return coordinates;
     }
   }
 
-  return DEFAULT_COORDINATES;
+  return null;
 }
 
 export function isDefaultListingCoordinate(lat: number, lng: number) {

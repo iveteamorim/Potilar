@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import AnunciarForm from '@/components/AnunciarForm';
 import Link from 'next/link';
+import { resolveCityPrefill } from '@/lib/cityPages';
 import { createClient } from '@/lib/supabase/server';
 
 export const metadata: Metadata = {
@@ -21,7 +22,7 @@ function normalizeReferral(ref?: string) {
 export default async function AnunciarPage({
   searchParams
 }: {
-  searchParams?: { ref?: string };
+  searchParams?: { ref?: string; cidade?: string };
 }) {
   let isAuthenticated = false;
   let defaultName = '';
@@ -30,6 +31,7 @@ export default async function AnunciarPage({
   let defaultDocument = '';
   let accountType = 'particular';
   const referralCode = normalizeReferral(searchParams?.ref);
+  const defaultCity = resolveCityPrefill(searchParams?.cidade);
 
   try {
     const supabase = createClient();
@@ -77,6 +79,7 @@ export default async function AnunciarPage({
             defaultEmail={defaultEmail}
             defaultDocument={defaultDocument}
             accountType={accountType}
+            defaultCity={defaultCity}
           />
         ) : (
           <div className="glass-card space-y-4 p-6">

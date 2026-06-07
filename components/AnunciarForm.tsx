@@ -8,6 +8,7 @@ import PrecoJustoRNAdvisor from '@/components/PrecoJustoRNAdvisor';
 import type { Property } from '@/data/properties';
 import { compressImage } from '@/lib/imageCompression';
 import { createClient } from '@/lib/supabase/client';
+import { geocodeListingAddress } from '@/lib/geocodeListing';
 import { KNOWN_CITY_NAMES, normalizeKnownCityName, resolveListingCoordinates } from '@/lib/locationCoordinates';
 import { formatPlaceName as formatDisplayPlaceName } from '@/lib/textFormat';
 import { getActiveListingStatuses, getListingLimitForAccount, getListingLimitLabel } from '@/lib/listingLimits';
@@ -109,32 +110,6 @@ function isValidCpf(value: string) {
   return calculateDigit(9, 10) === Number(digits[9]) && calculateDigit(10, 11) === Number(digits[10]);
 }
 
-async function geocodeListingAddress(parts: {
-  street?: string;
-  neighborhood?: string;
-  community?: string;
-  city?: string;
-}) {
-  try {
-    const response = await fetch('/api/geocode', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(parts)
-    });
-
-    if (!response.ok) return null;
-
-    const data = (await response.json()) as { found?: boolean; lat?: number; lng?: number };
-    if (!data.found || !Number.isFinite(data.lat) || !Number.isFinite(data.lng)) return null;
-
-    return [Number(data.lat), Number(data.lng)] as [number, number];
-  } catch {
-    return null;
-  }
-}
-
 type AnunciarFormProps = {
   referralCode?: string;
   defaultName?: string;
@@ -142,6 +117,7 @@ type AnunciarFormProps = {
   defaultEmail?: string;
   defaultDocument?: string;
   accountType?: string;
+  defaultCity?: string;
 };
 
 export default function AnunciarForm({
@@ -150,7 +126,8 @@ export default function AnunciarForm({
   defaultPhone = '',
   defaultEmail = '',
   defaultDocument = '',
-  accountType = 'particular'
+  accountType = 'particular',
+  defaultCity = ''
 }: AnunciarFormProps) {
   const router = useRouter();
   const cityInputRef = useRef<HTMLInputElement>(null);
@@ -160,7 +137,7 @@ export default function AnunciarForm({
   const [ownerDocument, setOwnerDocument] = useState(formatCpfDocument(defaultDocument));
   const [contactMethods, setContactMethods] = useState<string[]>(['whatsapp']);
   const [title, setTitle] = useState('');
-  const [location, setLocation] = useState('');
+  const [location, setLocation] = useState(defaultCity);
   const [isCityPickerOpen, setIsCityPickerOpen] = useState(false);
   const [street, setStreet] = useState('');
   const [neighborhood, setNeighborhood] = useState('');

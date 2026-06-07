@@ -6,6 +6,7 @@ import { useRef, useState } from 'react';
 import { ChevronDown, Save, Upload, X } from 'lucide-react';
 import { compressImage } from '@/lib/imageCompression';
 import { createClient } from '@/lib/supabase/client';
+import { geocodeListingAddress } from '@/lib/geocodeListing';
 import { KNOWN_CITY_NAMES, normalizeKnownCityName, resolveListingCoordinates } from '@/lib/locationCoordinates';
 import { formatPlaceName as formatDisplayPlaceName } from '@/lib/textFormat';
 
@@ -169,7 +170,14 @@ export default function ListingEditorForm({
       const formattedLocation = formatDisplayPlaceName(normalizeKnownCityName(location));
       const formattedNeighborhood = neighborhood ? formatDisplayPlaceName(neighborhood) : '';
       const formattedCommunity = community ? formatDisplayPlaceName(community) : '';
-      const [lat, lng] = resolveListingCoordinates(formattedLocation, formattedNeighborhood, formattedCommunity, addressExtra);
+      const geocodedCoordinates = await geocodeListingAddress({
+        neighborhood: formattedNeighborhood,
+        community: formattedCommunity,
+        city: formattedLocation
+      });
+      const [lat, lng] =
+        geocodedCoordinates ??
+        resolveListingCoordinates(formattedLocation, formattedNeighborhood, formattedCommunity, addressExtra);
       const cleanedPhone = contactPhone.trim() || null;
       const listingContactPhone = contactMethods.includes('phone') ? cleanedPhone : null;
       const listingContactWhatsapp = contactMethods.includes('whatsapp') ? cleanedPhone : null;

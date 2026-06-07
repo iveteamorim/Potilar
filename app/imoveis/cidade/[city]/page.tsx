@@ -1,8 +1,17 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { notFound } from 'next/navigation';
 import FavoriteAwarePropertyList from '@/components/FavoriteAwarePropertyList';
 import PropertyMap from '@/components/PropertyMapLoader';
 import { BASE_URL } from '@/lib/config';
+import {
+  getCityPagePath,
+  getCitySeoDescription,
+  getCitySeoTitle,
+  getAllCitySlugs,
+  isKnownCitySlug,
+  resolveCityNameFromSlug
+} from '@/lib/cityPages';
 import { fetchApprovedListingRows } from '@/lib/fetchApprovedListings';
 import { listingRowToProperty } from '@/lib/listings';
 import { slugify } from '@/lib/slugify';
@@ -10,8 +19,7 @@ import { createClient } from '@/lib/supabase/server';
 import { orderListingsForDisplay } from '@/lib/propertyOrdering';
 import type { Property } from '@/data/properties';
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
+export const revalidate = 300;
 
 type PublicListingRow = {
   id: string;
@@ -50,14 +58,6 @@ function cityFromLocation(location: string) {
   return location.split(',')[0]?.trim() || location.trim();
 }
 
-function titleFromSlug(value: string) {
-  return decodeURIComponent(value)
-    .split('-')
-    .filter(Boolean)
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(' ');
-}
-
 function toProperty(listing: PublicListingRow) {
   return listingRowToProperty({
     ...listing,
@@ -89,71 +89,186 @@ async function getCityListings(citySlug: string) {
   return orderListingsForDisplay(filtered);
 }
 
+export function generateStaticParams() {
+  return getAllCitySlugs().map((city) => ({ city }));
+}
+
 export async function generateMetadata({ params }: { params: { city: string } }): Promise<Metadata> {
   const citySlug = params.city;
+  if (!isKnownCitySlug(citySlug)) {
+    return { title: 'Cidade nao encontrada' };
+  }
+
+  const cityName = resolveCityNameFromSlug(citySlug)!;
   const listings = await getCityListings(citySlug);
-  const cityName = listings[0] ? cityFromLocation(listings[0].location) : titleFromSlug(citySlug);
+  const description = getCitySeoDescription(cityName, listings.length);
+  const title = getCitySeoTitle(cityName);
 
   return {
-    title: `Imoveis em ${cityName}`,
-    description: `Encontre casas, apartamentos, terrenos, alugueis e temporada em ${cityName}, RN, pela Potilar.`,
+    title,
+    description,
+    keywords: [
+      `imoveis ${cityName}`,
+      `aluguel ${cityName}`,
+      `casas ${cityName} RN`,
+      `apartamentos ${cityName}`,
+      `terrenos ${cityName}`,
+      `temporada ${cityName}`,
+      'imoveis Rio Grande do Norte'
+    ],
     alternates: {
       canonical: `${BASE_URL}/imoveis/cidade/${citySlug}`
     },
     openGraph: {
-      title: `Imoveis em ${cityName} | Potilar`,
-      description: `Anuncios de imoveis em ${cityName}, Rio Grande do Norte, com contato direto.`,
-      url: `${BASE_URL}/imoveis/cidade/${citySlug}`
+      title: `${title} | Potilar`,
+      description,
+      url: `${BASE_URL}/imoveis/cidade/${citySlug}`,
+      type: 'website'
     }
   };
 }
 
+function CityStructuredData({
+  cityName,
+  citySlug,
+  listingCount
+}: {
+  cityName: string;
+  citySlug: string;
+  listingCount: number;
+}) {
+  const pageUrl = `${BASE_URL}/imoveis/cidade/${citySlug}`;
+  const payload = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Inicio', item: BASE_URL },
+          { '@type': 'ListItem', position: 2, name: 'Imoveis', item: `${BASE_URL}/imoveis` },
+          { '@type': 'ListItem', position: 3, name: 'Cidades', item: `${BASE_URL}/imoveis/cidades` },
+          { '@type': 'ListItem', position: 4, name: cityName, item: pageUrl }
+        ]
+      },
+      {
+        '@type': 'CollectionPage',
+        name: getCitySeoTitle(cityName),
+        description: getCitySeoDescription(cityName, listingCount),
+        url: pageUrl,
+        isPartOf: {
+          '@type': 'WebSite',
+          name: 'Potilar',
+          url: BASE_URL
+        }
+      }
+    ]
+  };
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(payload) }}
+    />
+  );
+}
+
 export default async function CityListingsPage({ params }: { params: { city: string } }) {
+  if (!isKnownCitySlug(params.city)) {
+    notFound();
+  }
+
+  const cityName = resolveCityNameFromSlug(params.city)!;
   const listings = await getCityListings(params.city);
-  const cityName = listings[0] ? cityFromLocation(listings[0].location) : titleFromSlug(params.city);
+  const anunciarHref = `/anunciar?cidade=${encodeURIComponent(cityName)}`;
 
   return (
     <main className="section-padding">
+      <CityStructuredData cityName={cityName} citySlug={params.city} listingCount={listings.length} />
+
       <div className="mx-auto max-w-6xl space-y-8">
         <div className="max-w-3xl">
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-ocean-600">Imoveis no RN</p>
           <h1 className="mt-4 text-3xl font-semibold text-slate-900 dark:text-white">
-            Imoveis em {cityName}
+            Imoveis em {cityName}, RN
           </h1>
-          <p className="mt-3 text-sm text-slate-600 dark:text-slate-300">
-            Veja casas, apartamentos, terrenos, alugueis e temporada publicados em {cityName}, Rio Grande do Norte.
+          <p className="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300">
+            {getCitySeoDescription(cityName, listings.length)}
           </p>
           <div className="mt-5 flex flex-wrap gap-3">
-            <Link href="/imoveis" className="rounded-2xl border border-ocean-200 px-5 py-3 text-sm font-semibold text-ocean-700">
-              Ver todos os imoveis
+            <Link
+              href={`/imoveis?city=${encodeURIComponent(cityName)}`}
+              className="rounded-2xl border border-ocean-200 px-5 py-3 text-sm font-semibold text-ocean-700"
+            >
+              Buscar em {cityName}
             </Link>
-            <Link href="/anunciar" className="rounded-2xl bg-ocean-600 px-5 py-3 text-sm font-semibold text-white">
-              Anunciar meu imovel
+            <Link href={anunciarHref} className="rounded-2xl bg-ocean-600 px-5 py-3 text-sm font-semibold text-white">
+              Anunciar em {cityName}
+            </Link>
+            <Link href="/imoveis/cidades" className="rounded-2xl border border-sand-200 px-5 py-3 text-sm font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">
+              Todas as cidades
             </Link>
           </div>
         </div>
 
-        <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
-          <section className="space-y-4">
-            <div>
-              <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Anuncios em {cityName}</h2>
-              <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-                {listings.length} anuncios encontrados.
-              </p>
-            </div>
-            <FavoriteAwarePropertyList items={listings} />
-          </section>
-
-          <aside className="glass-card h-fit p-4 sm:p-6 lg:sticky lg:top-24">
-            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Mapa em {cityName}</h2>
-            <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-              Explore os anuncios publicados na cidade.
+        {listings.length === 0 ? (
+          <section className="glass-card space-y-4 p-8 text-center">
+            <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
+              Ainda nao ha anuncios publicados em {cityName}
+            </h2>
+            <p className="mx-auto max-w-2xl text-sm leading-7 text-slate-600 dark:text-slate-300">
+              Seja o primeiro a anunciar casas, apartamentos, terrenos ou temporada em {cityName}. O primeiro anuncio de
+              particular e gratuito na Potilar, com contato direto entre anunciante e interessado.
             </p>
-            <div className="mt-4">
-              <PropertyMap items={listings} height="420px" />
-            </div>
-          </aside>
-        </div>
+            <Link href={anunciarHref} className="inline-flex rounded-2xl bg-ocean-600 px-6 py-3 text-sm font-semibold text-white">
+              Anunciar gratis em {cityName}
+            </Link>
+          </section>
+        ) : (
+          <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
+            <section className="space-y-4">
+              <div>
+                <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Anuncios em {cityName}</h2>
+                <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+                  {listings.length} anuncio{listings.length === 1 ? '' : 's'} encontrado{listings.length === 1 ? '' : 's'}.
+                </p>
+              </div>
+              <FavoriteAwarePropertyList items={listings} />
+            </section>
+
+            <aside className="glass-card h-fit p-4 sm:p-6 lg:sticky lg:top-24">
+              <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Mapa em {cityName}</h2>
+              <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+                Explore os anuncios publicados na cidade.
+              </p>
+              <div className="mt-4">
+                <PropertyMap items={listings} height="420px" />
+              </div>
+            </aside>
+          </div>
+        )}
+
+        <section className="rounded-3xl border border-sand-200 bg-sand-50 p-6 dark:border-slate-800 dark:bg-slate-950/40">
+          <h2 className="text-base font-semibold text-slate-900 dark:text-white">
+            Por que buscar imoveis em {cityName} na Potilar?
+          </h2>
+          <ul className="mt-3 grid gap-2 text-sm leading-7 text-slate-600 dark:text-slate-300 sm:grid-cols-2">
+            <li>Portal focado no Rio Grande do Norte, com busca por cidade e mapa.</li>
+            <li>Contato direto com proprietarios, corretores e imobiliarias.</li>
+            <li>Aluguel, compra e temporada em um so lugar.</li>
+            <li>Primeiro anuncio de particular gratuito para ajudar o mercado local.</li>
+          </ul>
+          <p className="mt-4 text-xs text-slate-500 dark:text-slate-400">
+            Voce tambem pode explorar{' '}
+            <Link href={getCityPagePath('Natal')} className="font-semibold text-ocean-700">
+              imoveis em Natal
+            </Link>{' '}
+            ou ver{' '}
+            <Link href="/imoveis/cidades" className="font-semibold text-ocean-700">
+              todas as cidades do RN
+            </Link>
+            .
+          </p>
+        </section>
       </div>
     </main>
   );
