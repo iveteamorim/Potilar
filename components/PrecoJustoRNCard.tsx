@@ -34,14 +34,61 @@ function VerdictIcon({ verdict }: { verdict: PriceInsight['verdict'] }) {
 export default function PrecoJustoRNCard({ insight, compact = false }: Props) {
   const styles = getVerdictStyles(insight.verdict);
   const hasData = insight.verdict !== 'insufficient_data' && insight.medianPrice > 0;
+  const rangeStatus =
+    hasData && insight.listingPrice < insight.minPrice
+      ? 'below'
+      : hasData && insight.listingPrice > insight.maxPrice
+        ? 'above'
+        : hasData
+          ? 'inside'
+          : 'unknown';
+  const rangeTitle =
+    rangeStatus === 'below'
+      ? 'Preco abaixo da faixa estimada'
+      : rangeStatus === 'above'
+        ? 'Preco acima da faixa estimada'
+        : rangeStatus === 'inside'
+          ? 'Preco dentro da faixa estimada'
+          : insight.title;
+  const rangeCopy =
+    rangeStatus === 'below'
+      ? `Seu imovel esta anunciado abaixo da faixa estimada para `
+      : rangeStatus === 'above'
+        ? `Seu imovel esta anunciado acima da faixa estimada para `
+        : `Seu imovel esta na faixa estimada para `;
+  const rangeBadge =
+    rangeStatus === 'below'
+      ? 'bg-amber-100 text-amber-950 dark:bg-amber-950/40 dark:text-amber-100'
+      : rangeStatus === 'above'
+        ? 'bg-red-100 text-red-900 dark:bg-red-950/40 dark:text-red-100'
+        : rangeStatus === 'inside'
+          ? 'bg-green-100 text-green-900 dark:bg-green-950/40 dark:text-green-100'
+          : styles.badge;
+  const rangeBorder =
+    rangeStatus === 'below'
+      ? 'border-amber-200 dark:border-amber-900'
+      : rangeStatus === 'above'
+        ? 'border-red-200 dark:border-red-900'
+        : rangeStatus === 'inside'
+          ? 'border-green-200 dark:border-green-900'
+          : styles.border;
   const diffLabel =
     insight.percentVsMedian === 0
       ? 'Dentro da referencia regional'
       : `${insight.percentVsMedian > 0 ? '+' : ''}${insight.percentVsMedian}% ${
           insight.percentVsMedian > 0 ? 'acima' : 'abaixo'
         } da referencia regional`;
+  const diffAmount = hasData ? insight.listingPrice - insight.medianPrice : 0;
+  const diffAmountLabel =
+    diffAmount === 0
+      ? 'R$ 0'
+      : `${diffAmount > 0 ? '+' : '-'}${formatMoney(Math.abs(diffAmount))}`;
   const diffColor =
-    insight.verdict === 'much_above' || insight.verdict === 'above'
+    rangeStatus === 'above'
+      ? 'text-red-700 dark:text-red-200'
+      : rangeStatus === 'below'
+        ? 'text-amber-700 dark:text-amber-200'
+        : insight.verdict === 'much_above' || insight.verdict === 'above'
       ? 'text-amber-700 dark:text-amber-200'
       : insight.verdict === 'much_below'
         ? 'text-sky-700 dark:text-sky-200'
@@ -50,16 +97,16 @@ export default function PrecoJustoRNCard({ insight, compact = false }: Props) {
 
   return (
     <section
-      className={`rounded-2xl border bg-white p-4 shadow-sm dark:bg-slate-900 sm:p-5 ${styles.border}`}
+      className={`rounded-2xl border bg-white p-4 shadow-sm dark:bg-slate-900 sm:p-5 ${rangeBorder}`}
       aria-label="Analise Preco Justo RN"
     >
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-ocean-600">Potilar IA</p>
         </div>
-        <span className={`inline-flex w-fit items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.12em] ${styles.badge}`}>
+        <span className={`inline-flex w-fit items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.12em] ${rangeBadge}`}>
           <VerdictIcon verdict={insight.verdict} />
-          {insight.title}
+          {rangeTitle}
         </span>
       </div>
 
@@ -67,16 +114,19 @@ export default function PrecoJustoRNCard({ insight, compact = false }: Props) {
 
       {hasData ? (
         <p className="mt-3 text-base leading-7 text-slate-700 dark:text-slate-300">
-          Seu imovel esta na faixa estimada para <strong className="text-slate-950 dark:text-white">{insight.scopeLabel}</strong>.
+          {rangeCopy}<strong className="text-slate-950 dark:text-white">{insight.scopeLabel}</strong>.
+          {rangeStatus === 'below' && ' Isso pode atrair mais interessados, mas tambem pode indicar margem para valorizacao.'}
+          {rangeStatus === 'above' && ' Reforce os diferenciais reais do imovel para justificar o valor.'}
         </p>
       ) : (
         <p className="mt-3 text-sm leading-6 text-slate-700 dark:text-slate-300">{insight.summary}</p>
       )}
 
       {hasData && (
-        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+        <div className="mt-4 grid gap-3 sm:grid-cols-3">
           <Stat label="Seu preco" value={formatMoney(insight.listingPrice)} featured />
           <Stat label="Referencia de mercado" value={formatMoney(insight.medianPrice)} featured />
+          <Stat label="Diferenca referencia" value={diffAmountLabel} featured />
         </div>
       )}
 
