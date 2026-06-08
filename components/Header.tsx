@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { Menu, ShieldCheck, UserRound, X } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
-import DarkModeToggle from './DarkModeToggle';
 import Logo from './Logo';
 
 const navigation = [
@@ -78,7 +77,6 @@ export default function Header() {
           >
             Anunciar gratis
           </Link>
-          <DarkModeToggle />
           <button
             type="button"
             onClick={() => setMenuOpen((prev) => !prev)}
