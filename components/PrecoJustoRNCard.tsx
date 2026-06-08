@@ -54,6 +54,13 @@ export default function PrecoJustoRNCard({ insight, compact = false }: Props) {
       <p className="mt-4 text-sm leading-7 text-slate-700 dark:text-slate-300">{insight.summary}</p>
 
       {hasData && (
+        <p className="mt-3 rounded-2xl border border-sand-200 bg-sand-50 px-4 py-3 text-xs leading-6 text-slate-600 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-300">
+          O Preco Justo RN usa a metragem informada e referencias regionais de mercado para estimar uma faixa de preco.
+          O valor final pode variar conforme as caracteristicas e os diferenciais do imovel.
+        </p>
+      )}
+
+      {hasData && (
         <div className={`mt-4 grid gap-3 ${compact ? 'sm:grid-cols-2' : 'sm:grid-cols-4'}`}>
           <Stat label="Seu preco" value={formatMoney(insight.listingPrice)} />
           <Stat label="Referencia mercado" value={formatMoney(insight.medianPrice)} />
@@ -71,7 +78,7 @@ export default function PrecoJustoRNCard({ insight, compact = false }: Props) {
 
       {hasData && insight.isApproximate && (
         <p className="mt-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs leading-6 text-amber-950 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-100">
-          Estimativa aproximada para esta cidade. A referencia e orientativa — confirme com anuncios locais antes de decidir o preco.
+          Estimativa aproximada para esta cidade. A referencia e orientativa; confirme com anuncios locais antes de decidir o preco.
         </p>
       )}
 
