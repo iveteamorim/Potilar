@@ -24,8 +24,7 @@ export default function HeroSearch() {
       <div
         className="absolute inset-0 bg-cover bg-center opacity-70"
         style={{
-          backgroundImage:
-            "url('https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1800&q=80')"
+          backgroundImage: "url('/colourful-mexican-house.jpg')"
         }}
       />
       <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/75 to-slate-950/25" />
