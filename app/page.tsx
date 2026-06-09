@@ -152,18 +152,12 @@ export default async function HomePage() {
       <section className="border-b border-sand-200 bg-white py-8 dark:border-slate-800 dark:bg-slate-950">
         <div className="mx-auto grid max-w-6xl gap-6 px-4 sm:px-6 lg:grid-cols-[1fr_auto] lg:items-center">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.16em] text-ocean-700">Para proprietarios</p>
             <h2 className="mt-2 text-2xl font-semibold leading-tight text-slate-950 dark:text-white sm:text-3xl">
               Tem um imovel no Rio Grande do Norte?
             </h2>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600 dark:text-slate-300">
-              Anuncie gratis na Potilar e fale direto com interessados pelo WhatsApp. O primeiro anuncio e gratuito e passa por revisao de seguranca antes de publicar.
+              Anuncie gratis na Potilar.
             </p>
-            <div className="mt-4 flex flex-wrap gap-2 text-xs font-semibold text-slate-600 dark:text-slate-300">
-              <span className="rounded-full bg-green-50 px-3 py-1.5 text-green-700">Primeiro anuncio gratis</span>
-              <span className="rounded-full bg-ocean-50 px-3 py-1.5 text-ocean-700">Contato direto</span>
-              <span className="rounded-full bg-sand-100 px-3 py-1.5">Casas, terrenos e temporada</span>
-            </div>
           </div>
           <Link
             href="/anunciar"
