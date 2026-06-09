@@ -39,10 +39,10 @@ export default function Footer() {
           </div>
         </div>
         <div>
-          <p className="text-base font-semibold text-slate-900 dark:text-white">Buscas</p>
-          <div className="mt-2 grid gap-2">
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">Buscas</p>
+          <div className="mt-2 grid gap-1.5 text-xs text-slate-500 dark:text-slate-500">
             {SEO_INTENT_PAGES.slice(0, 6).map((page) => (
-              <Link key={page.slug} href={`/imoveis/${page.slug}`}>
+              <Link key={page.slug} href={`/imoveis/${page.slug}`} className="hover:text-ocean-700 dark:hover:text-ocean-300">
                 {page.title}
               </Link>
             ))}
