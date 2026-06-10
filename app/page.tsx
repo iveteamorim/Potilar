@@ -157,13 +157,21 @@ export default async function HomePage() {
             </h2>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600 dark:text-slate-300">
               Anuncie gratis na Potilar.
+              <a
+                href="https://wa.me/5521969724141?text=Ola%2C%20vim%20pelo%20site%20Potilar%20e%20quero%20ajuda%20para%20anunciar%20meu%20imovel."
+                target="_blank"
+                rel="noreferrer"
+                className="mt-2 block text-xs font-semibold text-ocean-700 underline-offset-4 hover:underline dark:text-ocean-300"
+              >
+                Quero ajuda para anunciar meu imovel
+              </a>
             </p>
           </div>
           <Link
             href="/anunciar"
             className="inline-flex w-full items-center justify-center rounded-2xl bg-ocean-700 px-6 py-4 text-sm font-bold text-white shadow-soft transition hover:bg-ocean-800 sm:w-auto"
           >
-            Quero ajuda para publicar meu imovel
+            Anunciar imovel gratis
           </Link>
         </div>
       </section>
