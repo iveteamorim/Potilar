@@ -163,7 +163,7 @@ export default async function HomePage() {
             href="/anunciar"
             className="inline-flex w-full items-center justify-center rounded-2xl bg-ocean-700 px-6 py-4 text-sm font-bold text-white shadow-soft transition hover:bg-ocean-800 sm:w-auto"
           >
-            Anunciar imovel gratis
+            Quero ajuda para publicar meu imovel
           </Link>
         </div>
       </section>
