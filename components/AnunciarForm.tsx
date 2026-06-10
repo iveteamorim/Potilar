@@ -510,7 +510,7 @@ export default function AnunciarForm({
       </div>
 
       <div className="rounded-2xl border border-ocean-100 bg-ocean-50 px-4 py-3 text-xs font-semibold leading-5 text-ocean-800 dark:border-ocean-900 dark:bg-ocean-950/40 dark:text-ocean-100">
-        Contas, anuncios e dados profissionais podem passar por revisao manual de seguranca. A analise normalmente ocorre em ate 24 horas.
+        Envie seu anuncio para publicacao. A analise normalmente ocorre em ate 24 horas.
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">

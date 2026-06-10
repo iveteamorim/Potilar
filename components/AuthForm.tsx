@@ -537,7 +537,7 @@ export default function AuthForm() {
           )}
           {signupEmailSent && (
             <p className="mt-2 text-xs font-medium">
-              Contas, anuncios e dados profissionais podem passar por revisao manual de seguranca. A analise normalmente ocorre em ate 24 horas.
+              Depois de entrar, voce ja pode enviar seu anuncio para publicacao.
             </p>
           )}
         </div>

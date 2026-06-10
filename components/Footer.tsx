@@ -91,9 +91,6 @@ export default function Footer() {
           A Potilar atua como plataforma digital de divulgacao imobiliaria. A negociacao e a formalizacao dos negocios
           sao realizadas diretamente entre proprietarios e interessados.
         </p>
-        <p className="mt-3">
-          Contas, anuncios, dados profissionais e pagamentos podem passar por revisao manual de seguranca, normalmente em ate 24 horas.
-        </p>
       </div>
     </footer>
   );

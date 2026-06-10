@@ -539,7 +539,7 @@ export default async function MinhaContaPage({
         </div>
 
         <p className="border-t border-sand-200 pt-5 text-xs leading-5 text-slate-500 dark:border-slate-800 dark:text-slate-400">
-          Contas, anuncios, dados profissionais e pagamentos podem passar por revisao manual de seguranca. A analise normalmente ocorre em ate 24 horas.
+          Anuncios enviados normalmente sao analisados em ate 24 horas.
         </p>
       </div>
     </main>
