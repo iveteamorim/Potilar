@@ -30,7 +30,7 @@ export default function CitiesIndexPage() {
           </h1>
           <p className="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300">
             A Potilar cobre os {RN_CITY_PAGES.length} municipios do Rio Grande do Norte. Escolha uma cidade para ver
-            anuncios de aluguel, compra e temporada — ou publique o primeiro anuncio da sua regiao.
+            anuncios de aluguel, compra e temporada — ou publique na promocao de lancamento da sua regiao.
           </p>
           <Link
             href="/anunciar"

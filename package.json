@@ -8,7 +8,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "sync:fipezap": "node scripts/sync-fipezap.mjs"
+    "sync:fipezap": "node scripts/sync-fipezap.mjs",
+    "bulk:images": "node scripts/bulk-update-listing-images.mjs",
+    "bulk:images:dry": "node scripts/bulk-update-listing-images.mjs --dry-run"
   },
   "dependencies": {
     "@radix-ui/react-switch": "^1.0.3",

@@ -2,11 +2,12 @@ import type { Metadata } from 'next';
 import AnunciarForm from '@/components/AnunciarForm';
 import Link from 'next/link';
 import { resolveCityPrefill } from '@/lib/cityPages';
+import { PLANS } from '@/lib/plans';
 import { createClient } from '@/lib/supabase/server';
 
 export const metadata: Metadata = {
   title: 'Anunciar imovel gratis',
-  description: 'Anuncie seu primeiro imovel gratis na Potilar. Publique casas, apartamentos, terrenos e temporada no RN.',
+  description: `Anuncie ate ${PLANS.listing.freeListingLimit} imoveis gratis na Potilar. Publique casas, apartamentos, terrenos e temporada no RN.`,
   alternates: {
     canonical: '/anunciar'
   }
@@ -64,10 +65,11 @@ export default async function AnunciarPage({
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-ocean-600">Anunciar</p>
             <h1 className="mt-4 text-3xl font-semibold text-slate-900 dark:text-white">
-              Anuncie gratis seu imovel na Potilar.
+              Anuncie ate {PLANS.listing.freeListingLimit} imoveis gratis na Potilar.
             </h1>
             <p className="mt-3 text-sm text-slate-600 dark:text-slate-300">
-              Complete os dados do imovel, adicione fotos e envie para avaliacao da Potilar.
+              Promocao de lancamento: publique ate {PLANS.listing.freeListingLimit} anuncios gratuitos por conta. Complete os dados,
+              adicione fotos e envie para avaliacao da Potilar.
             </p>
           </div>
         </div>

@@ -12,10 +12,10 @@ export const metadata: Metadata = {
 
 const ownerPlans = [
   {
-    title: '1º Imovel',
+    title: 'Promocao de lancamento',
     price: 'Gratis',
     features: [
-      '1 anuncio ativo',
+      `Ate ${PLANS.listing.freeListingLimit} anuncios ativos gratuitos`,
       `Ate ${PLANS.listing.standardDurationDays} dias de publicacao`,
       'Renovacao gratuita mediante confirmacao',
       'WhatsApp direto',
@@ -102,7 +102,10 @@ const highlightDescriptions: Record<'7_days' | '30_days' | 'super_30_days', { de
 };
 
 const faqs = [
-  ['O primeiro anuncio e realmente gratuito?', 'Sim. Todo proprietario pode publicar gratuitamente o primeiro imovel na plataforma.'],
+  [
+    'Quantos anuncios posso publicar de graca?',
+    `Durante o lancamento, todo proprietario pode publicar ate ${PLANS.listing.freeListingLimit} imoveis gratuitamente na plataforma. A partir do ${PLANS.listing.freeListingLimit + 1}º, cada anuncio adicional custa ${formatPlanPrice(PLANS.listing.additionalPrice)} via Pix.`
+  ],
   ['Preciso de contrato ou fidelidade?', 'Nao. Voce pode cancelar ou deixar de renovar quando desejar.'],
   ['Como recebo contatos?', 'Os interessados entram em contato diretamente pelo WhatsApp informado no anuncio.'],
   ['Posso anunciar terrenos?', 'Sim. Voce pode anunciar casas, apartamentos, terrenos e imoveis para temporada.'],

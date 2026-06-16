@@ -9,6 +9,7 @@ import { listingRowToProperty } from '@/lib/listings';
 import { orderListingsForDisplay } from '@/lib/propertyOrdering';
 import type { Property } from '@/data/properties';
 import Link from 'next/link';
+import { PLANS } from '@/lib/plans';
 import agencyMatchImage from '@/components/ayudamosencontrarimobiliaria.jpg';
 import { dedupeNewsArticles, fallbackNewsArticles, formatNewsDate, getNewsImageUrl, withUniqueNewsImages, type NewsArticle } from '@/data/news';
 
@@ -156,7 +157,7 @@ export default async function HomePage() {
               Tem um imovel no Rio Grande do Norte?
             </h2>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600 dark:text-slate-300">
-              Anuncie gratis na Potilar.
+              Promocao de lancamento: ate {PLANS.listing.freeListingLimit} anuncios gratis por conta na Potilar.
               <a
                 href="https://wa.me/5521969724141?text=Ola%2C%20vim%20pelo%20site%20Potilar%20e%20quero%20ajuda%20para%20anunciar%20meu%20imovel."
                 target="_blank"

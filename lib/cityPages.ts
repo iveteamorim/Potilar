@@ -1,4 +1,5 @@
 ﻿import { cities as RN_CITIES } from '@/data/cities';
+import { PLANS } from '@/lib/plans';
 import { slugify } from '@/lib/slugify';
 
 export type RnCityPage = {
@@ -62,7 +63,7 @@ export function getCitySeoDescription(cityName: string, listingCount: number) {
     return `${listingCount} anuncio${listingCount === 1 ? '' : 's'} de casas, apartamentos, terrenos, aluguel e temporada em ${cityName}, Rio Grande do Norte. Contato direto com anunciantes na Potilar.`;
   }
 
-  return `Busque ou anuncie casas, apartamentos, terrenos, aluguel e temporada em ${cityName}, RN. Portal imobiliario regional com contato direto e primeiro anuncio gratis na Potilar.`;
+  return `Busque ou anuncie casas, apartamentos, terrenos, aluguel e temporada em ${cityName}, RN. Portal imobiliario regional com contato direto e ate ${PLANS.listing.freeListingLimit} anuncios gratis na Potilar.`;
 }
 
 export function getCitySeoTitle(cityName: string) {

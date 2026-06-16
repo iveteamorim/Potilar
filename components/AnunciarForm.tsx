@@ -12,7 +12,7 @@ import { geocodeListingAddress } from '@/lib/geocodeListing';
 import { KNOWN_CITY_NAMES, normalizeKnownCityName, resolveListingCoordinates } from '@/lib/locationCoordinates';
 import { formatPlaceName as formatDisplayPlaceName } from '@/lib/textFormat';
 import { getActiveListingStatuses, getListingLimitForAccount, getListingLimitLabel } from '@/lib/listingLimits';
-import { PLANS, formatPlanPrice } from '@/lib/plans';
+import { PLANS, formatPlanPrice, getFreeListingLimit } from '@/lib/plans';
 
 const PAID_LISTING_PRICE = PLANS.listing.additionalPrice;
 const SEASONAL_LISTING_PRICE = PLANS.listing.seasonalPrice;
@@ -363,8 +363,9 @@ export default function AnunciarForm({
       const formattedLocation = formatDisplayPlaceName(normalizeKnownCityName(location));
       const formattedNeighborhood = neighborhood ? formatDisplayPlaceName(neighborhood) : '';
       const formattedCommunity = community ? formatDisplayPlaceName(community) : '';
-      const alreadyHasFreeListing = !isAdmin && (count ?? 0) >= 1;
-      const requiresListingPix = !isAdmin && (alreadyHasFreeListing || isSeasonal);
+      const freeListingLimit = getFreeListingLimit();
+      const freeSlotsUsed = !isAdmin && (count ?? 0) >= freeListingLimit;
+      const requiresListingPix = !isAdmin && (freeSlotsUsed || isSeasonal);
       const listingPaymentAmount = isSeasonal ? SEASONAL_LISTING_PRICE : PAID_LISTING_PRICE;
 
       if (requiresListingPix && !requiresPayment) {
@@ -372,7 +373,7 @@ export default function AnunciarForm({
         setStatus(
           isSeasonal
             ? `Anuncio de temporada custa ${LISTING_PRICE_LABEL} por ${PLANS.listing.seasonalDurationDays} dias via Pix. Confira os dados e clique novamente para enviar.`
-            : `Voce ja usou seu primeiro anuncio gratis. O proximo custa ${LISTING_PRICE_LABEL} via Pix. Confira os dados e clique novamente para enviar.`
+            : `Voce ja usou os ${freeListingLimit} anuncios gratuitos disponiveis. O proximo custa ${LISTING_PRICE_LABEL} via Pix. Confira os dados e clique novamente para enviar.`
         );
         setIsPublishing(false);
         return;

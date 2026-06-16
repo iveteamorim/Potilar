@@ -3,6 +3,8 @@ export type FeaturedPlanId = '7_days' | '30_days' | 'super_30_days';
 export const PLANS = {
   listing: {
     firstFree: true,
+    /** Promocao de lancamento: anuncios gratuitos por conta antes do Pix */
+    freeListingLimit: 3,
     additionalPrice: 19.9,
     seasonalPrice: 19.9,
     seasonalRenewalPrice: 9.9,
@@ -21,6 +23,10 @@ export const PLANS = {
     plus: { label: 'Plano Imobiliaria Plus', price: 399.9, listingLimit: 100 }
   }
 } as const;
+
+export function getFreeListingLimit() {
+  return PLANS.listing.freeListingLimit;
+}
 
 export function formatPlanPrice(value: number, options?: { perMonth?: boolean }) {
   const formatted = value.toLocaleString('pt-BR', {

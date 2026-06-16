@@ -530,7 +530,9 @@ export default async function MinhaContaPage({
           {(!listings || listings.length === 0) && (
             <div className="glass-card p-8 text-center">
               <p className="text-base font-semibold text-slate-900 dark:text-white">Nenhum anuncio ainda</p>
-              <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">Crie seu primeiro anuncio gratuito.</p>
+              <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+                Publique ate {PLANS.listing.freeListingLimit} anuncios gratuitos na promocao de lancamento.
+              </p>
               <Link href="/anunciar" className="mt-5 inline-flex rounded-2xl bg-ocean-600 px-5 py-3 text-sm font-semibold text-white">
                 Anunciar imovel
               </Link>
