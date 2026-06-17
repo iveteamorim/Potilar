@@ -81,7 +81,11 @@ export default function PrecoJustoRNAdvisor({
     return <div className="glass-card h-36 animate-pulse" />;
   }
 
-  if (!insight || insight.verdict === 'insufficient_data') return null;
+  if (!insight) return null;
+
+  if (insight.verdict === 'insufficient_data' && insight.dataTier !== 'generic_estimate') {
+    return null;
+  }
 
   return <PrecoJustoRNCard insight={insight} compact />;
 }

@@ -1,5 +1,7 @@
 import { ALL_NEIGHBORHOOD_MULTIPLIERS } from '@/data/marketNeighborhoods';
+import { getPotilarListingBenchmark } from '@/lib/marketListingBenchmark';
 import { resolveCityReference } from '@/lib/marketCityCache';
+import type { PriceDataTier } from '@/lib/priceDataTier';
 
 export type MarketCityReference = {
   city: string;
@@ -56,6 +58,15 @@ export function cityFromLocation(location: string) {
   return location.split(',')[0]?.trim() || location.trim();
 }
 
+function neighborhoodsMatch(itemNeighborhood: string, inputNeighborhood: string) {
+  if (itemNeighborhood === inputNeighborhood) return true;
+  if (inputNeighborhood.length < 4) return false;
+  return (
+    itemNeighborhood.startsWith(inputNeighborhood) ||
+    inputNeighborhood.startsWith(itemNeighborhood)
+  );
+}
+
 function findNeighborhoodMultiplier(city: string, neighborhood?: string | null) {
   if (!neighborhood?.trim()) return null;
 
@@ -67,11 +78,7 @@ function findNeighborhoodMultiplier(city: string, neighborhood?: string | null) 
       const itemCity = normalizeText(item.city);
       const itemNeighborhood = normalizeText(item.neighborhood);
       if (itemCity !== cityNorm) return false;
-      return (
-        itemNeighborhood === neighborhoodNorm ||
-        itemNeighborhood.includes(neighborhoodNorm) ||
-        neighborhoodNorm.includes(itemNeighborhood)
-      );
+      return neighborhoodsMatch(itemNeighborhood, neighborhoodNorm);
     }) ?? null
   );
 }
@@ -86,7 +93,8 @@ function estimateAreaSqm(bedrooms?: number, propertyType?: string, areaSqm?: num
   return BEDROOM_AREA_ESTIMATE[bucket] ?? 65;
 }
 
-function bedroomSqmMultiplier(bedrooms?: number) {
+function bedroomSqmMultiplier(bedrooms?: number, hasActualArea = false) {
+  if (hasActualArea) return 1;
   const beds = Number(bedrooms ?? 0);
   const bucket = beds >= 4 ? 4 : beds;
   return BEDROOM_SQM_MULTIPLIER[bucket] ?? 1;
@@ -110,6 +118,9 @@ export type MarketBenchmark = {
   source: string;
   referencePeriod: string;
   isApproximate: boolean;
+  priceUnit: 'monthly' | 'daily' | 'sale';
+  dataTier: PriceDataTier;
+  sampleCount?: number;
 };
 
 export async function getMarketBenchmark(input: {
@@ -120,12 +131,23 @@ export async function getMarketBenchmark(input: {
   bedrooms?: number;
   areaSqm?: number;
 }): Promise<MarketBenchmark | null> {
+  const potilarBenchmark = await getPotilarListingBenchmark(input);
+  if (potilarBenchmark) {
+    return potilarBenchmark;
+  }
+
   const cityRef = await resolveCityReference(input.location);
+
+  if (cityRef.cityDataTier === 'generic') {
+    return null;
+  }
+
   const cityLabel = cityRef.city;
   const neighborhoodMultiplier = findNeighborhoodMultiplier(cityLabel, input.neighborhood);
   const isRent = input.transaction === 'Aluguel';
   const isSeasonal = input.transaction === 'Temporada';
   const isSale = input.transaction === 'Compra';
+  const hasActualArea = Boolean(input.areaSqm && input.areaSqm > 0);
   const areaSqm = estimateAreaSqm(input.bedrooms, input.propertyType, input.areaSqm);
 
   if (input.propertyType === 'Terreno' && isRent) {
@@ -137,42 +159,58 @@ export async function getMarketBenchmark(input: {
   let scopeLabel: string;
   let source: string;
   let referencePeriod: string;
+  let dataTier: PriceDataTier;
 
   if (input.propertyType === 'Terreno' && isSale) {
     pricePerSqm = isCoastalCity(input.location, input.neighborhood) ? LAND_SALE_SQM_COAST : LAND_SALE_SQM;
     scope = neighborhoodMultiplier ? 'neighborhood' : 'city';
     scopeLabel = neighborhoodMultiplier?.neighborhood ?? cityLabel;
-    source = 'Estimativa de mercado (terrenos urbanos no RN)';
+    source = 'Estimativa Potilar para terrenos urbanos (nao e indice oficial)';
     referencePeriod = cityRef.referencePeriod;
+    dataTier = 'land_estimate';
   } else if (neighborhoodMultiplier) {
     const baseSale = cityRef.saleSqm * neighborhoodMultiplier.saleMultiplier;
     const baseRent = cityRef.rentSqm * neighborhoodMultiplier.rentMultiplier;
     pricePerSqm = isRent || isSeasonal ? baseRent : baseSale;
     scope = 'neighborhood';
     scopeLabel = neighborhoodMultiplier.neighborhood;
-    source = neighborhoodMultiplier.source;
+    source =
+      cityRef.cityDataTier === 'fipezap' && isFipeZapNeighborhood(neighborhoodMultiplier.source)
+        ? `FipeZAP Natal com ajuste de bairro (${neighborhoodMultiplier.neighborhood})`
+        : `Estimativa Potilar com ajuste de bairro (${neighborhoodMultiplier.neighborhood})`;
     referencePeriod = cityRef.referencePeriod;
+    dataTier =
+      cityRef.cityDataTier === 'fipezap' && isFipeZapNeighborhood(neighborhoodMultiplier.source)
+        ? 'fipezap_neighborhood'
+        : 'calibrated_estimate';
   } else {
     pricePerSqm = isRent || isSeasonal ? cityRef.rentSqm : cityRef.saleSqm;
-    scope = cityLabel === 'Rio Grande do Norte' ? 'state' : 'city';
+    scope = 'city';
     scopeLabel = cityLabel;
-    source = cityRef.source;
+    source =
+      cityRef.cityDataTier === 'fipezap'
+        ? 'Indice FipeZAP (Zap, Viva Real, OLX) - Natal'
+        : `Estimativa Potilar (modelo regional - ${cityLabel})`;
     referencePeriod = cityRef.referencePeriod;
+    dataTier = cityRef.cityDataTier === 'fipezap' ? 'fipezap_city' : 'calibrated_estimate';
   }
 
   const typeMultiplier = isRent || isSeasonal
     ? PROPERTY_TYPE_RENT_MULTIPLIER[input.propertyType] ?? 1
     : PROPERTY_TYPE_SALE_MULTIPLIER[input.propertyType] ?? 1;
 
-  pricePerSqm = Math.round(pricePerSqm * typeMultiplier * bedroomSqmMultiplier(input.bedrooms));
+  pricePerSqm = Math.round(pricePerSqm * typeMultiplier * bedroomSqmMultiplier(input.bedrooms, hasActualArea));
 
   let benchmarkPrice = Math.round(pricePerSqm * areaSqm);
+  let priceUnit: MarketBenchmark['priceUnit'] = isSale ? 'sale' : 'monthly';
 
   if (isSeasonal) {
-    benchmarkPrice = Math.round((pricePerSqm * areaSqm) / 30);
+    benchmarkPrice = Math.round(benchmarkPrice / 30);
+    pricePerSqm = Math.round((pricePerSqm / 30) * 100) / 100;
+    priceUnit = 'daily';
   }
 
-  const isApproximate = cityRef.isApproximate ?? (scope === 'state' || scope === 'neighborhood');
+  const isApproximate = dataTier === 'calibrated_estimate' || dataTier === 'land_estimate';
   const spread = isApproximate ? (isSeasonal ? 0.28 : 0.22) : isSeasonal ? 0.2 : 0.12;
   const minPrice = Math.round(benchmarkPrice * (1 - spread));
   const maxPrice = Math.round(benchmarkPrice * (1 + spread));
@@ -187,6 +225,12 @@ export async function getMarketBenchmark(input: {
     maxPrice,
     source,
     referencePeriod,
-    isApproximate
+    isApproximate,
+    priceUnit,
+    dataTier
   };
+}
+
+function isFipeZapNeighborhood(source: string) {
+  return source.toLowerCase().includes('fipezap');
 }

@@ -1,4 +1,10 @@
 import { cityFromLocation, getMarketBenchmark } from '@/lib/marketReference';
+import { resolveCityReference } from '@/lib/marketCityCache';
+import {
+  canShowPriceComparison,
+  getDataTierLabel,
+  type PriceDataTier
+} from '@/lib/priceDataTier';
 
 export type PriceVerdict = 'much_below' | 'below' | 'fair' | 'above' | 'much_above' | 'insufficient_data';
 
@@ -16,6 +22,9 @@ export type PriceInsight = {
   source: string;
   referencePeriod: string;
   isApproximate: boolean;
+  priceUnit: 'monthly' | 'daily' | 'sale';
+  dataTier: PriceDataTier;
+  sampleCount?: number;
   title: string;
   summary: string;
   tip?: string;
@@ -39,7 +48,13 @@ function formatMoney(value: number) {
   }).format(value);
 }
 
-function getVerdict(percentVsMedian: number, isApproximate = false): PriceVerdict {
+function isEstimateTier(tier: PriceDataTier) {
+  return tier === 'calibrated_estimate' || tier === 'land_estimate';
+}
+
+function getVerdict(percentVsMedian: number, dataTier: PriceDataTier): PriceVerdict {
+  const isApproximate = isEstimateTier(dataTier);
+
   if (isApproximate) {
     if (percentVsMedian <= -25) return 'much_below';
     if (percentVsMedian < -10) return 'below';
@@ -69,6 +84,7 @@ function buildInsightCopy(
     source: string;
     referencePeriod: string;
     isApproximate: boolean;
+    dataTier: PriceDataTier;
   }
 ): Pick<PriceInsight, 'title' | 'summary' | 'tip'> {
   const priceLabel = formatMoney(input.price);
@@ -83,46 +99,67 @@ function buildInsightCopy(
 
   const unitNote =
     input.transaction === 'Temporada'
-      ? `Referencia diaria estimada com base em aluguel de R$ ${benchmark.pricePerSqm}/m2 e ${benchmark.estimatedAreaSqm} m2.`
-      : `Referencia com base em R$ ${benchmark.pricePerSqm}/m2 e ${benchmark.estimatedAreaSqm} m2 estimados.`;
+      ? `Referencia diaria estimada com base em R$ ${benchmark.pricePerSqm}/m2 por dia e ${benchmark.estimatedAreaSqm} m2.`
+      : input.transaction === 'Compra'
+        ? `Referencia com base em R$ ${benchmark.pricePerSqm}/m2 de venda e ${benchmark.estimatedAreaSqm} m2.`
+        : `Referencia com base em R$ ${benchmark.pricePerSqm}/m2 de aluguel mensal e ${benchmark.estimatedAreaSqm} m2.`;
 
-  const approxNote = benchmark.isApproximate
-    ? 'Estimativa aproximada para cidades do interior — use como orientacao, nao como avaliacao oficial. '
-    : '';
-  const baseContext = `${approxNote}${unitNote} Faixa de mercado ${scopeText}: ${rangeLabel}. Referencia central: ${referenceLabel}. Fonte: ${benchmark.source} (${benchmark.referencePeriod}).`;
+  const approxNote = isEstimateTier(benchmark.dataTier)
+    ? 'Estimativa Potilar (nao e indice oficial). '
+    : benchmark.dataTier === 'potilar_listings'
+      ? 'Comparacao com anuncios reais publicados na Potilar. '
+      : '';
+  const baseContext = `${approxNote}${unitNote} Faixa ${scopeText}: ${rangeLabel}. Referencia central: ${referenceLabel}. ${benchmark.source}${benchmark.referencePeriod ? ` (${benchmark.referencePeriod})` : ''}.`;
 
   switch (verdict) {
     case 'much_below':
       return {
-        title: benchmark.isApproximate ? 'Preco abaixo da estimativa regional' : 'Preco bem abaixo do mercado online',
+        title: benchmark.dataTier === 'fipezap_city' || benchmark.dataTier === 'fipezap_neighborhood'
+          ? 'Preco bem abaixo do indice FipeZAP'
+          : benchmark.dataTier === 'potilar_listings'
+            ? 'Preco bem abaixo dos anuncios na Potilar'
+            : 'Preco abaixo da estimativa Potilar',
         summary: `Voce pede ${priceLabel}, abaixo da referencia ${scopeText}. ${baseContext}`,
-        tip: benchmark.isApproximate
-          ? 'No interior do RN os valores variam muito. Confirme com outros anuncios da mesma cidade antes de ajustar.'
-          : 'Valores muito abaixo do mercado podem gerar desconfianca. Confirme o preco e destaque diferenciais reais do imovel.'
+        tip:
+          benchmark.dataTier === 'potilar_listings'
+            ? 'Compare tambem com portais externos - a amostra na Potilar ainda pode ser pequena.'
+            : isEstimateTier(benchmark.dataTier)
+              ? 'No interior do RN os valores variam muito. Confirme com anuncios locais antes de ajustar.'
+              : 'Valores muito abaixo do mercado podem gerar desconfianca. Confirme o preco e destaque diferenciais reais do imovel.'
       };
     case 'below':
       return {
-        title: benchmark.isApproximate ? 'Preco um pouco abaixo da estimativa' : 'Preco abaixo da referencia de mercado',
+        title:
+          benchmark.dataTier === 'potilar_listings'
+            ? 'Preco abaixo dos anuncios na Potilar'
+            : isEstimateTier(benchmark.dataTier)
+              ? 'Preco um pouco abaixo da estimativa'
+              : 'Preco abaixo da referencia FipeZAP',
         summary: `Voce pede ${priceLabel}, abaixo da referencia ${scopeText}. ${baseContext}`,
         tip: 'Bom para atrair contatos rapidamente, principalmente em aluguel e temporada.'
       };
     case 'fair':
       return {
-        title: benchmark.isApproximate ? 'Preco dentro da faixa estimada' : 'Preco alinhado ao mercado do RN',
+        title:
+          benchmark.dataTier === 'potilar_listings'
+            ? 'Preco alinhado aos anuncios na Potilar'
+            : isEstimateTier(benchmark.dataTier)
+              ? 'Preco dentro da faixa estimada'
+              : 'Preco alinhado ao indice FipeZAP',
         summary: `Voce pede ${priceLabel}, proximo da referencia ${scopeText}. ${baseContext}`,
-        tip: benchmark.isApproximate
-          ? 'Para cidades pequenas, compare tambem com anuncios locais na Potilar e em portais da regiao.'
-          : 'Valor competitivo frente aos anuncios publicados na internet na mesma regiao.'
+        tip: isEstimateTier(benchmark.dataTier)
+          ? 'Estimativa orientativa - confirme com portais e anuncios locais.'
+          : 'Valor competitivo frente a referencias publicadas na internet na mesma regiao.'
       };
     case 'above':
       return {
-        title: 'Preco acima da referencia de mercado',
+        title: 'Preco acima da referencia',
         summary: `Voce pede ${priceLabel}, acima da referencia ${scopeText}. ${baseContext}`,
         tip: 'Se o imovel tiver diferenciais reais (vista, suite, mobilia, garagem), deixe isso claro na descricao e nas fotos.'
       };
     case 'much_above':
       return {
-        title: 'Preco bem acima do mercado online',
+        title: 'Preco bem acima da referencia',
         summary: `Voce pede ${priceLabel}, bem acima da referencia ${scopeText}. ${baseContext}`,
         tip: 'Valores muito altos costumam reduzir contatos. Considere ajustar ou reforcar o que justifica o preco.'
       };
@@ -153,15 +190,64 @@ export async function buildPriceInsight(input: PriceInsightInput): Promise<Price
       source: '',
       referencePeriod: '',
       isApproximate: false,
+      priceUnit: 'monthly',
+      dataTier: 'none',
       title: 'Informe preco, cidade, tipo e negociacao',
       summary: 'Preencha os dados do anuncio para comparar com referencias de mercado online no RN.',
       tip: 'Quanto mais completo o cadastro (bairro, metragem, quartos), melhor a leitura de preco.'
     };
   }
 
+  const cityRef = await resolveCityReference(input.location);
   const benchmark = await getMarketBenchmark(input);
 
   if (!benchmark) {
+    if (input.propertyType === 'Terreno' && input.transaction === 'Aluguel') {
+      return {
+        verdict: 'insufficient_data',
+        listingPrice: input.price,
+        medianPrice: 0,
+        minPrice: 0,
+        maxPrice: 0,
+        percentVsMedian: 0,
+        scope: 'city',
+        scopeLabel: cityLabel,
+        pricePerSqm: 0,
+        estimatedAreaSqm: 0,
+        source: '',
+        referencePeriod: '',
+        isApproximate: false,
+        priceUnit: 'monthly',
+        dataTier: 'none',
+        title: 'Referencia indisponivel para este tipo',
+        summary: 'Nao ha referencia publica consolidada para aluguel de terreno nesta regiao.',
+        tip: 'Para terrenos, compare com anuncios semelhantes na mesma rua ou loteamento.'
+      };
+    }
+
+    if (cityRef.cityDataTier === 'generic') {
+      return {
+        verdict: 'insufficient_data',
+        listingPrice: input.price,
+        medianPrice: 0,
+        minPrice: 0,
+        maxPrice: 0,
+        percentVsMedian: 0,
+        scope: 'city',
+        scopeLabel: cityLabel,
+        pricePerSqm: 0,
+        estimatedAreaSqm: 0,
+        source: getDataTierLabel('generic_estimate'),
+        referencePeriod: '',
+        isApproximate: true,
+        priceUnit: 'monthly',
+        dataTier: 'generic_estimate',
+        title: 'Sem dados confiaveis nesta cidade',
+        summary: `Nao ha indice FipeZAP nem anuncios suficientes na Potilar em ${cityLabel} para comparar automaticamente. Consulte portais locais (OLX, Zap, imobiliarias) antes de definir o preco.`,
+        tip: 'Quando houver mais anuncios reais na sua cidade, a Potilar podera comparar com dados locais.'
+      };
+    }
+
     return {
       verdict: 'insufficient_data',
       listingPrice: input.price,
@@ -176,9 +262,34 @@ export async function buildPriceInsight(input: PriceInsightInput): Promise<Price
       source: '',
       referencePeriod: '',
       isApproximate: false,
-      title: 'Referencia indisponivel para este tipo',
-      summary: 'Nao ha referencia publica consolidada para aluguel de terreno nesta regiao.',
-      tip: 'Para terrenos, compare com anuncios semelhantes na mesma rua ou loteamento.'
+      priceUnit: 'monthly',
+      dataTier: 'none',
+      title: 'Referencia indisponivel',
+      summary: 'Nao foi possivel calcular uma referencia para este anuncio.',
+      tip: 'Verifique cidade, metragem, tipo e negociacao.'
+    };
+  }
+
+  if (!canShowPriceComparison(benchmark.dataTier)) {
+    return {
+      verdict: 'insufficient_data',
+      listingPrice: input.price,
+      medianPrice: 0,
+      minPrice: 0,
+      maxPrice: 0,
+      percentVsMedian: 0,
+      scope: benchmark.scope,
+      scopeLabel: benchmark.scopeLabel,
+      pricePerSqm: 0,
+      estimatedAreaSqm: benchmark.estimatedAreaSqm,
+      source: benchmark.source,
+      referencePeriod: benchmark.referencePeriod,
+      isApproximate: true,
+      priceUnit: benchmark.priceUnit,
+      dataTier: benchmark.dataTier,
+      title: 'Sem dados confiaveis',
+      summary: benchmark.source,
+      tip: 'Compare manualmente com anuncios da regiao.'
     };
   }
 
@@ -186,7 +297,7 @@ export async function buildPriceInsight(input: PriceInsightInput): Promise<Price
     benchmark.benchmarkPrice > 0
       ? Math.round(((input.price - benchmark.benchmarkPrice) / benchmark.benchmarkPrice) * 100)
       : 0;
-  const verdict = getVerdict(percentVsMedian, benchmark.isApproximate);
+  const verdict = getVerdict(percentVsMedian, benchmark.dataTier);
   const copy = buildInsightCopy(verdict, input, benchmark);
 
   return {
@@ -203,6 +314,9 @@ export async function buildPriceInsight(input: PriceInsightInput): Promise<Price
     source: benchmark.source,
     referencePeriod: benchmark.referencePeriod,
     isApproximate: benchmark.isApproximate,
+    priceUnit: benchmark.priceUnit,
+    dataTier: benchmark.dataTier,
+    sampleCount: benchmark.sampleCount,
     ...copy
   };
 }

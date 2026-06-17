@@ -10,6 +10,11 @@ export type MarketCityReference = {
   isApproximate?: boolean;
 };
 
+export type ResolvedCityReference = MarketCityReference & {
+  syncedAt?: string;
+  cityDataTier: 'fipezap' | 'calibrated' | 'generic';
+};
+
 export type CachedCityBenchmark = MarketCityReference & {
   cityKey: string;
   syncedAt: string;
@@ -104,7 +109,7 @@ export const RN_CITY_MULTIPLIERS: Array<{
     city: 'Mossoro',
     saleMultiplier: 0.67,
     rentMultiplier: 0.69,
-    source: 'FipeZAP / portais imobiliarios (interior)'
+    source: 'Estimativa Potilar (modelo regional - base Natal)'
   },
   {
     cityKey: 'macau-rn',
@@ -133,6 +138,13 @@ export const RN_CITY_MULTIPLIERS: Array<{
     saleMultiplier: 0.52,
     rentMultiplier: 0.54,
     source: 'Portais imobiliarios / agreste norte'
+  },
+  {
+    cityKey: 'santana-do-matos-rn',
+    city: 'Santana do Matos',
+    saleMultiplier: 0.42,
+    rentMultiplier: 0.28,
+    source: 'Estimativa regional (portais / agreste central)'
   },
   // Serido e central
   {
@@ -281,49 +293,55 @@ export const RN_CITY_MULTIPLIERS: Array<{
   {
     cityKey: 'monte-alegre-rn',
     city: 'Monte Alegre',
-    saleMultiplier: 0.38,
-    rentMultiplier: 0.36,
+    saleMultiplier: 0.35,
+    rentMultiplier: 0.22,
     source: 'Estimativa regional (portais / interior pequeno)'
   },
   {
     cityKey: 'serra-do-mel-rn',
     city: 'Serra do Mel',
-    saleMultiplier: 0.36,
-    rentMultiplier: 0.34,
+    saleMultiplier: 0.33,
+    rentMultiplier: 0.2,
     source: 'Estimativa regional (portais / interior pequeno)'
   },
   {
     cityKey: 'venha-ver-rn',
     city: 'Venha-Ver',
-    saleMultiplier: 0.37,
-    rentMultiplier: 0.35,
+    saleMultiplier: 0.34,
+    rentMultiplier: 0.21,
     source: 'Estimativa regional (portais / interior pequeno)'
   },
   {
     cityKey: 'jardim-do-serido-rn',
     city: 'Jardim do Serido',
-    saleMultiplier: 0.38,
-    rentMultiplier: 0.36,
+    saleMultiplier: 0.35,
+    rentMultiplier: 0.22,
     source: 'Estimativa regional (portais / interior pequeno)'
   },
   {
     cityKey: 'sao-tome-rn',
     city: 'Sao Tome',
-    saleMultiplier: 0.37,
-    rentMultiplier: 0.35,
+    saleMultiplier: 0.34,
+    rentMultiplier: 0.21,
     source: 'Estimativa regional (portais / interior pequeno)'
   },
   {
     cityKey: 'serra-caiada-rn',
     city: 'Serra Caiada',
-    saleMultiplier: 0.39,
-    rentMultiplier: 0.37,
+    saleMultiplier: 0.36,
+    rentMultiplier: 0.23,
     source: 'Estimativa regional (portais / interior pequeno)'
   }
 ];
 
 /** Interior sem cidade calibrada: estimativa conservadora (nao usar % alto de Natal). */
-const RN_STATE_FALLBACK_MULTIPLIER = { sale: 0.4, rent: 0.38 };
+const RN_STATE_FALLBACK_MULTIPLIER = { sale: 0.35, rent: 0.25 };
+
+export const APPROXIMATE_CITY_KEYS = new Set(RN_CITY_MULTIPLIERS.map((item) => item.cityKey));
+
+function isFipeZapSource(source: string) {
+  return source.toLowerCase().includes('fipezap');
+}
 
 function deriveRegionalCities(natal: CachedCityBenchmark): CachedCityBenchmark[] {
   return RN_CITY_MULTIPLIERS.map((item) => ({
@@ -400,7 +418,7 @@ export async function getNatalBenchmark(): Promise<CachedCityBenchmark> {
   return rows.find((row) => row.cityKey === 'natal-rn') ?? STATIC_NATAL_FALLBACK;
 }
 
-export async function resolveCityReference(location: string): Promise<MarketCityReference & { syncedAt?: string }> {
+export async function resolveCityReference(location: string): Promise<ResolvedCityReference> {
   const cityLabel = location.split(',')[0]?.trim() || location.trim();
   const normalized = cityLabel
     .toLowerCase()
@@ -421,9 +439,21 @@ export async function resolveCityReference(location: string): Promise<MarketCity
   });
 
   if (direct) {
+    const cityDataTier: ResolvedCityReference['cityDataTier'] =
+      direct.cityKey === 'natal-rn' && isFipeZapSource(direct.source)
+        ? 'fipezap'
+        : APPROXIMATE_CITY_KEYS.has(direct.cityKey)
+          ? 'calibrated'
+          : isFipeZapSource(direct.source)
+            ? 'fipezap'
+            : 'calibrated';
+
+    const isApproximate = cityDataTier !== 'fipezap';
+
     return {
       ...direct,
-      isApproximate: direct.cityKey !== 'natal-rn'
+      isApproximate,
+      cityDataTier
     };
   }
 
@@ -434,9 +464,10 @@ export async function resolveCityReference(location: string): Promise<MarketCity
     state: 'RN',
     saleSqm: Math.round(natal.saleSqm * RN_STATE_FALLBACK_MULTIPLIER.sale),
     rentSqm: Math.round(natal.rentSqm * RN_STATE_FALLBACK_MULTIPLIER.rent * 100) / 100,
-    source: 'Estimativa aproximada do interior do RN (sem dados especificos da cidade)',
+    source: 'Sem indice oficial para esta cidade - nao usamos comparacao automatica',
     referencePeriod: natal.referencePeriod,
     syncedAt: natal.syncedAt,
-    isApproximate: true
+    isApproximate: true,
+    cityDataTier: 'generic'
   };
 }
