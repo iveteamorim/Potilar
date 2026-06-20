@@ -12,7 +12,7 @@ import { geocodeListingAddress } from '@/lib/geocodeListing';
 import { KNOWN_CITY_NAMES, normalizeKnownCityName, resolveListingCoordinates } from '@/lib/locationCoordinates';
 import { formatPlaceName as formatDisplayPlaceName } from '@/lib/textFormat';
 import { getActiveListingStatuses, getListingLimitForAccount, getListingLimitLabel } from '@/lib/listingLimits';
-import { PLANS, formatPlanPrice, getFreeListingLimit } from '@/lib/plans';
+import { PLANS, formatPlanPrice, getFreeListingLimit, getLaunchPromoDeadlineLabel, isLaunchPromoActive } from '@/lib/plans';
 
 const PAID_LISTING_PRICE = PLANS.listing.additionalPrice;
 const SEASONAL_LISTING_PRICE = PLANS.listing.seasonalPrice;
@@ -373,7 +373,9 @@ export default function AnunciarForm({
         setStatus(
           isSeasonal
             ? `Anuncio de temporada custa ${LISTING_PRICE_LABEL} por ${PLANS.listing.seasonalDurationDays} dias via Pix. Confira os dados e clique novamente para enviar.`
-            : `Voce ja usou os ${freeListingLimit} anuncios gratuitos disponiveis. O proximo custa ${LISTING_PRICE_LABEL} via Pix. Confira os dados e clique novamente para enviar.`
+            : isLaunchPromoActive()
+              ? `Voce ja usou os ${freeListingLimit} anuncios gratuitos da promocao (valida ate ${getLaunchPromoDeadlineLabel()}). O proximo custa ${LISTING_PRICE_LABEL} via Pix. Confira os dados e clique novamente para enviar.`
+              : `Voce ja usou seu anuncio gratuito. O proximo custa ${LISTING_PRICE_LABEL} via Pix. Confira os dados e clique novamente para enviar.`
         );
         setIsPublishing(false);
         return;

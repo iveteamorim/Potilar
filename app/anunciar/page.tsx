@@ -2,16 +2,21 @@ import type { Metadata } from 'next';
 import AnunciarForm from '@/components/AnunciarForm';
 import Link from 'next/link';
 import { resolveCityPrefill } from '@/lib/cityPages';
-import { PLANS } from '@/lib/plans';
+import { getFreeListingLimit, getLaunchPromoDeadlineLabel, isLaunchPromoActive } from '@/lib/plans';
 import { createClient } from '@/lib/supabase/server';
 
-export const metadata: Metadata = {
-  title: 'Anunciar imovel gratis',
-  description: `Anuncie ate ${PLANS.listing.freeListingLimit} imoveis gratis na Potilar. Publique casas, apartamentos, terrenos e temporada no RN.`,
-  alternates: {
-    canonical: '/anunciar'
-  }
-};
+export function generateMetadata(): Metadata {
+  const promoActive = isLaunchPromoActive();
+  return {
+    title: 'Anunciar imovel gratis',
+    description: promoActive
+      ? `Anuncie ate ${getFreeListingLimit()} imoveis gratis ate ${getLaunchPromoDeadlineLabel()} na Potilar. Publique casas, apartamentos, terrenos e temporada no RN.`
+      : 'Anuncie seu primeiro imovel gratis na Potilar. Publique casas, apartamentos, terrenos e temporada no RN.',
+    alternates: {
+      canonical: '/anunciar'
+    }
+  };
+}
 
 const VALID_REFERRALS = new Set(['arthur', 'isis']);
 
@@ -58,6 +63,10 @@ export default async function AnunciarPage({
     isAuthenticated = false;
   }
 
+  const promoActive = isLaunchPromoActive();
+  const freeLimit = getFreeListingLimit();
+  const promoDeadline = getLaunchPromoDeadlineLabel();
+
   return (
     <main className="section-padding">
       <div className="mx-auto max-w-6xl grid gap-10 lg:grid-cols-[1fr_1.1fr]">
@@ -65,11 +74,14 @@ export default async function AnunciarPage({
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-ocean-600">Anunciar</p>
             <h1 className="mt-4 text-3xl font-semibold text-slate-900 dark:text-white">
-              Anuncie ate {PLANS.listing.freeListingLimit} imoveis gratis na Potilar.
+              {promoActive
+                ? `Anuncie ate ${freeLimit} imoveis gratis ate ${promoDeadline}.`
+                : 'Anuncie seu primeiro imovel gratis na Potilar.'}
             </h1>
             <p className="mt-3 text-sm text-slate-600 dark:text-slate-300">
-              Promocao de lancamento: publique ate {PLANS.listing.freeListingLimit} anuncios gratuitos por conta. Complete os dados,
-              adicione fotos e envie para avaliacao da Potilar.
+              {promoActive
+                ? `Promocao de lancamento valida ate ${promoDeadline}: publique ate ${freeLimit} anuncios gratuitos por conta. Complete os dados, adicione fotos e envie para avaliacao da Potilar.`
+                : 'Complete os dados do imovel, adicione fotos e envie para avaliacao da Potilar.'}
             </p>
           </div>
         </div>

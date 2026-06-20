@@ -1,4 +1,5 @@
 import type { Property } from '@/data/properties';
+import { isActiveFeaturedListing } from './listingLifecycle';
 import { isDefaultListingCoordinate, isKnownCityCenterCoordinate, resolveListingCoordinates } from './locationCoordinates';
 import { formatPlaceName } from './textFormat';
 
@@ -53,14 +54,7 @@ export function listingRowToProperty(row: ListingRow): Property {
   const formattedCommunity = row.community ? formatPlaceName(row.community) : undefined;
   const formattedAddressExtra = row.address_extra ? formatPlaceName(row.address_extra) : undefined;
   const now = Date.now();
-  const featuredStartsAt = row.featured_starts_at ? new Date(row.featured_starts_at).getTime() : null;
-  const featuredExpiresAt = row.featured_expires_at ? new Date(row.featured_expires_at).getTime() : null;
-  const hasFeaturedDates = Boolean(featuredStartsAt && featuredExpiresAt);
-  const isFeatured = Boolean(
-    row.featured_plan &&
-      row.featured_payment_status === 'confirmed' &&
-      (!hasFeaturedDates || (featuredStartsAt! <= now && featuredExpiresAt! > now))
-  );
+  const isFeatured = isActiveFeaturedListing(row, now);
   const resolvedFromAddress = resolveListingCoordinates(
     row.location,
     row.neighborhood,

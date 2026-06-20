@@ -3,12 +3,18 @@ export type FeaturedPlanId = '7_days' | '30_days' | 'super_30_days';
 export const PLANS = {
   listing: {
     firstFree: true,
-    /** Promocao de lancamento: anuncios gratuitos por conta antes do Pix */
-    freeListingLimit: 3,
+    /** Promocao de lancamento ate setembro/2026 */
+    launchPromo: {
+      freeListingLimit: 3,
+      /** Fim da promo: 30/set/2026 23:59 (horario de Brasilia) */
+      endsAtIso: '2026-10-01T02:59:59.999Z'
+    },
+    /** Apos a promo de lancamento */
+    standardFreeListingLimit: 1,
     additionalPrice: 19.9,
     seasonalPrice: 19.9,
     seasonalRenewalPrice: 9.9,
-    standardDurationDays: 90,
+    standardDurationDays: 60,
     seasonalDurationDays: 60,
     seasonalRenewalNoticeDays: 7
   },
@@ -24,8 +30,25 @@ export const PLANS = {
   }
 } as const;
 
-export function getFreeListingLimit() {
-  return PLANS.listing.freeListingLimit;
+export function isLaunchPromoActive(now = new Date()) {
+  const endsAt = new Date(PLANS.listing.launchPromo.endsAtIso).getTime();
+  return Number.isFinite(endsAt) && now.getTime() < endsAt;
+}
+
+export function getFreeListingLimit(now = new Date()) {
+  return isLaunchPromoActive(now)
+    ? PLANS.listing.launchPromo.freeListingLimit
+    : PLANS.listing.standardFreeListingLimit;
+}
+
+export function getLaunchPromoDeadlineLabel() {
+  return 'setembro de 2026';
+}
+
+export function getLaunchPromoShortLabel() {
+  return isLaunchPromoActive()
+    ? `3 anuncios gratis ate ${getLaunchPromoDeadlineLabel()}`
+    : '1 anuncio gratis';
 }
 
 export function formatPlanPrice(value: number, options?: { perMonth?: boolean }) {
@@ -43,4 +66,11 @@ export function getHighlightPrice(plan: FeaturedPlanId) {
 
 export function getHighlightLabel(plan: FeaturedPlanId) {
   return PLANS.highlights[plan].label;
+}
+
+export function getHighlightDurationDays(plan?: string | null) {
+  if (plan === '7_days') return PLANS.highlights['7_days'].days;
+  if (plan === '30_days') return PLANS.highlights['30_days'].days;
+  if (plan === 'super_30_days') return PLANS.highlights.super_30_days.days;
+  return PLANS.highlights['30_days'].days;
 }

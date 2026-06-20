@@ -2,8 +2,13 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import AlertsManager from '@/components/AlertsManager';
 import { createClient } from '@/lib/supabase/server';
+import { SEARCH_ALERTS_ENABLED } from '@/lib/config';
 
 export default async function AlertasPage() {
+  if (!SEARCH_ALERTS_ENABLED) {
+    redirect('/mi-cuenta');
+  }
+
   const supabase = createClient();
   const {
     data: { user }
@@ -20,7 +25,8 @@ export default async function AlertasPage() {
           </Link>
           <h1 className="mt-4 text-3xl font-semibold text-slate-900 dark:text-white">Meus alertas</h1>
           <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-            Buscas salvas para acompanhar imoveis no RN. Abra os resultados quando quiser conferir novidades.
+            Buscas salvas na sua conta. Abra os resultados quando quiser conferir novidades — ainda sem e-mail ou
+            notificacao automatica.
           </p>
         </div>
         <AlertsManager />

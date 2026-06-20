@@ -3,7 +3,7 @@
 --
 -- Regra Potilar:
 -- - Temporada: 60 dias
--- - Compra / Aluguel / outros: 90 dias
+-- - Compra / Aluguel / outros: 60 dias
 -- A contagem usa payment_confirmed_at quando existe; caso contrario, updated_at;
 -- se updated_at tambem estiver vazio, usa created_at.
 
@@ -15,7 +15,7 @@ set
     coalesce(payment_confirmed_at, updated_at, created_at, now())
     + case
       when transaction = 'Temporada' then interval '60 days'
-      else interval '90 days'
+      else interval '60 days'
     end,
   updated_at = now()
 where status = 'approved'

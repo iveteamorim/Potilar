@@ -7,7 +7,8 @@ import { createClient } from '@/lib/supabase/server';
 import AccountNotice from '@/components/AccountNotice';
 import LogoutButton from '@/components/LogoutButton';
 import PixPaymentPanel from '@/components/PixPaymentPanel';
-import { PLANS, formatPlanPrice, getHighlightLabel, getHighlightPrice } from '@/lib/plans';
+import { PLANS, formatPlanPrice, getFreeListingLimit, getHighlightLabel, getHighlightPrice, getLaunchPromoDeadlineLabel, isLaunchPromoActive } from '@/lib/plans';
+import { SEARCH_ALERTS_ENABLED } from '@/lib/config';
 import {
   cancelListingHighlight,
   deleteOwnListing,
@@ -172,9 +173,11 @@ export default async function MinhaContaPage({
             <Link href="/mi-cuenta/favoritos" className="inline-flex rounded-xl border border-red-200 px-3.5 py-2 text-sm font-semibold text-red-600 dark:border-red-900 dark:text-red-300">
               Meus favoritos
             </Link>
-            <Link href="/mi-cuenta/alertas" className="inline-flex rounded-xl border border-ocean-200 px-3.5 py-2 text-sm font-semibold text-ocean-700">
-              Meus alertas
-            </Link>
+            {SEARCH_ALERTS_ENABLED && (
+              <Link href="/mi-cuenta/alertas" className="inline-flex rounded-xl border border-ocean-200 px-3.5 py-2 text-sm font-semibold text-ocean-700">
+                Meus alertas
+              </Link>
+            )}
             {(profile?.account_type === 'corretor' || profile?.account_type === 'imobiliaria') && (
               <Link href="/mi-cuenta/perfil" className="inline-flex rounded-xl border border-violet-200 px-3.5 py-2 text-sm font-semibold text-violet-700 dark:border-violet-900 dark:text-violet-300">
                 Perfil publico
@@ -531,7 +534,9 @@ export default async function MinhaContaPage({
             <div className="glass-card p-8 text-center">
               <p className="text-base font-semibold text-slate-900 dark:text-white">Nenhum anuncio ainda</p>
               <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-                Publique ate {PLANS.listing.freeListingLimit} anuncios gratuitos na promocao de lancamento.
+                {isLaunchPromoActive()
+                  ? `Publique ate ${getFreeListingLimit()} anuncios gratuitos ate ${getLaunchPromoDeadlineLabel()}.`
+                  : 'Publique seu primeiro anuncio gratuito.'}
               </p>
               <Link href="/anunciar" className="mt-5 inline-flex rounded-2xl bg-ocean-600 px-5 py-3 text-sm font-semibold text-white">
                 Anunciar imovel

@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { PLANS, formatPlanPrice } from '@/lib/plans';
+import { PLANS, formatPlanPrice, getFreeListingLimit, getLaunchPromoDeadlineLabel, isLaunchPromoActive } from '@/lib/plans';
 
 export const metadata: Metadata = {
   title: 'Planos e Destaques | Potilar',
@@ -12,15 +12,23 @@ export const metadata: Metadata = {
 
 const ownerPlans = [
   {
-    title: 'Promocao de lancamento',
+    title: isLaunchPromoActive() ? 'Promocao de lancamento' : '1º anuncio',
     price: 'Gratis',
-    features: [
-      `Ate ${PLANS.listing.freeListingLimit} anuncios ativos gratuitos`,
-      `Ate ${PLANS.listing.standardDurationDays} dias de publicacao`,
-      'Renovacao gratuita mediante confirmacao',
-      'WhatsApp direto',
-      'Fotos ilimitadas'
-    ]
+    features: isLaunchPromoActive()
+      ? [
+          `Ate ${getFreeListingLimit()} anuncios ativos gratuitos ate ${getLaunchPromoDeadlineLabel()}`,
+          `Ate ${PLANS.listing.standardDurationDays} dias de publicacao`,
+          'Renovacao gratuita mediante confirmacao',
+          'WhatsApp direto',
+          'Fotos ilimitadas'
+        ]
+      : [
+          '1 anuncio ativo gratuito',
+          `Ate ${PLANS.listing.standardDurationDays} dias de publicacao`,
+          'Renovacao gratuita mediante confirmacao',
+          'WhatsApp direto',
+          'Fotos ilimitadas'
+        ]
   },
   {
     title: 'Imovel adicional',
@@ -104,11 +112,17 @@ const highlightDescriptions: Record<'7_days' | '30_days' | 'super_30_days', { de
 const faqs = [
   [
     'Quantos anuncios posso publicar de graca?',
-    `Durante o lancamento, todo proprietario pode publicar ate ${PLANS.listing.freeListingLimit} imoveis gratuitamente na plataforma. A partir do ${PLANS.listing.freeListingLimit + 1}º, cada anuncio adicional custa ${formatPlanPrice(PLANS.listing.additionalPrice)} via Pix.`
+    isLaunchPromoActive()
+      ? `Ate ${getLaunchPromoDeadlineLabel()}, cada proprietario pode publicar ate ${getFreeListingLimit()} imoveis gratuitamente. Depois de setembro, volta a ser 1 anuncio gratis por conta. Anuncios adicionais custam ${formatPlanPrice(PLANS.listing.additionalPrice)} via Pix.`
+      : `Todo proprietario pode publicar 1 imovel gratuitamente. Anuncios adicionais custam ${formatPlanPrice(PLANS.listing.additionalPrice)} via Pix.`
   ],
   ['Preciso de contrato ou fidelidade?', 'Nao. Voce pode cancelar ou deixar de renovar quando desejar.'],
   ['Como recebo contatos?', 'Os interessados entram em contato diretamente pelo WhatsApp informado no anuncio.'],
   ['Posso anunciar terrenos?', 'Sim. Voce pode anunciar casas, apartamentos, terrenos e imoveis para temporada.'],
+  [
+    'Por quanto tempo fica ativo cada anuncio gratuito?',
+    `Cada anuncio gratuito fica publicado por ate ${PLANS.listing.standardDurationDays} dias. Depois disso, voce pode renovar mediante confirmacao na Potilar.`
+  ],
   [
     'Por quanto tempo fica ativo um anuncio de temporada?',
     `Anuncios de temporada ficam ativos por ate ${PLANS.listing.seasonalDurationDays} dias. Depois disso, podem ser renovados se o imovel continuar disponivel.`

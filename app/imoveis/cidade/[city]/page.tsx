@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation';
 import FavoriteAwarePropertyList from '@/components/FavoriteAwarePropertyList';
 import PropertyMap from '@/components/PropertyMapLoader';
 import { BASE_URL } from '@/lib/config';
-import { PLANS } from '@/lib/plans';
+import { getFreeListingLimit, getLaunchPromoDeadlineLabel, isLaunchPromoActive } from '@/lib/plans';
 import {
   getCityPagePath,
   getCitySeoDescription,
@@ -182,6 +182,9 @@ export default async function CityListingsPage({ params }: { params: { city: str
   const cityName = resolveCityNameFromSlug(params.city)!;
   const listings = await getCityListings(params.city);
   const anunciarHref = `/anunciar?cidade=${encodeURIComponent(cityName)}`;
+  const promoActive = isLaunchPromoActive();
+  const freeLimit = getFreeListingLimit();
+  const promoDeadline = getLaunchPromoDeadlineLabel();
 
   return (
     <main className="section-padding">
@@ -218,9 +221,10 @@ export default async function CityListingsPage({ params }: { params: { city: str
               Ainda nao ha anuncios publicados em {cityName}
             </h2>
             <p className="mx-auto max-w-2xl text-sm leading-7 text-slate-600 dark:text-slate-300">
-              Seja o primeiro a anunciar casas, apartamentos, terrenos ou temporada em {cityName}. Na promocao de lancamento,
-              particulares podem publicar ate {PLANS.listing.freeListingLimit} anuncios gratuitos na Potilar, com contato direto
-              entre anunciante e interessado.
+              Seja o primeiro a anunciar casas, apartamentos, terrenos ou temporada em {cityName}.
+              {promoActive
+                ? ` Ate ${promoDeadline}, particulares podem publicar ate ${freeLimit} anuncios gratuitos na Potilar, com contato direto entre anunciante e interessado.`
+                : ' Particulares podem publicar o primeiro anuncio gratis na Potilar, com contato direto entre anunciante e interessado.'}
             </p>
             <Link href={anunciarHref} className="inline-flex rounded-2xl bg-ocean-600 px-6 py-3 text-sm font-semibold text-white">
               Anunciar gratis em {cityName}

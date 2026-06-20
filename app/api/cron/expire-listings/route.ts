@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { CLEARED_HIGHLIGHT_FIELDS } from '@/lib/listingLifecycle';
 
 export const dynamic = 'force-dynamic';
 
@@ -29,14 +30,11 @@ export async function GET(request: Request) {
     const { data: expiredHighlights, error: expiredHighlightsError } = await supabase
       .from('listings')
       .update({
-        featured_plan: null,
-        featured_payment_status: 'not_requested',
-        featured_payment_amount: null,
-        featured_starts_at: null,
-        featured_expires_at: null,
+        ...CLEARED_HIGHLIGHT_FIELDS,
         updated_at: nowIso
       })
       .eq('featured_payment_status', 'confirmed')
+      .not('featured_expires_at', 'is', null)
       .lt('featured_expires_at', nowIso)
       .select('id');
 

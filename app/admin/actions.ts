@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { PLANS, getHighlightDurationDays } from '@/lib/plans';
 
 async function ensureAdmin() {
   const supabase = createClient();
@@ -25,12 +26,7 @@ function addDays(date: Date, days: number) {
 }
 
 function getListingDurationDays(transaction?: string | null) {
-  return transaction === 'Temporada' ? 60 : 90;
-}
-
-function getHighlightDurationDays(plan?: string | null) {
-  if (plan === '7_days') return 7;
-  return 30;
+  return transaction === 'Temporada' ? PLANS.listing.seasonalDurationDays : PLANS.listing.standardDurationDays;
 }
 
 export async function updateListingStatus(formData: FormData) {
