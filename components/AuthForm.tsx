@@ -83,10 +83,22 @@ function isValidCnpj(value: string) {
   return calculateDigit(firstWeights) === Number(digits[12]) && calculateDigit(secondWeights) === Number(digits[13]);
 }
 
+function getFriendlyAuthMessage(value: string) {
+  const message = value.toLowerCase();
+  if (message.includes('invalid login credentials')) return 'Email ou senha incorretos.';
+  if (message.includes('email not confirmed')) return 'Confirme seu email antes de entrar.';
+  if (message.includes('user already registered') || message.includes('already registered')) return 'Ja existe uma conta com este email.';
+  return value;
+}
+
 export default function AuthForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const next = searchParams.get('next') || '/mi-cuenta';
+  const initialEmail = searchParams.get('email') ?? '';
+  const intent = searchParams.get('intent');
+  const requestedMode = searchParams.get('mode');
+  const isBuyerIntent = intent === 'favorite' || intent === 'alert' || intent === 'chat';
   const confirmed = searchParams.get('confirmed') === '1';
   const reset = searchParams.get('reset') === '1';
   const recoveryCode = searchParams.get('code');
@@ -94,7 +106,7 @@ export default function AuthForm() {
   const authType = searchParams.get('type');
   const [hashRecovery, setHashRecovery] = useState(false);
   const isRecovery = reset || authType === 'recovery' || Boolean(recoveryCode) || Boolean(tokenHash) || hashRecovery;
-  const [mode, setMode] = useState<'login' | 'signup'>('login');
+  const [mode, setMode] = useState<'login' | 'signup'>(requestedMode === 'signup' ? 'signup' : 'login');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [phone, setPhone] = useState('');
@@ -102,7 +114,7 @@ export default function AuthForm() {
   const [cpf, setCpf] = useState('');
   const [cnpj, setCnpj] = useState('');
   const [creci, setCreci] = useState('');
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(initialEmail);
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
@@ -223,7 +235,7 @@ export default function AuthForm() {
 
       const { error } = await supabase.auth.updateUser({ password });
       if (error) {
-        setMessage(error.message);
+        setMessage(getFriendlyAuthMessage(error.message));
         setLoading(false);
         return;
       }
@@ -236,41 +248,56 @@ export default function AuthForm() {
     }
 
     if (mode === 'signup') {
-      const fullName = [firstName, lastName].map((item) => item.trim()).filter(Boolean).join(' ');
+      const normalizedEmail = email.trim().toLowerCase();
+      const fullName = isBuyerIntent
+        ? normalizedEmail.split('@')[0] || 'Buscador Potilar'
+        : [firstName, lastName].map((item) => item.trim()).filter(Boolean).join(' ');
 
-      if (!firstName.trim() || !lastName.trim()) {
+      if (!normalizedEmail) {
+        setMessage('Informe seu email para criar sua conta.');
+        setLoading(false);
+        return;
+      }
+
+      if (!password || password.length < 6) {
+        setMessage('Informe uma senha com pelo menos 6 caracteres.');
+        setLoading(false);
+        return;
+      }
+
+      if (!isBuyerIntent && (!firstName.trim() || !lastName.trim())) {
         setMessage('Informe nome e sobrenome para criar sua conta.');
         setLoading(false);
         return;
       }
 
-      if (!isValidBrazilMobilePhone(phone)) {
+      if (!isBuyerIntent && !isValidBrazilMobilePhone(phone)) {
         setMessage('Informe um WhatsApp valido.');
         setLoading(false);
         return;
       }
 
-      if (accountType === 'particular' && !isValidCpf(cpf)) {
+      if (!isBuyerIntent && accountType === 'particular' && !isValidCpf(cpf)) {
         setMessage('Informe um CPF valido para criar sua conta.');
         setLoading(false);
         return;
       }
 
-      if (accountType === 'corretor' && (!isValidCpf(cpf) || !creci.trim())) {
+      if (!isBuyerIntent && accountType === 'corretor' && (!isValidCpf(cpf) || !creci.trim())) {
         setMessage('Informe CPF valido e CRECI para criar conta de corretor.');
         setLoading(false);
         return;
       }
 
-      if (accountType === 'imobiliaria' && (!isValidCnpj(cnpj) || !creci.trim())) {
+      if (!isBuyerIntent && accountType === 'imobiliaria' && (!isValidCnpj(cnpj) || !creci.trim())) {
         setMessage('Informe CNPJ valido e CRECI para criar conta de imobiliaria.');
         setLoading(false);
         return;
       }
 
-      const advertiserDocument = accountType === 'imobiliaria' ? cleanDocument(cnpj) : cleanDocument(cpf);
-      const normalizedEmail = email.trim().toLowerCase();
-      const normalizedPhone = cleanDocument(phone);
+      const accountTypeToSave: AccountType = isBuyerIntent ? 'particular' : accountType;
+      const advertiserDocument = isBuyerIntent ? null : accountType === 'imobiliaria' ? cleanDocument(cnpj) : cleanDocument(cpf);
+      const normalizedPhone = isBuyerIntent ? null : cleanDocument(phone);
 
       if (!acceptedTerms) {
         setMessage('Aceite os Termos de Uso e a Politica de Privacidade para criar sua conta.');
@@ -302,15 +329,15 @@ export default function AuthForm() {
           data: {
             full_name: fullName,
             phone: normalizedPhone,
-            account_type: accountType,
+            account_type: accountTypeToSave,
             advertiser_document: advertiserDocument,
-            creci: creci.trim()
+            creci: isBuyerIntent ? null : creci.trim()
           }
         }
       });
 
       if (error) {
-        setMessage(error.message);
+        setMessage(getFriendlyAuthMessage(error.message));
         setLoading(false);
         return;
       }
@@ -321,14 +348,14 @@ export default function AuthForm() {
           email: normalizedEmail,
           full_name: fullName,
           phone: normalizedPhone,
-          account_type: accountType,
+          account_type: accountTypeToSave,
           advertiser_document: advertiserDocument,
-          creci: creci.trim() || null,
+          creci: isBuyerIntent ? null : creci.trim() || null,
           public_slug:
-            accountType === 'corretor' || accountType === 'imobiliaria'
+            !isBuyerIntent && (accountType === 'corretor' || accountType === 'imobiliaria')
               ? buildPublicProfileSlug(fullName, data.user.id)
               : null,
-          company_name: accountType === 'imobiliaria' ? fullName : null
+          company_name: !isBuyerIntent && accountType === 'imobiliaria' ? fullName : null
         });
 
         if (
@@ -348,7 +375,7 @@ export default function AuthForm() {
 
       if (!data.session) {
         setSignupEmailSent(true);
-        setMessage(`Enviamos um email para ${email}. Confirme sua conta antes de entrar e anunciar.`);
+        setMessage('Email enviado. Confirme seu email.');
         setLoading(false);
         return;
       }
@@ -360,7 +387,7 @@ export default function AuthForm() {
 
     const { data: signInData, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
-      setMessage(error.message);
+      setMessage(getFriendlyAuthMessage(error.message));
       setLoading(false);
       return;
     }
@@ -379,13 +406,13 @@ export default function AuthForm() {
   }
 
   return (
-    <div className="glass-card space-y-4 p-6">
-      <div className="grid grid-cols-2 rounded-2xl bg-sand-100 p-1 text-sm font-semibold dark:bg-slate-800">
-        <button type="button" onClick={() => setMode('login')} disabled={isRecovery} className={`rounded-xl px-4 py-2 ${mode === 'login' ? 'bg-white text-ocean-700 shadow-sm dark:bg-slate-950' : 'text-slate-500'} disabled:cursor-not-allowed disabled:opacity-60`}>
+    <div className="space-y-3 rounded-[2rem] border border-sand-300/90 bg-white p-4 shadow-[0_24px_70px_rgba(15,23,42,0.08)] ring-1 ring-white/80 sm:space-y-4 sm:p-6 lg:p-7 dark:border-slate-700 dark:bg-slate-900 dark:ring-slate-800">
+      <div className="grid grid-cols-2 border-b border-sand-200 text-sm font-semibold dark:border-slate-800">
+        <button type="button" onClick={() => setMode('login')} disabled={isRecovery} className={`border-b-2 px-3 py-2.5 transition sm:px-4 sm:py-3 ${mode === 'login' ? 'border-ocean-600 text-ocean-700' : 'border-transparent text-slate-500 hover:text-slate-800'} disabled:cursor-not-allowed disabled:opacity-60`}>
           Entrar
         </button>
-        <button type="button" onClick={() => setMode('signup')} disabled={isRecovery} className={`rounded-xl px-4 py-2 ${mode === 'signup' ? 'bg-white text-ocean-700 shadow-sm dark:bg-slate-950' : 'text-slate-500'} disabled:cursor-not-allowed disabled:opacity-60`}>
-          Criar conta
+        <button type="button" onClick={() => setMode('signup')} disabled={isRecovery} className={`border-b-2 px-3 py-2.5 transition sm:px-4 sm:py-3 ${mode === 'signup' ? 'border-ocean-600 text-ocean-700' : 'border-transparent text-slate-500 hover:text-slate-800'} disabled:cursor-not-allowed disabled:opacity-60`}>
+          Comecar gratis
         </button>
       </div>
 
@@ -397,91 +424,99 @@ export default function AuthForm() {
 
       {mode === 'signup' && !isRecovery && (
         <div className="grid gap-3">
-          <input value={firstName} onChange={(event) => setFirstName(event.target.value)} placeholder="Nome" className="w-full rounded-2xl border border-sand-200 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-900" />
-          <input value={lastName} onChange={(event) => setLastName(event.target.value)} placeholder="Sobrenome" className="w-full rounded-2xl border border-sand-200 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-900" />
-          <div>
-            <input
-              value={phone}
-              onChange={(event) => setPhone(formatBrazilPhone(event.target.value))}
-              placeholder="WhatsApp"
-              inputMode="numeric"
-              maxLength={12}
-              className={`w-full rounded-2xl border bg-white px-4 py-3 text-sm dark:bg-slate-900 ${
-                phoneHasError
-                  ? 'border-red-300 text-red-700 focus:border-red-500 focus:outline-none dark:border-red-800 dark:text-red-200'
-                  : 'border-sand-200 dark:border-slate-700'
-              }`}
-            />
-            {phoneHasError && (
-              <p className="mt-2 text-xs font-semibold text-red-600 dark:text-red-300">
-                WhatsApp invalido.
-              </p>
-            )}
-          </div>
-          <div className="grid grid-cols-3 rounded-2xl bg-sand-100 p-1 text-xs font-semibold dark:bg-slate-800">
-            {[
-              ['particular', 'Particular'],
-              ['corretor', 'Corretor'],
-              ['imobiliaria', 'Imobiliaria']
-            ].map(([value, label]) => (
-              <button
-                key={value}
-                type="button"
-                onClick={() => setAccountType(value as AccountType)}
-                className={`rounded-xl px-2 py-2 ${accountType === value ? 'bg-white text-ocean-700 shadow-sm dark:bg-slate-950' : 'text-slate-500'}`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-          {accountType !== 'imobiliaria' ? (
-            <div>
-              <input
-                value={cpf}
-                onChange={(event) => setCpf(formatCpf(event.target.value))}
-                placeholder="CPF"
-                inputMode="numeric"
-                maxLength={14}
-                className={`w-full rounded-2xl border bg-white px-4 py-3 text-sm dark:bg-slate-900 ${
-                  cpfHasLengthError
-                    ? 'border-red-300 text-red-700 focus:border-red-500 focus:outline-none dark:border-red-800 dark:text-red-200'
-                    : 'border-sand-200 dark:border-slate-700'
-                }`}
-              />
-              {cpfHasLengthError && (
-                <p className="mt-2 text-xs font-semibold text-red-600 dark:text-red-300">
-                  CPF deve ter 11 digitos.
-                </p>
-              )}
-            </div>
+          {isBuyerIntent ? (
+            <p className="rounded-xl bg-sand-50 px-3 py-2.5 text-xs font-semibold text-slate-600 dark:bg-slate-900 dark:text-slate-300 sm:rounded-2xl sm:px-4 sm:py-3 sm:text-sm sm:font-normal">
+              Crie uma conta para guardar favoritos e alertas.
+            </p>
           ) : (
-            <div>
-              <input
-                value={cnpj}
-                onChange={(event) => setCnpj(formatCnpj(event.target.value))}
-                placeholder="CNPJ"
-                inputMode="numeric"
-                maxLength={18}
-                className={`w-full rounded-2xl border bg-white px-4 py-3 text-sm dark:bg-slate-900 ${
-                  cnpjHasLengthError
-                    ? 'border-red-300 text-red-700 focus:border-red-500 focus:outline-none dark:border-red-800 dark:text-red-200'
-                    : 'border-sand-200 dark:border-slate-700'
-                }`}
-              />
-              {cnpjHasLengthError && (
-                <p className="mt-2 text-xs font-semibold text-red-600 dark:text-red-300">
-                  CNPJ deve ter 14 digitos.
-                </p>
+            <>
+              <input value={firstName} onChange={(event) => setFirstName(event.target.value)} placeholder="Nome" className="w-full rounded-xl border border-sand-200 bg-white px-4 py-2.5 text-sm dark:border-slate-700 dark:bg-slate-900" />
+              <input value={lastName} onChange={(event) => setLastName(event.target.value)} placeholder="Sobrenome" className="w-full rounded-xl border border-sand-200 bg-white px-4 py-2.5 text-sm dark:border-slate-700 dark:bg-slate-900" />
+              <div>
+                <input
+                  value={phone}
+                  onChange={(event) => setPhone(formatBrazilPhone(event.target.value))}
+                  placeholder="WhatsApp"
+                  inputMode="numeric"
+                  maxLength={12}
+                  className={`w-full rounded-xl border bg-white px-4 py-2.5 text-sm dark:bg-slate-900 ${
+                    phoneHasError
+                      ? 'border-red-300 text-red-700 focus:border-red-500 focus:outline-none dark:border-red-800 dark:text-red-200'
+                      : 'border-sand-200 dark:border-slate-700'
+                  }`}
+                />
+                {phoneHasError && (
+                  <p className="mt-2 text-xs font-semibold text-red-600 dark:text-red-300">
+                    WhatsApp invalido.
+                  </p>
+                )}
+              </div>
+              <div className="grid grid-cols-3 rounded-2xl bg-sand-100 p-1 text-xs font-semibold dark:bg-slate-800">
+                {[
+                  ['particular', 'Particular'],
+                  ['corretor', 'Corretor'],
+                  ['imobiliaria', 'Imobiliaria']
+                ].map(([value, label]) => (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => setAccountType(value as AccountType)}
+                    className={`rounded-xl px-2 py-2 ${accountType === value ? 'bg-white text-ocean-700 shadow-sm dark:bg-slate-950' : 'text-slate-500'}`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+              {accountType !== 'imobiliaria' ? (
+                <div>
+                  <input
+                    value={cpf}
+                    onChange={(event) => setCpf(formatCpf(event.target.value))}
+                    placeholder="CPF"
+                    inputMode="numeric"
+                    maxLength={14}
+                    className={`w-full rounded-xl border bg-white px-4 py-2.5 text-sm dark:bg-slate-900 ${
+                      cpfHasLengthError
+                        ? 'border-red-300 text-red-700 focus:border-red-500 focus:outline-none dark:border-red-800 dark:text-red-200'
+                        : 'border-sand-200 dark:border-slate-700'
+                    }`}
+                  />
+                  {cpfHasLengthError && (
+                    <p className="mt-2 text-xs font-semibold text-red-600 dark:text-red-300">
+                      CPF deve ter 11 digitos.
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <div>
+                  <input
+                    value={cnpj}
+                    onChange={(event) => setCnpj(formatCnpj(event.target.value))}
+                    placeholder="CNPJ"
+                    inputMode="numeric"
+                    maxLength={18}
+                    className={`w-full rounded-xl border bg-white px-4 py-2.5 text-sm dark:bg-slate-900 ${
+                      cnpjHasLengthError
+                        ? 'border-red-300 text-red-700 focus:border-red-500 focus:outline-none dark:border-red-800 dark:text-red-200'
+                        : 'border-sand-200 dark:border-slate-700'
+                    }`}
+                  />
+                  {cnpjHasLengthError && (
+                    <p className="mt-2 text-xs font-semibold text-red-600 dark:text-red-300">
+                      CNPJ deve ter 14 digitos.
+                    </p>
+                  )}
+                </div>
               )}
-            </div>
-          )}
-          {accountType !== 'particular' && (
-            <input value={creci} onChange={(event) => setCreci(event.target.value)} placeholder="CRECI" className="w-full rounded-2xl border border-sand-200 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-900" />
+              {accountType !== 'particular' && (
+                <input value={creci} onChange={(event) => setCreci(event.target.value)} placeholder="CRECI" className="w-full rounded-xl border border-sand-200 bg-white px-4 py-2.5 text-sm dark:border-slate-700 dark:bg-slate-900" />
+              )}
+            </>
           )}
         </div>
       )}
       {!isRecovery && (
-        <input type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="Email" className="w-full rounded-2xl border border-sand-200 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-900" />
+        <input type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="Email" className="w-full rounded-xl border border-sand-200 bg-white px-4 py-2.5 text-sm dark:border-slate-700 dark:bg-slate-900" />
       )}
       <div className="relative">
         <input
@@ -489,7 +524,7 @@ export default function AuthForm() {
           value={password}
           onChange={(event) => setPassword(event.target.value)}
           placeholder="Senha"
-          className="w-full rounded-2xl border border-sand-200 bg-white px-4 py-3 pr-12 text-sm dark:border-slate-700 dark:bg-slate-900"
+          className="w-full rounded-xl border border-sand-200 bg-white px-4 py-2.5 pr-12 text-sm dark:border-slate-700 dark:bg-slate-900"
         />
         <button
           type="button"
@@ -502,7 +537,7 @@ export default function AuthForm() {
       </div>
 
       {mode === 'signup' && !isRecovery && (
-        <label className="flex items-start gap-3 rounded-2xl border border-sand-200 bg-sand-50 px-4 py-3 text-xs text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">
+        <label className="flex items-start gap-3 rounded-xl border border-sand-200 bg-sand-50 px-3 py-2.5 text-[11px] text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 sm:rounded-2xl sm:px-4 sm:py-3 sm:text-xs">
           <input
             type="checkbox"
             checked={acceptedTerms}
@@ -527,24 +562,21 @@ export default function AuthForm() {
         <div className={`rounded-2xl px-4 py-3 text-sm font-semibold ${
           signupEmailSent || resetEmailSent
             ? 'border border-green-200 bg-green-50 text-green-800 dark:border-green-900 dark:bg-green-950/40 dark:text-green-100'
+            : message === 'Email ou senha incorretos.' || message.includes('incorretos') || message.includes('Confirme')
+              ? 'border border-red-200 bg-red-50 text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-100'
             : 'bg-sand-50 text-slate-700 dark:bg-slate-900 dark:text-slate-200'
         }`}>
           <p>{message || 'Email confirmado. Agora entre com seu email e senha para anunciar.'}</p>
-          {(signupEmailSent || resetEmailSent) && (
+          {resetEmailSent && (
             <p className="mt-2 text-xs font-medium">
               Depois de confirmar, volte para esta pagina e entre com seu email e senha.
-            </p>
-          )}
-          {signupEmailSent && (
-            <p className="mt-2 text-xs font-medium">
-              Depois de entrar, voce ja pode enviar seu anuncio para publicacao.
             </p>
           )}
         </div>
       )}
 
-      <button type="button" onClick={submit} disabled={loading} className="w-full rounded-2xl bg-ocean-600 px-5 py-3 text-sm font-semibold text-white disabled:opacity-60">
-        {loading ? 'Aguarde...' : isRecovery ? 'Guardar nova senha' : mode === 'signup' ? 'Criar conta gratis' : 'Entrar'}
+      <button type="button" onClick={submit} disabled={loading} className="w-full rounded-2xl bg-ocean-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-ocean-700 hover:shadow-lg disabled:translate-y-0 disabled:opacity-60">
+        {loading ? 'Aguarde...' : isRecovery ? 'Guardar nova senha' : mode === 'signup' ? 'Comecar gratis' : 'Entrar'}
       </button>
 
       {mode === 'login' && !isRecovery && (

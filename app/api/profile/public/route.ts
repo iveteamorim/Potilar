@@ -16,6 +16,7 @@ export async function PATCH(request: Request) {
     public_slug?: string;
     company_name?: string | null;
     bio?: string | null;
+    creci?: string | null;
   };
 
   const publicSlug = body.public_slug ? slugify(body.public_slug) : '';
@@ -25,7 +26,7 @@ export async function PATCH(request: Request) {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('account_type')
+    .select('account_type,creci')
     .eq('id', user.id)
     .single();
 
@@ -44,14 +45,34 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: 'Este endereco publico ja esta em uso' }, { status: 409 });
   }
 
-  const { error } = await supabase
+  const nextCreci = body.creci?.trim() || null;
+  const creciChanged = (profile.creci ?? null) !== nextCreci;
+
+  const updatePayload = {
+    public_slug: publicSlug,
+    company_name: body.company_name ?? null,
+    bio: body.bio ?? null,
+    creci: nextCreci,
+    ...(creciChanged ? { creci_verified: false, creci_verified_at: null } : {})
+  };
+
+  let { error } = await supabase
     .from('profiles')
-    .update({
+    .update(updatePayload)
+    .eq('id', user.id);
+
+  if (error && /creci_verified|creci_verified_at|schema cache|column/i.test(error.message)) {
+    const fallback = await supabase
+      .from('profiles')
+      .update({
       public_slug: publicSlug,
       company_name: body.company_name ?? null,
-      bio: body.bio ?? null
+      bio: body.bio ?? null,
+      creci: nextCreci
     })
-    .eq('id', user.id);
+      .eq('id', user.id);
+    error = fallback.error;
+  }
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });

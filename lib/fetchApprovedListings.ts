@@ -6,6 +6,9 @@ import { PUBLIC_LISTING_SELECT, PUBLIC_LISTING_SELECT_WITH_CONTACT } from '@/lib
 export const PUBLIC_LISTING_SELECT_LEGACY =
   'id,slug,title,property_type,transaction,price,price_period,bedrooms,bathrooms,parking,location,neighborhood,community,address_extra,lat,lng,images,featured_plan,featured_payment_status,featured_starts_at,featured_expires_at,description,features,created_at,updated_at';
 
+export const PUBLIC_LISTING_SELECT_GREEN_LEGACY =
+  'id,slug,title,property_type,transaction,price,price_period,bedrooms,bathrooms,parking,area_sqm,condo_fee,is_pet_friendly,is_furnished,location,neighborhood,community,address_extra,lat,lng,images,featured_plan,featured_payment_status,featured_starts_at,featured_expires_at,description,features,created_at,updated_at';
+
 export const PUBLIC_LISTING_SELECT_LEGACY_WITH_CONTACT =
   `${PUBLIC_LISTING_SELECT_LEGACY},contact_name,contact_phone,contact_whatsapp,contact_email,contact_methods`;
 
@@ -44,6 +47,7 @@ export async function fetchApprovedListingRows(supabase: SupabaseClient, options
   const withContact = options.withContact !== false;
   const extendedSelect =
     options.select ?? (withContact ? PUBLIC_LISTING_SELECT_WITH_CONTACT : PUBLIC_LISTING_SELECT);
+  const greenLegacySelect = options.select ?? (withContact ? `${PUBLIC_LISTING_SELECT_GREEN_LEGACY},contact_name,contact_phone,contact_whatsapp,contact_email,contact_methods` : PUBLIC_LISTING_SELECT_GREEN_LEGACY);
   const legacySelect = options.select ?? (withContact ? PUBLIC_LISTING_SELECT_LEGACY_WITH_CONTACT : PUBLIC_LISTING_SELECT_LEGACY);
   const canUsePublicRpc =
     options.withContact === false &&
@@ -79,8 +83,10 @@ export async function fetchApprovedListingRows(supabase: SupabaseClient, options
         ...listing,
         area_sqm: listing.area_sqm ?? null,
         condo_fee: listing.condo_fee ?? null,
+        condo_included: listing.condo_included ?? false,
         is_pet_friendly: listing.is_pet_friendly ?? false,
         is_furnished: listing.is_furnished ?? false,
+        video_url: listing.video_url ?? null,
         featured_starts_at: listing.featured_starts_at ?? null,
         featured_expires_at: listing.featured_expires_at ?? null
       }));
@@ -92,6 +98,12 @@ export async function fetchApprovedListingRows(supabase: SupabaseClient, options
   }
 
   let { data, error } = await runQuery(extendedSelect);
+
+  if (error && isMissingColumnError(error.message)) {
+    const fallback = await runQuery(greenLegacySelect, false);
+    data = fallback.data;
+    error = fallback.error;
+  }
 
   if (error && isMissingColumnError(error.message)) {
     const fallback = await runQuery(legacySelect, false);
@@ -180,7 +192,9 @@ export async function fetchPublicListingDetail(
   }
 
   const extendedSelect = withContact ? PUBLIC_LISTING_SELECT_WITH_CONTACT : PUBLIC_LISTING_SELECT;
+  const greenLegacySelect = withContact ? `${PUBLIC_LISTING_SELECT_GREEN_LEGACY},contact_name,contact_phone,contact_whatsapp,contact_email,contact_methods` : PUBLIC_LISTING_SELECT_GREEN_LEGACY;
   const legacySelect = withContact ? PUBLIC_LISTING_SELECT_LEGACY_WITH_CONTACT : PUBLIC_LISTING_SELECT_LEGACY;
+  const greenLegacyDetailSelect = `owner_id,${greenLegacySelect}`;
   const legacyDetailSelect = `owner_id,${legacySelect}`;
 
   async function queryDetail(select: string, field: 'slug' | 'id', value: string) {
@@ -217,6 +231,14 @@ export async function fetchPublicListingDetail(
     const byId = await queryDetail(`owner_id,${extendedSelect}`, 'id', listingId);
     data = (byId.data as PublicListingDetailRow | null) ?? null;
     errorMessage = byId.error?.message ?? '';
+  }
+
+  if (errorMessage && isMissingColumnError(errorMessage)) {
+    const greenLegacy = listingId
+      ? await queryDetail(greenLegacyDetailSelect, 'id', listingId)
+      : await queryDetail(greenLegacyDetailSelect, 'slug', normalizedSlug);
+    data = (greenLegacy.data as PublicListingDetailRow | null) ?? null;
+    errorMessage = greenLegacy.error?.message ?? '';
   }
 
   if (errorMessage && isMissingColumnError(errorMessage)) {

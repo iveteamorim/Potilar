@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { AlertTriangle, CheckCircle2, Flag, Mail, MessageCircle, Phone, ShieldCheck } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, Flag, Mail, MessageCircle, Phone, PlayCircle, ShieldCheck } from 'lucide-react';
 import { BASE_URL } from '@/lib/config';
 import { notFound } from 'next/navigation';
 import PropertyMap from '@/components/PropertyMapLoader';
@@ -10,6 +10,7 @@ import ShareButtons from '@/components/ShareButtons';
 import FavoriteButton from '@/components/FavoriteButton';
 import ListingViewTracker from '@/components/ListingViewTracker';
 import WhatsAppStatLink from '@/components/WhatsAppStatLink';
+import ListingMessageButton from '@/components/ListingMessageButton';
 import { getPublicProfilePath } from '@/lib/publicProfile';
 import { properties, type Property } from '@/data/properties';
 import { createClient } from '@/lib/supabase/server';
@@ -42,12 +43,22 @@ async function getProperty(slug: string): Promise<Property | null> {
     const data = await fetchPublicListingDetail(supabase, slug, { withContact: true });
 
     if (!data) return null;
+    let videoUrl = data.video_url ?? null;
+
+    if (!videoUrl && data.id) {
+      const videoResult = await supabase.from('listings').select('video_url').eq('id', data.id).maybeSingle();
+      if (!videoResult.error) {
+        videoUrl = videoResult.data?.video_url ?? null;
+      }
+    }
 
     return listingRowToProperty({
       ...data,
+      video_url: videoUrl,
       owner_id: data.owner_id ?? null,
       area_sqm: data.area_sqm ?? null,
       condo_fee: data.condo_fee ?? null,
+      condo_included: data.condo_included ?? false,
       is_pet_friendly: data.is_pet_friendly ?? false,
       is_furnished: data.is_furnished ?? false,
       price_period: data.price_period ?? null,
@@ -66,12 +77,22 @@ async function getAdvertiserProfile(ownerId?: string) {
 
   try {
     const supabase = createClient();
-    const { data } = await supabase
+    let { data, error } = await supabase
       .from('profiles')
-      .select('public_slug,company_name,full_name,account_type')
+      .select('public_slug,company_name,full_name,account_type,creci,creci_verified')
       .eq('id', ownerId)
       .in('account_type', ['corretor', 'imobiliaria'])
       .maybeSingle();
+
+    if (error) {
+      const fallback = await supabase
+        .from('profiles')
+        .select('public_slug,company_name,full_name,account_type,creci')
+        .eq('id', ownerId)
+        .in('account_type', ['corretor', 'imobiliaria'])
+        .maybeSingle();
+      data = fallback.data ? { ...fallback.data, creci_verified: false } : null;
+    }
 
     if (!data?.public_slug) return null;
     return data;
@@ -182,6 +203,7 @@ export default async function PropertyDetailPage({ params }: { params: { slug: s
     property.areaSqm && `${property.areaSqm} m2`,
     property.condoFee &&
       `Condominio ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(property.condoFee)}`,
+    property.condoIncluded && 'Condomínio incluso',
     property.isPetFriendly && 'Aceita pet',
     property.isFurnished && 'Mobiliado'
   ].filter(Boolean) as string[];
@@ -258,7 +280,7 @@ export default async function PropertyDetailPage({ params }: { params: { slug: s
               </div>
             )}
             {advertiserProfile?.public_slug && (
-              <p className="text-sm text-slate-600 dark:text-slate-300">
+              <p className="flex flex-wrap items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
                 Anunciante:{' '}
                 <Link
                   href={getPublicProfilePath(advertiserProfile.public_slug)}
@@ -266,6 +288,12 @@ export default async function PropertyDetailPage({ params }: { params: { slug: s
                 >
                   {advertiserProfile.company_name || advertiserProfile.full_name}
                 </Link>
+                {advertiserProfile.creci && advertiserProfile.creci_verified && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-ocean-50 px-2.5 py-1 text-[11px] font-semibold text-ocean-700">
+                    <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
+                    CRECI verificado
+                  </span>
+                )}
               </p>
             )}
             <div className="glass-card space-y-4 p-5">
@@ -303,6 +331,9 @@ export default async function PropertyDetailPage({ params }: { params: { slug: s
                     <Mail className="h-4 w-4" aria-hidden="true" />
                     Email
                   </a>
+                )}
+                {property.ownerId && (
+                  <ListingMessageButton listingId={property.id} ownerId={property.ownerId} title={displayTitle} />
                 )}
                 {!hasAdvertiserContact && (
                   <a
@@ -343,6 +374,17 @@ export default async function PropertyDetailPage({ params }: { params: { slug: s
           </div>
           <div className="space-y-4">
             <p className="text-sm leading-6 text-slate-600 dark:text-slate-300">{property.description}</p>
+            {property.videoUrl && (
+              <a
+                href={property.videoUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-2 rounded-2xl border border-ocean-200 bg-ocean-50 px-5 py-3 text-sm font-semibold text-ocean-800 transition hover:border-ocean-400 hover:bg-ocean-100 dark:border-ocean-900 dark:bg-ocean-950/40 dark:text-ocean-100"
+              >
+                <PlayCircle className="h-4 w-4" aria-hidden="true" />
+                Ver video do imovel
+              </a>
+            )}
             {property.features.length > 0 && (
               <ul className="grid gap-2 text-sm text-slate-600 dark:text-slate-300 sm:grid-cols-2">
                 {property.features.map((feature) => (
@@ -420,6 +462,9 @@ export default async function PropertyDetailPage({ params }: { params: { slug: s
             >
               <Phone className="h-4 w-4" aria-hidden="true" />
             </a>
+          )}
+          {property.ownerId && (
+            <ListingMessageButton listingId={property.id} ownerId={property.ownerId} title={displayTitle} />
           )}
         </div>
       </div>

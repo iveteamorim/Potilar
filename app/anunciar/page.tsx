@@ -7,13 +7,33 @@ import { createClient } from '@/lib/supabase/server';
 
 export function generateMetadata(): Metadata {
   const promoActive = isLaunchPromoActive();
+  const freeLimit = getFreeListingLimit();
+  const promoDeadline = getLaunchPromoDeadlineLabel();
+  const title = 'Anunciar imóvel grátis no Rio Grande do Norte';
+  const description = promoActive
+    ? `Anuncie imóvel grátis no Rio Grande do Norte (RN). Até ${freeLimit} anúncios grátis por 60 dias na Potilar, promoção até ${promoDeadline}. Casas, apartamentos, terrenos e temporada com contato direto.`
+    : 'Anuncie imóvel grátis no Rio Grande do Norte (RN). Primeiro anúncio gratuito por 60 dias na Potilar. Casas, apartamentos, terrenos e temporada com contato direto.';
+
   return {
-    title: 'Anunciar imovel gratis',
-    description: promoActive
-      ? `Anuncie ate ${getFreeListingLimit()} imoveis gratis ate ${getLaunchPromoDeadlineLabel()} na Potilar. Publique casas, apartamentos, terrenos e temporada no RN.`
-      : 'Anuncie seu primeiro imovel gratis na Potilar. Publique casas, apartamentos, terrenos e temporada no RN.',
+    title,
+    description,
+    keywords: [
+      'anunciar imóvel grátis',
+      'anunciar imóveis grátis',
+      'anunciar imóvel grátis RN',
+      'anunciar casa Rio Grande do Norte',
+      'portal imóveis RN',
+      'Potilar'
+    ],
     alternates: {
       canonical: '/anunciar'
+    },
+    openGraph: {
+      title: `${title} | Potilar`,
+      description,
+      url: '/anunciar',
+      type: 'website',
+      locale: 'pt_BR'
     }
   };
 }
@@ -66,40 +86,45 @@ export default async function AnunciarPage({
   const promoActive = isLaunchPromoActive();
   const freeLimit = getFreeListingLimit();
   const promoDeadline = getLaunchPromoDeadlineLabel();
+  const cityLine = defaultCity
+    ? `Publique seu imóvel em ${defaultCity}, Rio Grande do Norte, com fotos, preço e contato direto.`
+    : 'Publique casas, apartamentos, terrenos e imóveis de temporada em qualquer cidade do Rio Grande do Norte.';
 
   return (
     <main className="section-padding">
-      <div className="mx-auto max-w-6xl grid gap-10 lg:grid-cols-[1fr_1.1fr]">
-        <div className="space-y-6">
+      <div className="mx-auto flex max-w-4xl flex-col items-center gap-10">
+        <div className="mx-auto max-w-2xl space-y-6 text-center">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-ocean-600">Anunciar</p>
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-ocean-600">Anunciar no RN</p>
             <h1 className="mt-4 text-3xl font-semibold text-slate-900 dark:text-white">
               {promoActive
-                ? `Anuncie ate ${freeLimit} imoveis gratis ate ${promoDeadline}.`
-                : 'Anuncie seu primeiro imovel gratis na Potilar.'}
+                ? `Anuncie seu imóvel grátis`
+                : 'Anunciar imóvel grátis no Rio Grande do Norte'}
             </h1>
-            <p className="mt-3 text-sm text-slate-600 dark:text-slate-300">
+            <p className="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300">
               {promoActive
-                ? `Promocao de lancamento valida ate ${promoDeadline}: publique ate ${freeLimit} anuncios gratuitos por conta. Complete os dados, adicione fotos e envie para avaliacao da Potilar.`
-                : 'Complete os dados do imovel, adicione fotos e envie para avaliacao da Potilar.'}
+                ? `Publique seus ${freeLimit} primeiros anúncios grátis na Potilar. Cada anúncio fica ativo por 60 dias.`
+                : `Publique seu primeiro anúncio gratuito por 60 dias. ${cityLine}`}
             </p>
           </div>
         </div>
         {isAuthenticated ? (
-          <AnunciarForm
-            referralCode={referralCode}
-            defaultName={defaultName}
-            defaultPhone={defaultPhone}
-            defaultEmail={defaultEmail}
-            defaultDocument={defaultDocument}
-            accountType={accountType}
-            defaultCity={defaultCity}
-          />
+          <div className="mx-auto w-full max-w-3xl">
+            <AnunciarForm
+              referralCode={referralCode}
+              defaultName={defaultName}
+              defaultPhone={defaultPhone}
+              defaultEmail={defaultEmail}
+              defaultDocument={defaultDocument}
+              accountType={accountType}
+              defaultCity={defaultCity}
+            />
+          </div>
         ) : (
-          <div className="glass-card space-y-4 p-6">
+          <div className="glass-card mx-auto w-full max-w-3xl space-y-4 p-6">
             <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Crie sua conta para anunciar</h2>
             <p className="text-sm text-slate-600 dark:text-slate-300">
-              Para publicar e gerenciar seus anuncios, entre ou crie uma conta gratuita. Depois, clique em Anunciar imovel dentro de Minha conta.
+              Para publicar e gerenciar seus anúncios, entre ou crie uma conta gratuita. Depois, clique em Anunciar imóvel dentro de Minha conta.
             </p>
             <Link href={`/login?next=${encodeURIComponent('/mi-cuenta')}`} className="inline-flex w-full justify-center rounded-2xl bg-ocean-600 px-5 py-3 text-sm font-semibold text-white">
               Entrar ou criar conta
@@ -110,3 +135,4 @@ export default async function AnunciarPage({
     </main>
   );
 }
+

@@ -28,12 +28,22 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 async function getPublicProfile(slug: string) {
   const supabase = createClient();
-  const { data } = await supabase
+  let { data, error } = await supabase
     .from('profiles')
-    .select('id,full_name,company_name,bio,phone,account_type,public_slug,creci')
+    .select('id,full_name,company_name,bio,phone,account_type,public_slug,creci,creci_verified')
     .ilike('public_slug', slug)
     .in('account_type', ['corretor', 'imobiliaria'])
     .maybeSingle();
+
+  if (error) {
+    const fallback = await supabase
+      .from('profiles')
+      .select('id,full_name,company_name,bio,phone,account_type,public_slug,creci')
+      .ilike('public_slug', slug)
+      .in('account_type', ['corretor', 'imobiliaria'])
+      .maybeSingle();
+    data = fallback.data ? { ...fallback.data, creci_verified: false } : null;
+  }
 
   return data;
 }
@@ -51,6 +61,11 @@ export default async function AnunciantePage({ params }: Props) {
   if (!profile?.public_slug) notFound();
 
   const listings = await getProfileListings(profile.id);
+  const verifiedListings = listings.map((property) => ({
+    ...property,
+    advertiserAccountType: profile.account_type ?? undefined,
+    advertiserCreciVerified: Boolean(profile.creci && profile.creci_verified)
+  }));
   const displayName = profile.company_name || profile.full_name || 'Anunciante';
   const accountLabel = getAccountTypeLabel(profile.account_type as 'corretor' | 'imobiliaria');
   const phone = profile.phone?.replace(/\D/g, '');
@@ -64,15 +79,19 @@ export default async function AnunciantePage({ params }: Props) {
         <section className="glass-card space-y-4 p-6">
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-ocean-600">{accountLabel} no RN</p>
           <h1 className="text-3xl font-semibold text-slate-950 dark:text-white">{displayName}</h1>
-          {profile.creci && (
-            <p className="text-sm font-semibold text-slate-600 dark:text-slate-300">CRECI {profile.creci}</p>
-          )}
+          {profile.creci && <p className="text-sm font-semibold text-slate-600 dark:text-slate-300">CRECI {profile.creci}</p>}
           {profile.bio && <p className="max-w-3xl text-sm leading-7 text-slate-600 dark:text-slate-300">{profile.bio}</p>}
           <div className="flex flex-wrap items-center gap-3">
             <span className="inline-flex items-center gap-2 rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-700">
               <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
               Perfil Potilar
             </span>
+            {profile.creci && profile.creci_verified && (
+              <span className="inline-flex items-center gap-2 rounded-full bg-ocean-50 px-3 py-1 text-xs font-semibold text-ocean-700">
+                <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
+                CRECI verificado
+              </span>
+            )}
             <span className="rounded-full bg-sand-100 px-3 py-1 text-xs font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-200">
               {listings.length} anuncio{listings.length === 1 ? '' : 's'} ativo{listings.length === 1 ? '' : 's'}
             </span>
@@ -96,7 +115,7 @@ export default async function AnunciantePage({ params }: Props) {
             <p className="text-sm text-slate-600 dark:text-slate-300">Nenhum anuncio ativo no momento.</p>
           ) : (
             <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-              {listings.map((property) => (
+              {verifiedListings.map((property) => (
                 <PropertyCard key={property.id} property={property} />
               ))}
             </div>

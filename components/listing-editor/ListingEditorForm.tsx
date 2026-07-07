@@ -27,11 +27,15 @@ type ListingEditorData = {
   description: string;
   features: string[];
   images: string[];
+  video_url?: string | null;
   contact_name?: string | null;
   contact_phone?: string | null;
   contact_whatsapp?: string | null;
   contact_email?: string | null;
   contact_methods?: string[] | null;
+  condo_included?: boolean | null;
+  is_pet_friendly?: boolean | null;
+  is_furnished?: boolean | null;
 };
 
 type NewPhoto = {
@@ -58,6 +62,18 @@ function formatPlaceName(value: string) {
     });
 }
 
+function normalizeVideoUrl(value: string) {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+
+  try {
+    const url = new URL(trimmed);
+    return ['http:', 'https:'].includes(url.protocol) ? url.toString() : null;
+  } catch {
+    return null;
+  }
+}
+
 export default function ListingEditorForm({
   listing,
   backHref
@@ -81,6 +97,10 @@ export default function ListingEditorForm({
   const [addressExtra, setAddressExtra] = useState(listing.address_extra ?? '');
   const [description, setDescription] = useState(listing.description);
   const [features, setFeatures] = useState((listing.features ?? []).join(', '));
+  const [videoUrl, setVideoUrl] = useState(listing.video_url ?? '');
+  const [condoIncluded, setCondoIncluded] = useState(Boolean(listing.condo_included));
+  const [isPetFriendly, setIsPetFriendly] = useState(Boolean(listing.is_pet_friendly));
+  const [isFurnished, setIsFurnished] = useState(Boolean(listing.is_furnished));
   const [contactName, setContactName] = useState(listing.contact_name ?? '');
   const [contactPhone, setContactPhone] = useState(listing.contact_whatsapp ?? listing.contact_phone ?? '');
   const [contactEmail, setContactEmail] = useState(listing.contact_email ?? '');
@@ -122,12 +142,18 @@ export default function ListingEditorForm({
     setStatus('');
 
     if (!title || !location || !propertyType || !transaction || !price || !description) {
-      setStatus('Preencha titulo, cidade, tipo, negociacao, preco e descricao.');
+      setStatus('Preencha título, cidade, tipo, negociação, preço e descrição.');
       return;
     }
 
-    if (images.length + newPhotos.length < 3) {
-      setStatus('O anuncio precisa ter pelo menos 3 fotos.');
+    if (images.length + newPhotos.length < 6) {
+      setStatus('O anúncio precisa ter pelo menos 6 fotos.');
+      return;
+    }
+
+    const normalizedVideoUrl = normalizeVideoUrl(videoUrl);
+    if (videoUrl.trim() && !normalizedVideoUrl) {
+      setStatus('Informe um link de vídeo válido, com http:// ou https://.');
       return;
     }
 
@@ -210,11 +236,24 @@ export default function ListingEditorForm({
 
       if (error) throw new Error(error.message);
 
-      setStatus('Anuncio atualizado com sucesso.');
+      const extraUpdate = await supabase
+        .from('listings')
+        .update({
+          video_url: normalizedVideoUrl,
+          condo_included: transaction === 'Aluguel' && condoIncluded,
+          is_pet_friendly: isPetFriendly,
+          is_furnished: isFurnished
+        })
+        .eq('id', listing.id);
+      if (extraUpdate.error && !/column|schema cache/i.test(extraUpdate.error.message)) {
+        throw new Error(extraUpdate.error.message);
+      }
+
+      setStatus('Anúncio atualizado com sucesso.');
       router.push(backHref);
       router.refresh();
     } catch (error) {
-      setStatus(error instanceof Error ? `Nao foi possivel guardar: ${error.message}` : 'Nao foi possivel guardar.');
+      setStatus(error instanceof Error ? `Não foi possível guardar: ${error.message}` : 'Não foi possível guardar.');
     } finally {
       setSaving(false);
     }
@@ -223,8 +262,8 @@ export default function ListingEditorForm({
   return (
     <form className="glass-card space-y-5 p-6">
       <div className="grid gap-3 sm:grid-cols-2">
-        <input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Titulo do anuncio" className="rounded-2xl border border-sand-200 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-900" />
-        <input value={price} onChange={(event) => setPrice(event.target.value)} placeholder="Preco" className="rounded-2xl border border-sand-200 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-900" />
+        <input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Título do anúncio" className="rounded-2xl border border-sand-200 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-900" />
+        <input value={price} onChange={(event) => setPrice(event.target.value)} placeholder="Preço" className="rounded-2xl border border-sand-200 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-900" />
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
@@ -243,9 +282,9 @@ export default function ListingEditorForm({
 
       {transaction === 'Temporada' && (
         <select value={pricePeriod} onChange={(event) => setPricePeriod(event.target.value as 'dia' | 'semana' | 'mes')} className="w-full rounded-2xl border border-sand-200 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-900">
-          <option value="dia">Preco por dia</option>
-          <option value="semana">Preco por semana</option>
-          <option value="mes">Preco por mes</option>
+          <option value="dia">Preço por dia</option>
+          <option value="semana">Preço por semana</option>
+          <option value="mes">Preço por mês</option>
         </select>
       )}
 
@@ -269,21 +308,65 @@ export default function ListingEditorForm({
           </datalist>
         </div>
         <input value={neighborhood} onChange={(event) => setNeighborhood(event.target.value)} placeholder="Bairro" className="rounded-2xl border border-sand-200 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-900" />
-        <input value={community} onChange={(event) => setCommunity(event.target.value)} placeholder="Conjunto, COHAB ou condominio" className="rounded-2xl border border-sand-200 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-900" />
-        <input value={addressExtra} onChange={(event) => setAddressExtra(event.target.value)} placeholder="Referencia" className="rounded-2xl border border-sand-200 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-900" />
+        <input value={community} onChange={(event) => setCommunity(event.target.value)} placeholder="Conjunto, COHAB ou condomínio" className="rounded-2xl border border-sand-200 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-900" />
+        <input value={addressExtra} onChange={(event) => setAddressExtra(event.target.value)} placeholder="Referência" className="rounded-2xl border border-sand-200 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-900" />
       </div>
 
       <div className="grid gap-3 sm:grid-cols-3">
-        <input type="number" min="0" value={bedrooms} onChange={(event) => setBedrooms(event.target.value)} placeholder="Quartos" className="rounded-2xl border border-sand-200 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-900" />
-        <input type="number" min="0" value={bathrooms} onChange={(event) => setBathrooms(event.target.value)} placeholder="Banheiros" className="rounded-2xl border border-sand-200 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-900" />
-        <input type="number" min="0" value={parking} onChange={(event) => setParking(event.target.value)} placeholder="Garagem" className="rounded-2xl border border-sand-200 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-900" />
+        <label className="space-y-1.5">
+          <span className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Quartos</span>
+          <input type="number" min="0" value={bedrooms} onChange={(event) => setBedrooms(event.target.value)} placeholder="0" className="w-full rounded-2xl border border-sand-200 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-900" />
+        </label>
+        <label className="space-y-1.5">
+          <span className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Banheiros</span>
+          <input type="number" min="0" value={bathrooms} onChange={(event) => setBathrooms(event.target.value)} placeholder="0" className="w-full rounded-2xl border border-sand-200 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-900" />
+        </label>
+        <label className="space-y-1.5">
+          <span className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Garagem</span>
+          <input type="number" min="0" value={parking} onChange={(event) => setParking(event.target.value)} placeholder="0" className="w-full rounded-2xl border border-sand-200 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-900" />
+        </label>
       </div>
 
-      <textarea rows={5} value={description} onChange={(event) => setDescription(event.target.value)} placeholder="Descricao" className="w-full rounded-2xl border border-sand-200 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-900" />
-      <input value={features} onChange={(event) => setFeatures(event.target.value)} placeholder="Diferenciais separados por virgula" className="w-full rounded-2xl border border-sand-200 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-900" />
+      {propertyType !== 'Terreno' && (
+        <div className="grid gap-3 text-sm font-semibold text-slate-700 dark:text-slate-200 sm:grid-cols-3">
+          <label className="inline-flex items-center gap-3 rounded-2xl border border-sand-200 bg-white px-4 py-3 dark:border-slate-700 dark:bg-slate-900">
+            <input type="checkbox" checked={isPetFriendly} onChange={(event) => setIsPetFriendly(event.target.checked)} />
+            Aceita pet
+          </label>
+          <label className="inline-flex items-center gap-3 rounded-2xl border border-sand-200 bg-white px-4 py-3 dark:border-slate-700 dark:bg-slate-900">
+            <input type="checkbox" checked={isFurnished} onChange={(event) => setIsFurnished(event.target.checked)} />
+            Mobiliado
+          </label>
+          {transaction === 'Aluguel' && (
+            <label className="inline-flex items-center gap-3 rounded-2xl border border-sand-200 bg-white px-4 py-3 dark:border-slate-700 dark:bg-slate-900">
+              <input type="checkbox" checked={condoIncluded} onChange={(event) => setCondoIncluded(event.target.checked)} />
+              Condomínio incluso
+            </label>
+          )}
+        </div>
+      )}
+
+      <textarea rows={5} value={description} onChange={(event) => setDescription(event.target.value)} placeholder="Descrição" className="w-full rounded-2xl border border-sand-200 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-900" />
+      <input value={features} onChange={(event) => setFeatures(event.target.value)} placeholder="Diferenciais separados por vírgula" className="w-full rounded-2xl border border-sand-200 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-900" />
+
+      <div className="rounded-2xl border border-ocean-100 bg-ocean-50/50 p-4 dark:border-slate-700 dark:bg-slate-900">
+        <label className="block text-sm font-semibold text-slate-900 dark:text-white" htmlFor="listing-video-url">
+          Vídeo do imóvel
+        </label>
+        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Cole aqui um link do YouTube, Instagram, TikTok, Drive ou outro vídeo público.</p>
+        <input
+          id="listing-video-url"
+          type="url"
+          value={videoUrl}
+          onChange={(event) => setVideoUrl(event.target.value)}
+          placeholder="https://..."
+          className="mt-3 w-full rounded-2xl border border-sand-200 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-900"
+        />
+      </div>
 
       <div className="rounded-2xl border border-sand-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
-        <p className="text-sm font-semibold text-slate-900 dark:text-white">Fotos do anuncio</p>
+        <p className="text-sm font-semibold text-slate-900 dark:text-white">Fotos do anúncio</p>
+        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Mínimo 6 fotos. Máximo 10.</p>
         <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-6">
           {images.map((image, index) => (
             <div key={image} className="space-y-2">
@@ -292,7 +375,7 @@ export default function ListingEditorForm({
                 {index === 0 && <span className="absolute left-2 top-2 rounded-full bg-ocean-600 px-2 py-1 text-[10px] font-semibold text-white">Principal</span>}
               </div>
               <button type="button" onClick={() => setImages((current) => current.filter((item) => item !== image))} className="w-full rounded-xl border border-red-200 px-3 py-2 text-xs font-semibold text-red-700">
-                Quitar
+                Remover
               </button>
             </div>
           ))}
@@ -302,20 +385,20 @@ export default function ListingEditorForm({
                 <img src={photo.url} alt={photo.file.name} className="h-full w-full object-cover" />
               </div>
               <button type="button" onClick={() => removeNewPhoto(photo.url)} className="w-full rounded-xl border border-red-200 px-3 py-2 text-xs font-semibold text-red-700">
-                Quitar
+                Remover
               </button>
             </div>
           ))}
         </div>
         <label className="mt-4 inline-flex cursor-pointer items-center gap-2 rounded-2xl border border-ocean-200 px-5 py-3 text-sm font-semibold text-ocean-700">
           <Upload className="h-4 w-4" aria-hidden="true" />
-          Subir mas fotos
+          Subir mais fotos
           <input type="file" accept="image/*" multiple onChange={handlePhotos} className="sr-only" />
         </label>
       </div>
 
       <div className="rounded-2xl border border-sand-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
-        <p className="text-sm font-semibold text-slate-900 dark:text-white">Contato do anuncio</p>
+        <p className="text-sm font-semibold text-slate-900 dark:text-white">Contato do anúncio</p>
         <div className="mt-3 grid gap-3 sm:grid-cols-3">
           <input value={contactName} onChange={(event) => setContactName(event.target.value)} placeholder="Nome" className="rounded-2xl border border-sand-200 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-900" />
           <input value={contactPhone} onChange={(event) => setContactPhone(event.target.value)} placeholder="Telefone ou WhatsApp" className="rounded-2xl border border-sand-200 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-900" />
@@ -344,7 +427,7 @@ export default function ListingEditorForm({
       <div className="flex flex-wrap gap-3">
         <button type="button" onClick={saveListing} disabled={saving} className="inline-flex items-center gap-2 rounded-2xl bg-ocean-600 px-5 py-3 text-sm font-semibold text-white disabled:opacity-60">
           <Save className="h-4 w-4" aria-hidden="true" />
-          {saving ? 'Guardando...' : 'Guardar cambios'}
+          {saving ? 'Salvando...' : 'Salvar alterações'}
         </button>
         <button type="button" onClick={() => router.push(backHref)} className="inline-flex items-center gap-2 rounded-2xl border border-sand-200 px-5 py-3 text-sm font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">
           <X className="h-4 w-4" aria-hidden="true" />
@@ -354,3 +437,5 @@ export default function ListingEditorForm({
     </form>
   );
 }
+
+

@@ -8,9 +8,10 @@ import { getFavoriteIds } from './FavoriteButton';
 
 type Props = {
   items: Property[];
+  variant?: 'grid' | 'horizontal';
 };
 
-export default function FavoriteAwarePropertyList({ items }: Props) {
+export default function FavoriteAwarePropertyList({ items, variant = 'grid' }: Props) {
   const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
   const [showFavorites, setShowFavorites] = useState(false);
 
@@ -50,14 +51,14 @@ export default function FavoriteAwarePropertyList({ items }: Props) {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex flex-wrap items-center justify-end gap-3">
         <button
           type="button"
           onClick={() => setShowFavorites((current) => !current)}
-          className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-xs font-semibold transition ${
+          className={`inline-flex items-center gap-2 rounded-full border px-4 py-2.5 text-xs font-bold shadow-sm transition ${
             showFavorites
               ? 'border-red-500 bg-red-500 text-white'
-              : 'border-sand-200 text-slate-600 dark:border-slate-700 dark:text-slate-300'
+              : 'border-sand-200 bg-white text-slate-600 hover:border-ocean-200 hover:text-ocean-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300'
           }`}
         >
           <Heart className={`h-4 w-4 ${showFavorites ? 'fill-current' : ''}`} aria-hidden="true" />
@@ -66,9 +67,9 @@ export default function FavoriteAwarePropertyList({ items }: Props) {
       </div>
 
       {visibleItems.length > 0 ? (
-        <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+        <div className={variant === 'horizontal' ? 'space-y-5' : 'grid gap-6 sm:grid-cols-2 xl:grid-cols-3'}>
           {visibleItems.map((property) => (
-            <PropertyCard key={property.id} property={property} />
+            <PropertyCard key={property.id} property={property} variant={variant} />
           ))}
         </div>
       ) : (

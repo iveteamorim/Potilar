@@ -69,11 +69,11 @@ export default function AlertsManager() {
   if (alerts.length === 0) {
     return (
       <div className="glass-card p-6 text-sm text-slate-600 dark:text-slate-300">
-        Nenhum alerta salvo ainda. Faca uma busca em{' '}
+        Nenhuma busca salva ainda. Faca uma busca em{' '}
         <Link href="/imoveis" className="font-semibold text-ocean-700">
           Imoveis
         </Link>{' '}
-        e clique em Salvar alerta.
+        e clique em Criar alerta para acompanhar novos anuncios com esses filtros.
       </div>
     );
   }

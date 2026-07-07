@@ -6,12 +6,14 @@ import { SUPABASE_ANON_KEY, SUPABASE_URL } from '@/lib/supabase/config';
 export async function GET(request: NextRequest) {
   const requestUrl = request.nextUrl.clone();
   const code = requestUrl.searchParams.get('code');
+  const tokenHash = requestUrl.searchParams.get('token_hash');
+  const type = requestUrl.searchParams.get('type');
   const nextParam = requestUrl.searchParams.get('next');
   const next = nextParam?.startsWith('/') ? nextParam : '/login?confirmed=1';
   const redirectUrl = new URL(next, requestUrl.origin);
   const response = NextResponse.redirect(redirectUrl);
 
-  if (code) {
+  if (code || tokenHash) {
     const supabase = createServerClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
       cookies: {
         getAll() {
@@ -26,7 +28,14 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    await supabase.auth.exchangeCodeForSession(code);
+    if (code) {
+      await supabase.auth.exchangeCodeForSession(code);
+    } else if (tokenHash) {
+      await supabase.auth.verifyOtp({
+        token_hash: tokenHash,
+        type: type === 'signup' ? 'signup' : 'magiclink'
+      });
+    }
   }
 
   return response;

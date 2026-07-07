@@ -1,54 +1,29 @@
 import type { Metadata } from 'next';
+import { buildFaqPageJsonLd, getFaqItems } from '@/lib/siteIdentity';
 
 export const metadata: Metadata = {
   title: 'FAQ | Potilar',
-  description: 'Perguntas frequentes sobre anuncios, contatos, seguranca e funcionamento da Potilar.',
+  description:
+    'O que é a Potilar, como anunciar imóvel no RN, preços, contato direto, revisão de anúncios e segurança na plataforma.',
   alternates: {
     canonical: '/faq'
   }
 };
 
-const questions = [
-  {
-    title: 'A Potilar faz intermediacao?',
-    answer:
-      'Nao. Atuamos como plataforma de divulgacao imobiliaria. A negociacao acontece diretamente entre proprietarios, anunciantes e interessados.'
-  },
-  {
-    title: 'Como divulgo meu imovel?',
-    answer:
-      'Crie sua conta, preencha o anuncio, envie fotos reais, informe cidade, tipo de negociacao, preco e dados de contato.'
-  },
-  {
-    title: 'Posso acompanhar meu anuncio?',
-    answer:
-      'Sim. Na area Minha conta voce acompanha o status, edita informacoes, organiza fotos e atualiza contatos.'
-  },
-  {
-    title: 'A Potilar verifica os anuncios?',
-    answer:
-      'Os anuncios podem passar por revisao antes de aparecerem publicamente. Mesmo assim, recomendamos confirmar dados, documentos e identidade do anunciante antes de qualquer pagamento.'
-  },
-  {
-    title: 'Como entro em contato com um anunciante?',
-    answer:
-      'Cada anuncio pode mostrar os canais informados pelo responsavel, como WhatsApp, telefone ou email. O contato e feito diretamente entre as partes.'
-  },
-  {
-    title: 'E seguro pagar sinal ou reserva?',
-    answer:
-      'Nunca envie dinheiro sem confirmar a existencia do imovel, a identidade do responsavel e a documentacao. Em caso de duvida, procure orientacao profissional.'
-  }
-];
-
 export default function FaqPage() {
+  const questions = getFaqItems();
+  const faqJsonLd = buildFaqPageJsonLd(questions);
+
   return (
     <main className="section-padding">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
+
       <div className="mx-auto max-w-4xl">
         <p className="text-sm font-semibold uppercase tracking-[0.2em] text-ocean-600">FAQ</p>
         <h1 className="mt-4 text-4xl font-semibold text-slate-950 dark:text-white">Perguntas frequentes</h1>
         <p className="mt-4 max-w-2xl text-base leading-7 text-slate-600 dark:text-slate-300">
-          Respostas rapidas sobre publicacao de anuncios, contato direto, revisao e cuidados de seguranca.
+          Respostas sobre o portal de imóveis no Rio Grande do Norte: publicação, preços, contato direto, revisão e
+          segurança.
         </p>
 
         <section className="mt-10 divide-y divide-sand-200 border-y border-sand-200 dark:divide-slate-800 dark:border-slate-800">

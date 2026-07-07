@@ -232,3 +232,38 @@ export async function updateHighlightStatus(formData: FormData) {
 
   redirect('/admin?success=1');
 }
+
+export async function updateCreciVerification(formData: FormData) {
+  try {
+    const ownerId = String(formData.get('owner_id') || '');
+    const action = String(formData.get('action') || '');
+
+    if (!ownerId || !['verify', 'unverify'].includes(action)) {
+      throw new Error('Verificacao CRECI invalida');
+    }
+
+    const supabase = await ensureAdmin();
+    const { data, error } = await supabase
+      .from('profiles')
+      .update({
+        creci_verified: action === 'verify',
+        creci_verified_at: action === 'verify' ? new Date().toISOString() : null
+      })
+      .eq('id', ownerId)
+      .select('id')
+      .single();
+
+    if (error || !data) {
+      throw new Error(error?.message ?? 'Nao foi possivel atualizar o CRECI');
+    }
+
+    revalidatePath('/admin');
+    revalidatePath('/imoveis');
+    revalidatePath('/');
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Erro desconhecido';
+    redirect(`/admin?error=${encodeURIComponent(message)}`);
+  }
+
+  redirect('/admin?success=1');
+}

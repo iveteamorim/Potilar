@@ -1,23 +1,24 @@
 import type { Metadata } from 'next';
 import { Analytics } from '@vercel/analytics/react';
 import { BASE_URL } from '@/lib/config';
-import { Manrope, Sora } from 'next/font/google';
+import { buildOrganizationJsonLd, buildWebsiteJsonLd } from '@/lib/siteIdentity';
+import { DM_Serif_Display, Plus_Jakarta_Sans } from 'next/font/google';
 import 'leaflet/dist/leaflet.css';
 import './globals.css';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import Header from '@/components/Header';
-import Footer from '@/components/Footer';
-import ChatWidget from '@/components/ChatWidget';
+import RouteFooter from '@/components/RouteFooter';
 
-const manrope = Manrope({
+const jakarta = Plus_Jakarta_Sans({
   subsets: ['latin'],
-  variable: '--font-manrope',
+  variable: '--font-jakarta',
   display: 'swap'
 });
 
-const sora = Sora({
+const dmSerif = DM_Serif_Display({
   subsets: ['latin'],
-  variable: '--font-sora',
+  weight: '400',
+  variable: '--font-dm-serif',
   display: 'swap'
 });
 
@@ -28,7 +29,7 @@ export const metadata: Metadata = {
     template: '%s | Potilar'
   },
   description:
-    'Compre, alugue, anuncie e encontre casas, apartamentos, terrenos e imoveis de temporada no Rio Grande do Norte.',
+    'Potilar é um portal de imóveis no Rio Grande do Norte. Encontre, alugue, compre e anuncie casas, apartamentos, terrenos e temporada no RN com contato direto.',
   alternates: {
     canonical: '/'
   },
@@ -67,29 +68,12 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const organizationJsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'Organization',
-    name: 'Potilar',
-    url: BASE_URL,
-    logo: `${BASE_URL}/POTILAR-LOGO.png`,
-    description: 'Portal de imoveis no Rio Grande do Norte.'
-  };
-  const websiteJsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'WebSite',
-    name: 'Potilar',
-    url: BASE_URL,
-    potentialAction: {
-      '@type': 'SearchAction',
-      target: `${BASE_URL}/imoveis?busca={search_term_string}`,
-      'query-input': 'required name=search_term_string'
-    }
-  };
+  const organizationJsonLd = buildOrganizationJsonLd();
+  const websiteJsonLd = buildWebsiteJsonLd();
 
   return (
-    <html lang="pt-BR" className={`${manrope.variable} ${sora.variable}`}>
-      <body className="font-sans">
+    <html lang="pt-BR" className={`${jakarta.variable} ${dmSerif.variable}`}>
+      <body className="flex min-h-screen flex-col font-sans">
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
@@ -100,9 +84,10 @@ export default function RootLayout({
         />
         <ThemeProvider>
           <Header />
-          {children}
-          <Footer />
-          <ChatWidget />
+          <div className="flex-1">
+            {children}
+          </div>
+          <RouteFooter />
           <Analytics />
         </ThemeProvider>
       </body>

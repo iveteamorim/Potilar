@@ -9,6 +9,7 @@ export type PublicProfile = {
   accountType: 'corretor' | 'imobiliaria';
   publicSlug: string;
   creci?: string;
+  creciVerified?: boolean;
 };
 
 export function buildPublicProfileSlug(fullName: string, suffix?: string) {
@@ -22,5 +23,5 @@ export function getPublicProfilePath(slug: string) {
 }
 
 export function getAccountTypeLabel(accountType: PublicProfile['accountType']) {
-  return accountType === 'imobiliaria' ? 'Imobiliaria' : 'Corretor';
+  return accountType === 'imobiliaria' ? 'Imobiliária' : 'Corretor';
 }

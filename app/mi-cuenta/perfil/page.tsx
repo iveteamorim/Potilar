@@ -12,11 +12,20 @@ export default async function PerfilPublicoPage() {
 
   if (!user) redirect('/login?next=/mi-cuenta/perfil');
 
-  const { data: profile } = await supabase
+  let { data: profile, error: profileError } = await supabase
     .from('profiles')
-    .select('full_name,company_name,bio,public_slug,account_type,phone')
+    .select('full_name,company_name,bio,public_slug,account_type,phone,creci,creci_verified')
     .eq('id', user.id)
     .single();
+
+  if (profileError) {
+    const fallback = await supabase
+      .from('profiles')
+      .select('full_name,company_name,bio,public_slug,account_type,phone,creci')
+      .eq('id', user.id)
+      .single();
+    profile = fallback.data ? { ...fallback.data, creci_verified: false } : null;
+  }
 
   const publicSlug = profile?.public_slug || buildPublicProfileSlug(profile?.full_name ?? 'anunciante', user.id);
 
@@ -46,6 +55,8 @@ export default async function PerfilPublicoPage() {
           bio={profile?.bio ?? ''}
           publicSlug={publicSlug}
           accountType={profile?.account_type ?? 'particular'}
+          creci={profile?.creci ?? ''}
+          creciVerified={Boolean(profile?.creci_verified)}
           userId={user.id}
         />
       </div>

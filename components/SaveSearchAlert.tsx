@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { BellPlus } from 'lucide-react';
+import { BellPlus, CheckCircle2 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { SEARCH_ALERTS_ENABLED } from '@/lib/config';
 import { buildAlertLabel, searchParamsToFilters } from '@/lib/searchAlerts';
@@ -31,7 +31,7 @@ export default function SaveSearchAlert() {
 
   async function saveAlert() {
     if (!isAuthenticated) {
-      setStatus('Crie uma conta ou entre para salvar esta busca.');
+      setStatus('Entre com seu email para salvar esta busca.');
       return;
     }
 
@@ -60,7 +60,7 @@ export default function SaveSearchAlert() {
         throw new Error(payload.error ?? 'Erro ao salvar busca');
       }
 
-      setStatus('Busca salva em Minha conta > Alertas. Abra quando quiser ver novidades.');
+      setStatus('Alerta criado. Voce pode ver suas buscas salvas em Minha conta.');
     } catch (error) {
       setStatus(error instanceof Error ? error.message : 'Erro ao salvar busca');
     } finally {
@@ -69,23 +69,22 @@ export default function SaveSearchAlert() {
   }
 
   return (
-    <div className="rounded-2xl border border-ocean-200 bg-ocean-50 px-4 py-3 text-sm text-ocean-900 dark:border-ocean-900 dark:bg-ocean-950/40 dark:text-ocean-100">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <p>
-          Salvar busca <span className="font-semibold">{buildAlertLabel(filters)}</span> na sua conta para
-          acompanhar depois em Alertas.
-          <span className="mt-1 block text-xs text-ocean-800/80 dark:text-ocean-200/80">
-            Ainda nao enviamos e-mail nem notificacao automatica — voce abre os resultados quando quiser.
+    <div className="rounded-2xl border border-ocean-200 bg-white px-4 py-4 text-sm shadow-soft dark:border-ocean-900 dark:bg-slate-900">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-3">
+          <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-ocean-50 text-ocean-700 dark:bg-ocean-950/50 dark:text-ocean-200">
+            <BellPlus className="h-5 w-5" aria-hidden="true" />
           </span>
-        </p>
-        <div className="flex flex-wrap gap-2">
+          <p className="font-semibold text-slate-950 dark:text-white">Criar alerta para esta busca</p>
+        </div>
+        <div className="shrink-0">
           {isAuthenticated === false ? (
             <Link
               href={loginHref}
               className="inline-flex items-center gap-2 rounded-xl bg-ocean-700 px-4 py-2 text-xs font-semibold text-white"
             >
               <BellPlus className="h-4 w-4" aria-hidden="true" />
-              Entrar para salvar
+              Criar alerta
             </Link>
           ) : (
             <button
@@ -94,18 +93,13 @@ export default function SaveSearchAlert() {
               disabled={loading || isAuthenticated === null}
               className="inline-flex items-center gap-2 rounded-xl bg-ocean-700 px-4 py-2 text-xs font-semibold text-white disabled:opacity-60"
             >
-              <BellPlus className="h-4 w-4" aria-hidden="true" />
+              {status.startsWith('Alerta') ? <CheckCircle2 className="h-4 w-4" aria-hidden="true" /> : <BellPlus className="h-4 w-4" aria-hidden="true" />}
               {loading ? 'Salvando...' : 'Salvar busca'}
             </button>
           )}
-          {isAuthenticated === false && (
-            <Link href={loginHref} className="rounded-xl border border-ocean-300 px-4 py-2 text-xs font-semibold">
-              Criar conta
-            </Link>
-          )}
         </div>
       </div>
-      {status && <p className="mt-2 text-xs font-semibold">{status}</p>}
+      {status && <p className="mt-3 text-xs font-semibold text-ocean-800 dark:text-ocean-200">{status}</p>}
     </div>
   );
 }

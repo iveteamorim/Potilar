@@ -11,14 +11,17 @@ type Props = {
   bio: string;
   publicSlug: string;
   accountType: string;
+  creci: string;
+  creciVerified: boolean;
   userId: string;
 };
 
-export default function ProfileEditorForm({ fullName, companyName, bio, publicSlug, accountType, userId }: Props) {
+export default function ProfileEditorForm({ fullName, companyName, bio, publicSlug, accountType, creci, creciVerified, userId }: Props) {
   const router = useRouter();
   const [slug, setSlug] = useState(publicSlug || buildPublicProfileSlug(fullName, userId));
   const [company, setCompany] = useState(companyName);
   const [about, setAbout] = useState(bio);
+  const [creciValue, setCreciValue] = useState(creci);
   const [status, setStatus] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -44,7 +47,8 @@ export default function ProfileEditorForm({ fullName, companyName, bio, publicSl
       body: JSON.stringify({
         public_slug: normalizedSlug,
         company_name: company.trim() || null,
-        bio: about.trim() || null
+        bio: about.trim() || null,
+        creci: creciValue.trim() || null
       })
     });
 
@@ -91,6 +95,18 @@ export default function ProfileEditorForm({ fullName, companyName, bio, publicSl
           placeholder={fullName}
           className="mt-2 w-full rounded-2xl border border-sand-200 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-900"
         />
+      </div>
+      <div>
+        <label className="text-sm font-semibold text-slate-700 dark:text-slate-200">CRECI</label>
+        <input
+          value={creciValue}
+          onChange={(event) => setCreciValue(event.target.value)}
+          placeholder="Ex: CRECI-RN 0000-F"
+          className="mt-2 w-full rounded-2xl border border-sand-200 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-900"
+        />
+        <p className={`mt-2 text-xs font-semibold ${creciVerified ? 'text-green-700' : 'text-slate-500'}`}>
+          {creciVerified ? 'CRECI verificado pela Potilar.' : 'CRECI pendente de verificação pela Potilar.'}
+        </p>
       </div>
       <div>
         <label className="text-sm font-semibold text-slate-700 dark:text-slate-200">Sobre voce</label>

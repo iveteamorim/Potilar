@@ -1,17 +1,18 @@
 import Link from 'next/link';
-import Image from 'next/image';
 
 export default function Logo() {
   return (
-    <Link href="/" className="relative block h-12 w-36 sm:h-14 sm:w-44" aria-label="Potilar">
-      <Image
-        src="/POTILAR-LOGO.png"
-        alt="Potilar - Imoveis no Rio Grande do Norte"
-        fill
-        priority
-        sizes="(min-width: 640px) 176px, 144px"
-        className="object-contain object-left"
-      />
+    <Link
+      href="/"
+      className="inline-flex items-baseline leading-none"
+      aria-label="Potilar - Imoveis no Rio Grande do Norte"
+    >
+      <span className="font-sans text-[2.35rem] font-black tracking-[-0.045em] text-ocean-950 drop-shadow-[0_1px_0_rgba(255,255,255,0.45)] sm:text-[2.8rem]">
+        Poti
+      </span>
+      <span className="font-sans text-[2.35rem] font-black tracking-[-0.055em] text-agreste-500 drop-shadow-[0_1px_0_rgba(255,255,255,0.45)] sm:text-[2.8rem]">
+        Lar
+      </span>
     </Link>
   );
 }

@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { getPaymentCode } from '@/lib/pix';
 import { PLANS } from '@/lib/plans';
-import { setMainImage, updateHighlightStatus, updateListingPaymentStatus, updateListingStatus } from './actions';
+import { setMainImage, updateCreciVerification, updateHighlightStatus, updateListingPaymentStatus, updateListingStatus } from './actions';
 
 export const metadata: Metadata = {
   title: 'Admin | Potilar'
@@ -108,20 +108,29 @@ export default async function AdminPage({
   }
 
   const ownerIds = Array.from(new Set((listings ?? []).map((listing) => listing.owner_id).filter(Boolean)));
-  let advertiserProfiles = new Map<string, { document: string | null; accountType: string | null; creci: string | null }>();
+  let advertiserProfiles = new Map<string, { document: string | null; accountType: string | null; creci: string | null; creciVerified: boolean }>();
   if (ownerIds.length > 0) {
-    const { data: profileDocs } = await supabase
+    let { data: profileDocs, error: profileDocsError } = await supabase
       .from('profiles')
-      .select('id,advertiser_document,account_type,creci')
+      .select('id,advertiser_document,account_type,creci,creci_verified')
       .in('id', ownerIds);
 
+    if (profileDocsError) {
+      const fallback = await supabase
+        .from('profiles')
+        .select('id,advertiser_document,account_type,creci')
+        .in('id', ownerIds);
+      profileDocs = fallback.data?.map((profile) => ({ ...profile, creci_verified: false })) ?? [];
+    }
+
     advertiserProfiles = new Map(
-      ((profileDocs ?? []) as Array<{ id: string; advertiser_document: string | null; account_type: string | null; creci: string | null }>).map((profile) => [
+      ((profileDocs ?? []) as Array<{ id: string; advertiser_document: string | null; account_type: string | null; creci: string | null; creci_verified?: boolean | null }>).map((profile) => [
         profile.id,
         {
           document: profile.advertiser_document,
           accountType: profile.account_type,
-          creci: profile.creci
+          creci: profile.creci,
+          creciVerified: Boolean(profile.creci_verified)
         }
       ])
     );
@@ -398,7 +407,36 @@ export default async function AdminPage({
                             CRECI: {advertiserProfiles.get(listing.owner_id)?.creci}
                           </p>
                         )}
+                        {advertiserProfiles.get(listing.owner_id)?.creci && (
+                          <p
+                            className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
+                              advertiserProfiles.get(listing.owner_id)?.creciVerified
+                                ? 'bg-green-50 text-green-800'
+                                : 'bg-sun-50 text-slate-800'
+                            }`}
+                          >
+                            {advertiserProfiles.get(listing.owner_id)?.creciVerified ? 'CRECI verificado' : 'CRECI pendente'}
+                          </p>
+                        )}
                       </div>
+                      {advertiserProfiles.get(listing.owner_id)?.creci && (
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          <form action={updateCreciVerification}>
+                            <input type="hidden" name="owner_id" value={listing.owner_id} />
+                            <input type="hidden" name="action" value="verify" />
+                            <button className="rounded-xl bg-green-600 px-3 py-2 text-xs font-semibold text-white">
+                              Marcar CRECI verificado
+                            </button>
+                          </form>
+                          <form action={updateCreciVerification}>
+                            <input type="hidden" name="owner_id" value={listing.owner_id} />
+                            <input type="hidden" name="action" value="unverify" />
+                            <button className="rounded-xl border border-sand-200 px-3 py-2 text-xs font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">
+                              Remover verificacao
+                            </button>
+                          </form>
+                        </div>
+                      )}
                       {listing.address_extra && (
                         <p className="mt-1 text-xs font-semibold text-slate-500">Referencia: {listing.address_extra}</p>
                       )}

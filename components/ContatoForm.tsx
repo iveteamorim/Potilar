@@ -2,20 +2,24 @@
 
 import { useState } from 'react';
 
+const CONTACT_EMAIL = 'contato@potilar.com.br';
+
 export default function ContatoForm() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
 
   function handleSubmit() {
-    const text = [
+    const body = [
       'Ola, vim pelo site Potilar e quero informacoes sobre imoveis.',
+      '',
       `Nome: ${name || '-'}`,
       `Email: ${email || '-'}`,
       `Mensagem: ${message || '-'}`
     ].join('\n');
-    const url = `https://wa.me/5521969724141?text=${encodeURIComponent(text)}`;
-    window.open(url, '_blank');
+    const subject = 'Contato pelo site Potilar';
+    const url = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    window.location.href = url;
   }
 
   return (
@@ -46,16 +50,10 @@ export default function ContatoForm() {
         onClick={handleSubmit}
         className="w-full rounded-2xl bg-ocean-600 px-5 py-3 text-sm font-semibold text-white"
       >
-        Receber informacoes
+        Enviar por email
       </button>
-      <a
-        href="https://wa.me/5521969724141?text=Ola%2C%20vim%20pelo%20site%20Potilar%20e%20quero%20falar%20com%20atendimento."
-        className="block text-center text-sm font-semibold text-ocean-700"
-      >
-        Ou falar com atendimento no WhatsApp
-      </a>
       <p className="text-center text-xs text-slate-500">
-        Seus dados sao usados apenas para contato e retorno do atendimento.
+        O formulario abre seu aplicativo de email com a mensagem pronta para envio.
       </p>
     </form>
   );

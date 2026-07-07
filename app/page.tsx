@@ -10,6 +10,7 @@ import { orderListingsForDisplay } from '@/lib/propertyOrdering';
 import type { Property } from '@/data/properties';
 import Link from 'next/link';
 import { getFreeListingLimit, getLaunchPromoDeadlineLabel, isLaunchPromoActive } from '@/lib/plans';
+import { POTILAR_DEFINITION } from '@/lib/siteIdentity';
 import agencyMatchImage from '@/components/ayudamosencontrarimobiliaria.jpg';
 import { dedupeNewsArticles, fallbackNewsArticles, formatNewsDate, getNewsImageUrl, withUniqueNewsImages, type NewsArticle } from '@/data/news';
 
@@ -19,7 +20,7 @@ export const revalidate = 0;
 
 export const metadata: Metadata = {
   title: {
-    absolute: 'Potilar | Imoveis no Rio Grande do Norte'
+    absolute: 'Potilar | Imóveis no Rio Grande do Norte'
   },
   description:
     'Encontre e anuncie casas, apartamentos, terrenos, alugueis e temporada no Rio Grande do Norte com contato direto.',
@@ -142,9 +143,7 @@ async function getHomeNews(): Promise<NewsArticle[]> {
 export default async function HomePage() {
   const approvedListings = await getApprovedListings();
   const newsArticles = await getHomeNews();
-  const featured = orderListingsForDisplay(
-    approvedListings.filter((listing) => listing.featuredPlan)
-  ).slice(0, 10);
+  const featured = orderListingsForDisplay(approvedListings).slice(0, 10);
 
   return (
     <main>
@@ -154,35 +153,37 @@ export default async function HomePage() {
         <div className="mx-auto grid max-w-6xl gap-6 px-4 sm:px-6 lg:grid-cols-[1fr_auto] lg:items-center">
           <div>
             <h2 className="mt-2 text-2xl font-semibold leading-tight text-slate-950 dark:text-white sm:text-3xl">
-              Tem um imovel no Rio Grande do Norte?
+              Tem um imóvel no Rio Grande do Norte?
             </h2>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600 dark:text-slate-300">
               {isLaunchPromoActive()
-                ? `Promocao ate ${getLaunchPromoDeadlineLabel()}: ${getFreeListingLimit()} anuncios gratis por conta na Potilar.`
-                : 'Anuncie seu primeiro imovel gratis na Potilar.'}
-              <a
-                href="https://wa.me/5521969724141?text=Ola%2C%20vim%20pelo%20site%20Potilar%20e%20quero%20ajuda%20para%20anunciar%20meu%20imovel."
-                target="_blank"
-                rel="noreferrer"
-                className="mt-2 block text-xs font-semibold text-ocean-700 underline-offset-4 hover:underline dark:text-ocean-300"
-              >
-                Quero ajuda para anunciar meu imovel
-              </a>
+                ? 'Publique seus 2 primeiros anúncios grátis na Potilar.'
+                : 'Anuncie seu primeiro imóvel grátis na Potilar.'}
             </p>
           </div>
-          <Link
-            href="/anunciar"
-            className="inline-flex w-full items-center justify-center rounded-2xl bg-ocean-700 px-6 py-4 text-sm font-bold text-white shadow-soft transition hover:bg-ocean-800 sm:w-auto"
-          >
-            Anunciar imovel gratis
-          </Link>
+          <div className="space-y-2 text-center sm:text-left">
+            <Link
+              href="/anunciar"
+              className="inline-flex w-full items-center justify-center rounded-2xl bg-ocean-700 px-6 py-4 text-sm font-bold text-white shadow-soft transition hover:bg-ocean-800 sm:w-auto"
+            >
+              Anunciar imóvel grátis
+            </Link>
+            <a
+              href="https://wa.me/5521969724141?text=Ola%2C%20vim%20pelo%20site%20Potilar%20e%20quero%20ajuda%20para%20anunciar%20meu%20imovel."
+              target="_blank"
+              rel="noreferrer"
+              className="block text-xs font-semibold text-ocean-700 underline-offset-4 hover:underline dark:text-ocean-300"
+            >
+              Quero ajuda para anunciar meu imóvel
+            </a>
+          </div>
         </div>
       </section>
 
       <section className="section-padding">
         <div className="mx-auto max-w-6xl">
           <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">Imoveis em destaque</h2>
+            <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">Imóveis em destaque</h2>
             <Link href="/imoveis" className="text-sm font-semibold text-ocean-700">
               Ver todos
             </Link>
@@ -191,7 +192,7 @@ export default async function HomePage() {
             <FeaturedCarousel items={featured} />
           ) : (
             <div className="glass-card mt-6 p-6 text-sm text-slate-600 dark:text-slate-300">
-              Nenhum imovel publicado ainda.
+              Nenhum imóvel publicado ainda.
             </div>
           )}
         </div>
@@ -202,20 +203,20 @@ export default async function HomePage() {
           <div className="overflow-hidden border border-sand-200 bg-sand-100 dark:border-slate-800 dark:bg-slate-900">
             <img
               src={agencyMatchImage.src}
-              alt="Sala de imovel preparada para venda"
+              alt="Sala de imóvel preparada para venda"
               className="h-[300px] w-full object-cover object-[50%_30%] sm:h-[380px]"
             />
           </div>
           <div className="border border-sand-200 bg-white p-7 shadow-[0_18px_45px_rgba(15,23,42,0.12)] dark:border-slate-800 dark:bg-slate-900 lg:-ml-12">
             <h2 className="text-2xl font-semibold leading-tight text-ocean-700 dark:text-ocean-300 sm:text-3xl">
-              Recomendamos as imobiliarias mais adequadas para vender ou alugar seu imovel
+              Recomendamos as imobiliárias mais adequadas para vender ou alugar seu imóvel
             </h2>
             <p className="mt-4 text-base leading-7 text-slate-600 dark:text-slate-300">
-              A Potilar ajuda voce a divulgar o anuncio e encontrar corretores ou imobiliarias do RN quando precisar de
+              A Potilar ajuda você a divulgar o anúncio e encontrar corretores ou imobiliárias do RN quando precisar de
               apoio profissional.
             </p>
             <Link href="/anunciar" className="mt-6 inline-flex text-base font-bold text-ocean-700 hover:text-ocean-900">
-              Anunciar meu imovel
+              Anunciar meu imóvel
             </Link>
           </div>
         </div>
@@ -228,18 +229,32 @@ export default async function HomePage() {
               Busca por mapa
             </h2>
             <p className="mt-4 text-2xl font-semibold text-slate-900 dark:text-white">
-              Encontre imoveis pela regiao que voce procura.
+              Encontre imóveis pela região que você procura.
             </p>
             <p className="mt-4 text-sm text-slate-600 dark:text-slate-300">
-              Veja os anuncios publicados no Rio Grande do Norte e use a localizacao para comparar cidades, bairros e
+              Veja os anúncios publicados no Rio Grande do Norte e use a localização para comparar cidades, bairros e
               oportunidades com mais clareza.
             </p>
-            <Link
-              href="/imoveis#mapa"
-              className="mt-6 inline-flex rounded-full bg-sun-500 px-6 py-3 text-sm font-semibold text-white shadow-soft"
-            >
-              Ver imoveis no mapa
-            </Link>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Link
+                href="/imoveis?transaction=Compra#mapa"
+                className="inline-flex min-w-32 justify-center rounded-full bg-sun-500 px-6 py-3 text-sm font-semibold text-white shadow-soft transition hover:bg-sun-600"
+              >
+                Comprar
+              </Link>
+              <Link
+                href="/imoveis?transaction=Aluguel#mapa"
+                className="inline-flex min-w-32 justify-center rounded-full border border-ocean-700 bg-white px-6 py-3 text-sm font-semibold text-ocean-700 shadow-soft transition hover:border-ocean-900 hover:text-ocean-900 dark:border-ocean-300 dark:bg-slate-950 dark:text-ocean-200"
+              >
+                Alugar
+              </Link>
+              <Link
+                href="/imoveis#mapa"
+                className="inline-flex min-w-32 justify-center rounded-full border border-sand-300 bg-white/70 px-6 py-3 text-sm font-semibold text-slate-700 transition hover:border-ocean-300 hover:text-ocean-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+              >
+                Ver todos
+              </Link>
+            </div>
           </div>
           <div className="hidden md:block">
             <PropertyMap items={approvedListings} height="360px" />
@@ -257,10 +272,10 @@ export default async function HomePage() {
               Potilar<span className="text-slate-500">/noticias</span>
             </h2>
             <p className="mt-3 text-base text-slate-600 dark:text-slate-300">
-              Noticias e orientacoes sobre mercado imobiliario, aluguel, compra e seguranca no RN.
+              Notícias e orientações sobre mercado imobiliário, aluguel, compra e segurança no RN.
             </p>
             <div className="mt-5 flex flex-wrap gap-8 text-sm font-bold text-slate-600 dark:text-slate-300">
-              <span className="border-b-4 border-ocean-700 pb-3 text-ocean-700">Noticias destacadas</span>
+              <span className="border-b-4 border-ocean-700 pb-3 text-ocean-700">Notícias destacadas</span>
               <span>Imobiliario</span>
               <span>Financiamento</span>
               <span>Temporada</span>
@@ -289,9 +304,16 @@ export default async function HomePage() {
 
           <div className="mt-8 text-center">
             <Link href="/noticias" className="text-lg font-bold text-ocean-700">
-              Ver mais noticias imobiliarias
+              Ver mais notícias imobiliárias
             </Link>
           </div>
+        </div>
+      </section>
+
+      <section className="border-y border-sand-200 bg-sand-50/70 py-6 dark:border-slate-800 dark:bg-slate-900/50">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6">
+          <h2 className="text-sm font-semibold text-slate-950 dark:text-white">Sobre a Potilar</h2>
+          <p className="mt-2 max-w-4xl text-sm leading-7 text-slate-600 dark:text-slate-300">{POTILAR_DEFINITION}</p>
         </div>
       </section>
 
@@ -299,11 +321,11 @@ export default async function HomePage() {
         <div className="mx-auto max-w-6xl rounded-3xl bg-ocean-700 px-6 py-10 text-white shadow-soft">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
-              <h3 className="text-2xl font-semibold">Quer divulgar seu imovel?</h3>
-              <p className="mt-2 text-sm text-sand-100">Publique seu anuncio e fale diretamente com interessados.</p>
+              <h3 className="text-2xl font-semibold">Quer divulgar seu imóvel?</h3>
+              <p className="mt-2 text-sm text-sand-100">Publique seu anúncio e fale diretamente com interessados.</p>
             </div>
             <Link href="/anunciar" className="inline-flex rounded-full bg-white px-6 py-3 text-sm font-semibold text-ocean-700">
-              Anunciar meu imovel
+              Anunciar meu imóvel
             </Link>
           </div>
         </div>

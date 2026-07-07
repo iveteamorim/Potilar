@@ -159,11 +159,8 @@ export default async function MinhaContaPage({
         <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-start">
           <div className="min-w-0">
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-ocean-600">Minha conta</p>
-            <h1 className="mt-4 text-3xl font-semibold text-slate-900 dark:text-white">
-              Meus anuncios ({listingCount})
-            </h1>
             <p className="mt-3 text-sm text-slate-600 dark:text-slate-300">
-              Acompanhe seus anuncios enviados, pendentes de revisao e publicados. Para criar um novo, clique em Anunciar imovel.
+              Salve favoritos, acompanhe alertas de busca e gerencie seus anuncios publicados.
             </p>
           </div>
           <div className="flex flex-wrap items-center justify-start gap-2 lg:justify-end">
@@ -172,6 +169,9 @@ export default async function MinhaContaPage({
             </Link>
             <Link href="/mi-cuenta/favoritos" className="inline-flex rounded-xl border border-red-200 px-3.5 py-2 text-sm font-semibold text-red-600 dark:border-red-900 dark:text-red-300">
               Meus favoritos
+            </Link>
+            <Link href="/mi-cuenta/mensagens" className="inline-flex rounded-xl border border-ocean-200 px-3.5 py-2 text-sm font-semibold text-ocean-700">
+              Mensagens
             </Link>
             {SEARCH_ALERTS_ENABLED && (
               <Link href="/mi-cuenta/alertas" className="inline-flex rounded-xl border border-ocean-200 px-3.5 py-2 text-sm font-semibold text-ocean-700">
@@ -535,7 +535,7 @@ export default async function MinhaContaPage({
               <p className="text-base font-semibold text-slate-900 dark:text-white">Nenhum anuncio ainda</p>
               <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
                 {isLaunchPromoActive()
-                  ? `Publique ate ${getFreeListingLimit()} anuncios gratuitos ate ${getLaunchPromoDeadlineLabel()}.`
+                  ? `Publique seus ${getFreeListingLimit()} primeiros anuncios gratis.`
                   : 'Publique seu primeiro anuncio gratuito.'}
               </p>
               <Link href="/anunciar" className="mt-5 inline-flex rounded-2xl bg-ocean-600 px-5 py-3 text-sm font-semibold text-white">

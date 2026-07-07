@@ -5,7 +5,7 @@ export const PLANS = {
     firstFree: true,
     /** Promocao de lancamento ate setembro/2026 */
     launchPromo: {
-      freeListingLimit: 3,
+      freeListingLimit: 2,
       /** Fim da promo: 30/set/2026 23:59 (horario de Brasilia) */
       endsAtIso: '2026-10-01T02:59:59.999Z'
     },
@@ -47,7 +47,7 @@ export function getLaunchPromoDeadlineLabel() {
 
 export function getLaunchPromoShortLabel() {
   return isLaunchPromoActive()
-    ? `3 anuncios gratis ate ${getLaunchPromoDeadlineLabel()}`
+    ? `2 anuncios gratis ate ${getLaunchPromoDeadlineLabel()}`
     : '1 anuncio gratis';
 }
 

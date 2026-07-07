@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Instagram, Mail, MessageCircle } from 'lucide-react';
+import { Instagram, MessageCircle } from 'lucide-react';
 import { FEATURED_CITY_NAMES, getCityPagePath } from '@/lib/cityPages';
 import { SEO_INTENT_PAGES } from '@/lib/seoIntentPages';
 import Logo from './Logo';
@@ -15,14 +15,16 @@ export default function Footer() {
           </p>
         </div>
         <div>
-          <p className="text-base font-semibold text-slate-900 dark:text-white">Navegacao</p>
+          <p className="text-base font-semibold text-slate-900 dark:text-white">Navegação</p>
           <div className="mt-2 grid grid-cols-2 gap-x-6 gap-y-2">
-            <Link href="/imoveis">Imoveis</Link>
+            <Link href="/imoveis">Imóveis</Link>
             <Link href="/imoveis/cidades">Cidades do RN</Link>
-            <Link href="/planos">Planos e Precos</Link>
+            <Link href="/minha-casa-minha-vida">Financiamento de imóveis</Link>
+            <Link href="/planos">Planos e Preços</Link>
+            <Link href="/sobre">Sobre</Link>
             <Link href="/contato">Contato</Link>
-            <Link href="/imobiliarias">Imobiliarias</Link>
-            <Link href="/seguranca">Seguranca</Link>
+            <Link href="/imobiliarias">Imobiliárias</Link>
+            <Link href="/seguranca">Segurança</Link>
             <Link href="/faq">FAQ</Link>
             <Link href="/termos-de-uso">Termos de Uso</Link>
             <Link href="/privacidade">Privacidade</Link>
@@ -33,7 +35,7 @@ export default function Footer() {
           <div className="mt-2 grid gap-2">
             {FEATURED_CITY_NAMES.slice(0, 8).map((city) => (
               <Link key={city} href={getCityPagePath(city)}>
-                Imoveis em {city}
+                Imóveis em {city}
               </Link>
             ))}
           </div>
@@ -69,27 +71,20 @@ export default function Footer() {
             >
               <Instagram className="h-5 w-5" aria-hidden="true" />
             </a>
-            <Link
-              href="/contato"
-              aria-label="Fale conosco"
-              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-sand-200 bg-white text-ocean-700 transition hover:border-ocean-300 hover:bg-ocean-50 dark:border-slate-800 dark:bg-slate-900"
-            >
-              <Mail className="h-5 w-5" aria-hidden="true" />
-            </Link>
           </div>
           <Link
             href="/anunciar"
             className="mt-3 inline-flex rounded-full border border-sand-200 px-4 py-2 text-xs font-semibold text-ocean-700"
           >
-            Anunciar meu imovel
+            Anunciar meu imóvel
           </Link>
         </div>
       </div>
       <div className="mx-auto mt-8 max-w-6xl px-4 text-xs text-slate-500 sm:px-6">
         &copy; 2026 Potilar. Todos os direitos reservados.
         <p className="mt-3">
-          A Potilar atua como plataforma digital de divulgacao imobiliaria. A negociacao e a formalizacao dos negocios
-          sao realizadas diretamente entre proprietarios e interessados.
+          A Potilar atua como plataforma digital de divulgação imobiliária. A negociação e a formalização dos negócios
+          são realizadas diretamente entre proprietários e interessados.
         </p>
       </div>
     </footer>

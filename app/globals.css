@@ -13,6 +13,21 @@ body {
 
 body {
   @apply bg-sand-50 text-slate-900 antialiased;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "liga" 1, "kern" 1;
+}
+
+h1,
+h2,
+.font-display {
+  font-family: var(--font-dm-serif), Georgia, serif;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+h1,
+h2 {
+  line-height: 1.04;
 }
 
 .dark body {
@@ -20,7 +35,7 @@ body {
 }
 
 .section-padding {
-  @apply px-4 py-10 sm:px-6 sm:py-16 lg:px-8;
+  @apply px-4 py-12 sm:px-6 sm:py-16 lg:px-8 lg:py-20;
 }
 
 .glass-card {

@@ -10,6 +10,7 @@ type Props = {
   zoom?: number;
   mapActive?: boolean;
   showLegend?: boolean;
+  compactPreview?: boolean;
 };
 
 function MapLoadingPlaceholder({ height = '360px' }: { height?: string }) {

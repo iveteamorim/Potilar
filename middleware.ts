@@ -5,6 +5,7 @@ import { properties } from '@/data/properties';
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const host = request.headers.get('host');
+  const hasSearchParams = request.nextUrl.searchParams.size > 0;
 
   if (host === 'rn-lar.vercel.app' || host === 'viva-rn.vercel.app' || host === 'potilar.vercel.app') {
     const url = request.nextUrl.clone();
@@ -22,8 +23,24 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(url, 302);
   }
 
+  const shouldNoindex =
+    hasSearchParams &&
+    (
+      pathname === '/imoveis' ||
+      pathname.startsWith('/imoveis/cidade/') ||
+      pathname.startsWith('/noticias') ||
+      pathname.startsWith('/login') ||
+      pathname.startsWith('/mi-cuenta') ||
+      pathname.startsWith('/admin') ||
+      pathname.startsWith('/completar-conta')
+    );
+
   if (!pathname.startsWith('/imoveis/')) {
-    return NextResponse.next();
+    const response = NextResponse.next();
+    if (shouldNoindex) {
+      response.headers.set('X-Robots-Tag', 'noindex, follow');
+    }
+    return response;
   }
 
   const listingCodeFromImoveis = pathname.replace('/imoveis/', '').replace(/\/+$/g, '');
@@ -42,7 +59,11 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(url, 301);
   }
 
-  return NextResponse.next();
+  const response = NextResponse.next();
+  if (shouldNoindex) {
+    response.headers.set('X-Robots-Tag', 'noindex, follow');
+  }
+  return response;
 }
 
 export const config = {

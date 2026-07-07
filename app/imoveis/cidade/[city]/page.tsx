@@ -223,7 +223,7 @@ export default async function CityListingsPage({ params }: { params: { city: str
             <p className="mx-auto max-w-2xl text-sm leading-7 text-slate-600 dark:text-slate-300">
               Seja o primeiro a anunciar casas, apartamentos, terrenos ou temporada em {cityName}.
               {promoActive
-                ? ` Ate ${promoDeadline}, particulares podem publicar ate ${freeLimit} anuncios gratuitos na Potilar, com contato direto entre anunciante e interessado.`
+                ? ` Particulares podem publicar seus ${freeLimit} primeiros anuncios gratis na Potilar, com contato direto entre anunciante e interessado.`
                 : ' Particulares podem publicar o primeiro anuncio gratis na Potilar, com contato direto entre anunciante e interessado.'}
             </p>
             <Link href={anunciarHref} className="inline-flex rounded-2xl bg-ocean-600 px-6 py-3 text-sm font-semibold text-white">

@@ -1,10 +1,12 @@
 import { Suspense } from 'react';
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import PropertyFilters from '@/components/PropertyFilters';
 import PaginatedPropertyList from '@/components/PaginatedPropertyList';
 import PropertyMap from '@/components/PropertyMapLoader';
 import MobileListingsControls from '@/components/MobileListingsControls';
 import SaveSearchAlert from '@/components/SaveSearchAlert';
+import MapModalButton from '@/components/MapModalButton';
 import { createClient } from '@/lib/supabase/server';
 import { fetchApprovedListingRows } from '@/lib/fetchApprovedListings';
 import { listingRowToProperty } from '@/lib/listings';
@@ -32,6 +34,7 @@ type PublicListingRow = {
   lat: number;
   lng: number;
   images: string[];
+  video_url?: string | null;
   featured_plan?: '7_days' | '30_days' | 'super_30_days' | null;
   featured_payment_status?: 'not_requested' | 'pix_pending' | 'confirmed' | null;
   featured_starts_at?: string | null;
@@ -41,6 +44,7 @@ type PublicListingRow = {
   contact_whatsapp?: string | null;
   contact_email?: string | null;
   contact_methods?: string[] | null;
+  condo_included?: boolean | null;
   description: string;
   features: string[];
   created_at?: string | null;
@@ -78,6 +82,8 @@ function applyFilters(items: Property[], searchParams: { [key: string]: string |
     const parking = Number(searchParams.parking ?? 0);
     const minArea = Number(searchParams.minArea ?? 0);
     const petFriendly = searchParams.petFriendly === '1';
+    const furnished = searchParams.furnished === '1';
+    const condoIncluded = searchParams.condoIncluded === '1';
     const propertyType = typeof searchParams.propertyType === 'string' ? searchParams.propertyType : '';
     const transaction = typeof searchParams.transaction === 'string' ? searchParams.transaction : '';
     const city = typeof searchParams.city === 'string' ? searchParams.city : '';
@@ -103,6 +109,8 @@ function applyFilters(items: Property[], searchParams: { [key: string]: string |
     if (parking && property.parking < parking) return false;
     if (minArea && (property.areaSqm ?? 0) < minArea) return false;
     if (petFriendly && !property.isPetFriendly) return false;
+    if (furnished && !property.isFurnished) return false;
+    if (condoIncluded && !property.condoIncluded) return false;
     if (propertyType && property.propertyType !== propertyType) return false;
     if (transaction && property.transaction !== transaction) return false;
     if (city && !normalizeFilterText(property.location).includes(normalizeFilterText(city))) return false;
@@ -118,6 +126,59 @@ function applyFilters(items: Property[], searchParams: { [key: string]: string |
     return [...filtered].sort((a, b) => b.price - a.price);
   }
   return orderListingsForDisplay(filtered);
+}
+
+function buildTransactionHref(
+  searchParams: { [key: string]: string | string[] | undefined },
+  transaction: '' | 'Compra' | 'Aluguel'
+) {
+  const params = new URLSearchParams();
+
+  Object.entries(searchParams).forEach(([key, value]) => {
+    if (key === 'transaction' || key === 'page') return;
+    if (typeof value === 'string' && value) params.set(key, value);
+  });
+
+  if (transaction) params.set('transaction', transaction);
+  const query = params.toString();
+  return query ? `/imoveis?${query}` : '/imoveis';
+}
+
+function TransactionTabs({
+  searchParams
+}: {
+  searchParams: { [key: string]: string | string[] | undefined };
+}) {
+  const current = typeof searchParams.transaction === 'string' ? searchParams.transaction : '';
+  const tabs = [
+    ['', 'Todos'],
+    ['Aluguel', 'Alugar'],
+    ['Compra', 'Comprar']
+  ] as const;
+
+  return (
+    <div className="grid grid-cols-3 rounded-2xl border border-sand-200 bg-white p-1 text-center shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:inline-flex sm:gap-8 sm:border-0 sm:bg-transparent sm:p-0 sm:text-left sm:shadow-none">
+      {tabs.map(([value, label]) => {
+        const active =
+          current === value ||
+          (!current && value === '') ||
+          (value === 'Aluguel' && current === 'Temporada');
+        return (
+          <Link
+            key={label}
+            href={buildTransactionHref(searchParams, value)}
+            className={`inline-flex items-center justify-center rounded-xl px-3 py-2.5 text-sm font-extrabold transition sm:min-w-24 sm:rounded-none sm:border-b-4 sm:px-1 sm:pb-4 sm:pt-2 sm:text-base ${
+              active
+                ? 'bg-ocean-700 text-white sm:border-ocean-700 sm:bg-transparent sm:text-ocean-700'
+                : 'text-slate-500 hover:bg-ocean-50 hover:text-ocean-700 sm:border-transparent sm:hover:border-ocean-200 sm:hover:bg-transparent dark:text-slate-300'
+            }`}
+          >
+            {label}
+          </Link>
+        );
+      })}
+    </div>
+  );
 }
 
 function PropertyFiltersSkeleton() {
@@ -144,7 +205,9 @@ function toProperty(listing: PublicListingRow) {
     contact_phone: listing.contact_phone ?? null,
     contact_whatsapp: listing.contact_whatsapp ?? null,
     contact_email: listing.contact_email ?? null,
-    contact_methods: listing.contact_methods ?? []
+    contact_methods: listing.contact_methods ?? [],
+    video_url: listing.video_url ?? null,
+    condo_included: listing.condo_included ?? false
   });
 }
 
@@ -166,38 +229,51 @@ export default async function ImoveisPage({
   const filtered = applyFilters(approvedListings, searchParams);
 
   return (
-    <main className="section-padding">
-      <div className="mx-auto max-w-6xl space-y-8">
-        <div>
-          <h1 className="text-2xl font-semibold text-slate-900 dark:text-white sm:text-3xl">Imoveis</h1>
-        </div>
-
-        <div className="grid gap-8 lg:grid-cols-[1.1fr_0.65fr]">
-          <div className="space-y-4">
-            <div>
-              <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Resultados</h2>
-              <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-                {filtered.length} anuncios encontrados.
-              </p>
-            </div>
-            <Suspense fallback={null}>
-              <SaveSearchAlert />
-            </Suspense>
-            <MobileListingsControls items={filtered} />
-            <Suspense fallback={<div className="glass-card h-40 animate-pulse" />}>
-              <PaginatedPropertyList items={filtered} />
-            </Suspense>
-          </div>
-          <div className="hidden space-y-4 lg:block">
-            <div className="hidden lg:block">
+    <main className="border-t border-sand-200 bg-sand-50/40 dark:border-slate-800 dark:bg-slate-950">
+      <div className="mx-auto max-w-[1500px] px-4 py-6 sm:px-6">
+        <div className="grid gap-8 lg:grid-cols-[360px_minmax(0,1fr)]">
+          <aside className="hidden lg:block">
+            <div className="sticky top-24 max-h-[calc(100vh-7rem)] space-y-4 overflow-y-auto pr-2">
+              <Suspense fallback={null}>
+                <SaveSearchAlert />
+              </Suspense>
+              <div id="mapa" className="relative overflow-hidden rounded-lg border border-sand-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                <PropertyMap items={filtered} height="390px" />
+                <MapModalButton items={filtered} floating />
+              </div>
               <PropertyFilters />
             </div>
-            <div id="mapa" className="scroll-mt-24 lg:sticky lg:top-24">
-              <PropertyMap items={filtered} height="420px" />
+          </aside>
+
+          <section className="space-y-4">
+            <div className="rounded-2xl border border-sand-200 bg-white px-4 py-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:rounded-3xl sm:px-6 sm:py-5">
+              <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+                <div>
+                  <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-ocean-700 dark:text-ocean-300">Busca no RN</p>
+                  <h1 className="mt-1.5 font-sans text-2xl font-extrabold tracking-normal text-slate-950 dark:text-white sm:mt-2 sm:text-3xl">
+                    Imóveis no RN
+                  </h1>
+                  <p className="mt-1.5 text-sm font-semibold text-slate-600 dark:text-slate-300 sm:mt-2">
+                    {filtered.length} anúncios encontrados
+                  </p>
+                </div>
+                <TransactionTabs searchParams={searchParams} />
+              </div>
             </div>
-          </div>
+            <MobileListingsControls items={filtered} />
+            <div className="lg:hidden">
+              <Suspense fallback={null}>
+                <SaveSearchAlert />
+              </Suspense>
+            </div>
+            <Suspense fallback={<div className="glass-card h-40 animate-pulse" />}>
+              <PaginatedPropertyList items={filtered} variant="horizontal" />
+            </Suspense>
+          </section>
         </div>
       </div>
     </main>
   );
 }
+
+

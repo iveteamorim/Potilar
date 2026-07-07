@@ -11,8 +11,8 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['"Manrope"', ...defaultTheme.fontFamily.sans],
-        display: ['"Sora"', ...defaultTheme.fontFamily.sans]
+        sans: ['var(--font-jakarta)', ...defaultTheme.fontFamily.sans],
+        display: ['var(--font-dm-serif)', ...defaultTheme.fontFamily.serif]
       },
       colors: {
         ocean: {

@@ -22,7 +22,9 @@ export type Property = {
   isPetFriendly: boolean;
   isFurnished?: boolean;
   condoFee?: number;
+  condoIncluded?: boolean;
   images: string[];
+  videoUrl?: string;
   tourUrl?: string;
   isFeatured?: boolean;
   featuredPlan?: '7_days' | '30_days' | 'super_30_days';
@@ -31,6 +33,8 @@ export type Property = {
   contactWhatsapp?: string;
   contactEmail?: string;
   contactMethods?: string[];
+  advertiserAccountType?: 'particular' | 'corretor' | 'imobiliaria' | string;
+  advertiserCreciVerified?: boolean;
   description: string;
   features: string[];
   createdAt?: string;

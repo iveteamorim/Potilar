@@ -8,9 +8,10 @@ const PAGE_SIZE = 12;
 
 type Props = {
   items: Property[];
+  variant?: 'grid' | 'horizontal';
 };
 
-export default function PaginatedPropertyList({ items }: Props) {
+export default function PaginatedPropertyList({ items, variant = 'grid' }: Props) {
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -34,7 +35,7 @@ export default function PaginatedPropertyList({ items }: Props) {
 
   return (
     <div className="space-y-6">
-      <FavoriteAwarePropertyList items={pageItems} />
+      <FavoriteAwarePropertyList items={pageItems} variant={variant} />
 
       {items.length > PAGE_SIZE && (
         <div className="flex flex-col items-center justify-between gap-3 border-t border-sand-200 pt-4 dark:border-slate-800 sm:flex-row">

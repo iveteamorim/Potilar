@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 };
 
 const LISTING_SELECT =
-  'id,title,property_type,transaction,price,price_period,bedrooms,bathrooms,parking,location,neighborhood,community,address_extra,description,features,images,contact_name,contact_phone,contact_whatsapp,contact_email,contact_methods';
+  'id,title,property_type,transaction,price,price_period,bedrooms,bathrooms,parking,location,neighborhood,community,address_extra,description,features,images,video_url,condo_included,is_pet_friendly,is_furnished,contact_name,contact_phone,contact_whatsapp,contact_email,contact_methods';
 const LISTING_SELECT_FALLBACK =
   'id,title,property_type,transaction,price,bedrooms,bathrooms,parking,location,neighborhood,community,address_extra,description,features,images,contact_name,contact_phone,contact_whatsapp,contact_email,contact_methods';
 
@@ -36,9 +36,13 @@ export default async function EditOwnerListingPage({ params }: { params: { id: s
       .single();
 
     data = fallback.data
-      ? {
+        ? {
           ...fallback.data,
-          price_period: null
+          price_period: null,
+          video_url: null,
+          condo_included: false,
+          is_pet_friendly: false,
+          is_furnished: false
         }
       : null;
   }
