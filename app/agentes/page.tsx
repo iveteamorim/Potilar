@@ -29,8 +29,8 @@ export default function AgentesPage() {
         <section className="grid gap-5 md:grid-cols-3">
           {(
             [
-              { title: 'Ate 10 anuncios ativos', text: `Plano Corretor ${formatPlanPrice(PLANS.professional.corretor.price, { perMonth: true })}`, Icon: Users },
-              { title: 'Ate 50 anuncios ativos', text: `Plano Imobiliaria ${formatPlanPrice(PLANS.professional.imobiliaria.price, { perMonth: true })}`, Icon: BadgeCheck },
+              { title: `Ate ${PLANS.professional.corretor.listingLimit} anuncios ativos`, text: `Plano Corretor ${formatPlanPrice(PLANS.professional.corretor.price, { perMonth: true })} com ${PLANS.professional.corretor.aiCredits} usos de IA`, Icon: Users },
+              { title: `Ate ${PLANS.professional.imobiliaria.listingLimit} anuncios ativos`, text: `Plano Imobiliaria ${formatPlanPrice(PLANS.professional.imobiliaria.price, { perMonth: true })} com ate ${PLANS.professional.imobiliaria.aiCredits} usos de IA`, Icon: BadgeCheck },
               { title: 'Mapa e busca local', text: 'Destaques para vender ou alugar mais rapido', Icon: MapPin }
             ] as const
           ).map(({ title, text, Icon }) => (

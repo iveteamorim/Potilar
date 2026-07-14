@@ -10,6 +10,7 @@ import MapModalButton from '@/components/MapModalButton';
 import { createClient } from '@/lib/supabase/server';
 import { fetchApprovedListingRows } from '@/lib/fetchApprovedListings';
 import { listingRowToProperty } from '@/lib/listings';
+import { attachListingContactFields } from '@/lib/listingContactFields';
 import { orderListingsForDisplay } from '@/lib/propertyOrdering';
 import type { Property } from '@/data/properties';
 
@@ -18,6 +19,7 @@ export const revalidate = 0;
 
 type PublicListingRow = {
   id: string;
+  owner_id?: string | null;
   slug: string;
   title: string;
   property_type: Property['propertyType'];
@@ -35,7 +37,7 @@ type PublicListingRow = {
   lng: number;
   images: string[];
   video_url?: string | null;
-  featured_plan?: '7_days' | '30_days' | 'super_30_days' | null;
+  featured_plan?: '7_days' | '15_days' | '30_days' | 'super_30_days' | null;
   featured_payment_status?: 'not_requested' | 'pix_pending' | 'confirmed' | null;
   featured_starts_at?: string | null;
   featured_expires_at?: string | null;
@@ -221,7 +223,12 @@ export default async function ImoveisPage({
   try {
     const supabase = createClient();
     const data = await fetchApprovedListingRows(supabase, { withContact: false });
-    approvedListings = orderListingsForDisplay((data as unknown as PublicListingRow[]).map(toProperty));
+    const properties = orderListingsForDisplay((data as unknown as PublicListingRow[]).map(toProperty));
+    try {
+      approvedListings = await attachListingContactFields(supabase, properties);
+    } catch {
+      approvedListings = properties;
+    }
   } catch {
     approvedListings = [];
   }

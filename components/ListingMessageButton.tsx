@@ -9,9 +9,11 @@ type Props = {
   listingId: string;
   ownerId: string;
   title: string;
+  label?: string;
+  buttonClassName?: string;
 };
 
-export default function ListingMessageButton({ listingId, ownerId, title }: Props) {
+export default function ListingMessageButton({ listingId, ownerId, title, label = 'Perguntar por chat', buttonClassName }: Props) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -68,10 +70,13 @@ export default function ListingMessageButton({ listingId, ownerId, title }: Prop
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="inline-flex items-center justify-center gap-2 rounded-2xl border border-ocean-200 px-4 py-3 text-sm font-semibold text-ocean-700 transition hover:bg-ocean-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+        className={
+          buttonClassName ??
+          'inline-flex items-center justify-center gap-2 rounded-2xl border border-ocean-200 px-4 py-3 text-sm font-semibold text-ocean-700 transition hover:bg-ocean-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800'
+        }
       >
         <MessageSquare className="h-4 w-4" aria-hidden="true" />
-        Perguntar por chat
+        {label}
       </button>
 
       {open && (

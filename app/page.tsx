@@ -6,6 +6,8 @@ import type { Metadata } from 'next';
 import { createClient } from '@/lib/supabase/server';
 import { fetchApprovedListingRows } from '@/lib/fetchApprovedListings';
 import { listingRowToProperty } from '@/lib/listings';
+import { attachListingContactFields } from '@/lib/listingContactFields';
+import { getHomeFeaturedListings } from '@/lib/homeFeaturedListings';
 import { orderListingsForDisplay } from '@/lib/propertyOrdering';
 import type { Property } from '@/data/properties';
 import Link from 'next/link';
@@ -31,6 +33,7 @@ export const metadata: Metadata = {
 
 type PublicListingRow = {
   id: string;
+  owner_id?: string | null;
   slug: string;
   title: string;
   property_type: Property['propertyType'];
@@ -65,6 +68,7 @@ type PublicListingRow = {
 function toProperty(listing: PublicListingRow) {
   return listingRowToProperty({
     ...listing,
+    owner_id: listing.owner_id ?? null,
     featured_plan: listing.featured_plan ?? null,
     featured_payment_status: listing.featured_payment_status ?? null,
     featured_starts_at: listing.featured_starts_at ?? null,
@@ -81,7 +85,12 @@ async function getApprovedListings(): Promise<Property[]> {
   try {
     const supabase = createClient();
     const data = await fetchApprovedListingRows(supabase, { withContact: false });
-    return orderListingsForDisplay((data as unknown as PublicListingRow[]).map(toProperty));
+    const properties = orderListingsForDisplay((data as unknown as PublicListingRow[]).map(toProperty));
+    try {
+      return await attachListingContactFields(supabase, properties);
+    } catch {
+      return properties;
+    }
   } catch {
     return [];
   }
@@ -143,7 +152,7 @@ async function getHomeNews(): Promise<NewsArticle[]> {
 export default async function HomePage() {
   const approvedListings = await getApprovedListings();
   const newsArticles = await getHomeNews();
-  const featured = orderListingsForDisplay(approvedListings).slice(0, 10);
+  const { items: featured } = getHomeFeaturedListings(approvedListings);
 
   return (
     <main>
@@ -190,6 +199,10 @@ export default async function HomePage() {
           </div>
           {featured.length > 0 ? (
             <FeaturedCarousel items={featured} />
+          ) : approvedListings.length > 0 ? (
+            <div className="glass-card mt-6 p-6 text-sm text-slate-600 dark:text-slate-300">
+              Nenhum imóvel em destaque no momento.
+            </div>
           ) : (
             <div className="glass-card mt-6 p-6 text-sm text-slate-600 dark:text-slate-300">
               Nenhum imóvel publicado ainda.

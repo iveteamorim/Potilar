@@ -1,13 +1,22 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { getPublicListingExpiryFilterIso } from '@/lib/listingLifecycle';
+import { enrichFeaturedListingRows } from '@/lib/listingFeaturedFields';
 import { PUBLIC_LISTING_SELECT, PUBLIC_LISTING_SELECT_WITH_CONTACT } from '@/lib/listings';
+
+type EnrichableListingRow = Record<string, unknown> & {
+  id: string;
+  featured_plan?: string | null;
+  featured_payment_status?: string | null;
+  featured_starts_at?: string | null;
+  featured_expires_at?: string | null;
+};
 
 /** Colunas que existiam antes do bloque verde (sem area_sqm, pet, etc.). */
 export const PUBLIC_LISTING_SELECT_LEGACY =
-  'id,slug,title,property_type,transaction,price,price_period,bedrooms,bathrooms,parking,location,neighborhood,community,address_extra,lat,lng,images,featured_plan,featured_payment_status,featured_starts_at,featured_expires_at,description,features,created_at,updated_at';
+  'id,owner_id,slug,title,property_type,transaction,price,price_period,bedrooms,bathrooms,parking,location,neighborhood,community,address_extra,lat,lng,images,featured_plan,featured_payment_status,featured_starts_at,featured_expires_at,description,features,created_at,updated_at';
 
 export const PUBLIC_LISTING_SELECT_GREEN_LEGACY =
-  'id,slug,title,property_type,transaction,price,price_period,bedrooms,bathrooms,parking,area_sqm,condo_fee,is_pet_friendly,is_furnished,location,neighborhood,community,address_extra,lat,lng,images,featured_plan,featured_payment_status,featured_starts_at,featured_expires_at,description,features,created_at,updated_at';
+  'id,owner_id,slug,title,property_type,transaction,price,price_period,bedrooms,bathrooms,parking,area_sqm,condo_fee,is_pet_friendly,is_furnished,location,neighborhood,community,address_extra,lat,lng,images,featured_plan,featured_payment_status,featured_starts_at,featured_expires_at,description,features,created_at,updated_at';
 
 export const PUBLIC_LISTING_SELECT_LEGACY_WITH_CONTACT =
   `${PUBLIC_LISTING_SELECT_LEGACY},contact_name,contact_phone,contact_whatsapp,contact_email,contact_methods`;
@@ -79,8 +88,9 @@ export async function fetchApprovedListingRows(supabase: SupabaseClient, options
     const rpcResult = await supabase.rpc('get_public_approved_listings');
 
     if (!rpcResult.error && (rpcResult.data?.length ?? 0) > 0) {
-      return (rpcResult.data ?? []).map((listing: Record<string, unknown>) => ({
+      const mapped = (rpcResult.data ?? []).map((listing: Record<string, unknown>) => ({
         ...listing,
+        owner_id: listing.owner_id ?? null,
         area_sqm: listing.area_sqm ?? null,
         condo_fee: listing.condo_fee ?? null,
         condo_included: listing.condo_included ?? false,
@@ -88,8 +98,15 @@ export async function fetchApprovedListingRows(supabase: SupabaseClient, options
         is_furnished: listing.is_furnished ?? false,
         video_url: listing.video_url ?? null,
         featured_starts_at: listing.featured_starts_at ?? null,
-        featured_expires_at: listing.featured_expires_at ?? null
+        featured_expires_at: listing.featured_expires_at ?? null,
+        contact_name: listing.contact_name ?? null,
+        contact_phone: listing.contact_phone ?? null,
+        contact_whatsapp: listing.contact_whatsapp ?? null,
+        contact_email: listing.contact_email ?? null,
+        contact_methods: listing.contact_methods ?? null
       }));
+
+      return enrichFeaturedListingRows(supabase, mapped);
     }
 
     if (rpcResult.error) {
@@ -118,10 +135,14 @@ export async function fetchApprovedListingRows(supabase: SupabaseClient, options
 
   const rows = data ?? [];
 
+  if (rows.length > 0) {
+    return enrichFeaturedListingRows(supabase, rows as unknown as EnrichableListingRow[]);
+  }
+
   if (canUsePublicRpc && rows.length === 0) {
     const rpcRetry = await supabase.rpc('get_public_approved_listings');
     if (!rpcRetry.error && (rpcRetry.data?.length ?? 0) > 0) {
-      return rpcRetry.data ?? [];
+      return enrichFeaturedListingRows(supabase, (rpcRetry.data ?? []) as unknown as EnrichableListingRow[]);
     }
   }
 

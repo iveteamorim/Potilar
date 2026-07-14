@@ -5,6 +5,7 @@ import {
   BadgeCheck,
   Building2,
   Check,
+  Info,
   LayoutDashboard,
   MapPin,
   MessageCircle,
@@ -13,7 +14,8 @@ import {
   TrendingUp,
   Users
 } from 'lucide-react';
-import { PLANS, formatPlanPrice } from '@/lib/plans';
+import ProfessionalPlanCheckoutButton from '@/components/ProfessionalPlanCheckoutButton';
+import { PLANS, formatPlanPrice, type ProfessionalPlanId } from '@/lib/plans';
 
 export const metadata: Metadata = {
   title: 'Imobiliárias e corretores no RN | Potilar',
@@ -38,12 +40,14 @@ const planHighlights = [
     name: 'Corretor',
     price: formatPlanPrice(PLANS.professional.corretor.price, { perMonth: true }),
     limit: PLANS.professional.corretor.listingLimit,
+    aiCredits: PLANS.professional.corretor.aiCredits,
     features: ['Perfil profissional', 'Gestão dos anúncios', 'Contato direto']
   },
   {
     name: 'Imobiliária',
     price: formatPlanPrice(PLANS.professional.imobiliaria.price, { perMonth: true }),
     limit: PLANS.professional.imobiliaria.listingLimit,
+    aiCredits: PLANS.professional.imobiliaria.aiCredits,
     featured: true,
     features: ['Logo da empresa', 'Página própria', 'Gestão centralizada']
   },
@@ -51,6 +55,7 @@ const planHighlights = [
     name: 'Imobiliária Plus',
     price: formatPlanPrice(PLANS.professional.plus.price, { perMonth: true }),
     limit: PLANS.professional.plus.listingLimit,
+    aiCredits: PLANS.professional.plus.aiCredits,
     features: ['Página destacada', '3 destaques incluídos', 'Suporte prioritário']
   }
 ];
@@ -64,6 +69,12 @@ function CheckItem({ children }: { children: string }) {
       <span>{children}</span>
     </li>
   );
+}
+
+function getPlanAction(planName: string): { id: ProfessionalPlanId; cta: string } {
+  if (planName === 'Corretor') return { id: 'corretor', cta: 'Assinar Corretor' };
+  if (planName.includes('Plus')) return { id: 'plus', cta: 'Assinar Plus' };
+  return { id: 'imobiliaria', cta: 'Assinar Imobiliaria' };
 }
 
 export default function ImobiliariasPage() {
@@ -128,7 +139,7 @@ export default function ImobiliariasPage() {
                   <div className="grid h-14 w-14 place-items-center rounded-2xl bg-ocean-700 text-lg font-bold text-white">RN</div>
                   <div>
                     <p className="font-semibold text-slate-950 dark:text-white">Imobiliária em Natal</p>
-                    <p className="text-sm text-slate-500">50 imóveis ativos</p>
+                    <p className="text-sm text-slate-500">{PLANS.professional.imobiliaria.listingLimit} imóveis ativos</p>
                   </div>
                 </div>
                 <div className="mt-5 grid gap-3 sm:grid-cols-3">
@@ -200,11 +211,29 @@ export default function ImobiliariasPage() {
                 <p className="mt-3 rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm dark:bg-slate-800 dark:text-slate-200">
                   Até {plan.limit} imóveis ativos
                 </p>
+                <div className="mt-2 flex items-center justify-between gap-3 rounded-2xl bg-ocean-50 px-4 py-3 text-sm font-semibold text-ocean-800 dark:bg-ocean-950/40 dark:text-ocean-100">
+                  <span>IA para melhorar anúncios</span>
+                  <button
+                    type="button"
+                    className="group relative inline-flex rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ocean-500"
+                    aria-label={`Até ${plan.aiCredits} utilizações por mês`}
+                  >
+                    <Info className="h-4 w-4" aria-hidden="true" />
+                    <span className="pointer-events-none absolute right-0 top-6 z-20 w-52 rounded-xl bg-slate-950 px-3 py-2 text-xs font-semibold leading-5 text-white opacity-0 shadow-soft transition group-hover:opacity-100 group-focus-within:opacity-100">
+                      Até {plan.aiCredits} utilizações por mês.
+                    </span>
+                  </button>
+                </div>
                 <ul className="mt-5 space-y-3">
                   {plan.features.map((feature) => (
                     <CheckItem key={feature}>{feature}</CheckItem>
                   ))}
                 </ul>
+                <div className="mt-7">
+                  <ProfessionalPlanCheckoutButton planId={getPlanAction(plan.name).id} fallbackHref={whatsappHref}>
+                    {getPlanAction(plan.name).cta}
+                  </ProfessionalPlanCheckoutButton>
+                </div>
               </article>
             ))}
           </div>
@@ -244,3 +273,4 @@ export default function ImobiliariasPage() {
     </main>
   );
 }
+

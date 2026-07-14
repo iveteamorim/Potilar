@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import ProfileEditorForm from '@/components/ProfileEditorForm';
 import { createClient } from '@/lib/supabase/server';
-import { buildPublicProfileSlug, getPublicProfilePath } from '@/lib/publicProfile';
+import { buildProfessionalProfileSlug, getPublicProfilePath, isProfessionalAccountType } from '@/lib/publicProfile';
 
 export default async function PerfilPublicoPage() {
   const supabase = createClient();
@@ -27,7 +27,22 @@ export default async function PerfilPublicoPage() {
     profile = fallback.data ? { ...fallback.data, creci_verified: false } : null;
   }
 
-  const publicSlug = profile?.public_slug || buildPublicProfileSlug(profile?.full_name ?? 'anunciante', user.id);
+  if (profile && isProfessionalAccountType(profile.account_type) && !profile.public_slug) {
+    const generatedSlug = buildProfessionalProfileSlug(profile, user.id);
+    const { error: profileSlugError } = await supabase
+      .from('profiles')
+      .update({
+        public_slug: generatedSlug,
+        company_name: profile.account_type === 'imobiliaria' ? profile.company_name || profile.full_name || null : profile.company_name || null
+      })
+      .eq('id', user.id);
+
+    if (!profileSlugError) {
+      profile = { ...profile, public_slug: generatedSlug };
+    }
+  }
+
+  const publicSlug = profile?.public_slug || buildProfessionalProfileSlug(profile ?? {}, user.id);
 
   return (
     <main className="section-padding">

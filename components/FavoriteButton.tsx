@@ -56,11 +56,13 @@ async function persistFavorite(listingId: string, favorite: boolean) {
 export default function FavoriteButton({
   propertyId,
   title,
-  variant = 'floating'
+  variant = 'floating',
+  floatingClassName
 }: {
   propertyId: string;
   title: string;
   variant?: 'floating' | 'inline';
+  floatingClassName?: string;
 }) {
   const [isFavorite, setIsFavorite] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
@@ -194,7 +196,11 @@ export default function FavoriteButton({
         type="button"
         onClick={toggleFavorite}
         aria-label={isFavorite ? `Remover ${title} dos favoritos` : `Salvar ${title} nos favoritos`}
-        className={`${variant === 'floating' ? 'absolute right-3 top-3 z-20 h-10 w-10' : 'h-11 px-4'} flex items-center justify-center gap-2 rounded-full shadow-soft transition ${
+        className={`${
+          variant === 'floating'
+            ? floatingClassName ?? 'absolute bottom-3 right-3 z-20 h-10 w-10'
+            : 'h-11 px-4'
+        } flex items-center justify-center gap-2 rounded-full shadow-soft transition ${
           isFavorite ? 'bg-red-500 text-white' : 'bg-white/95 text-slate-700 hover:text-red-500'
         }`}
       >

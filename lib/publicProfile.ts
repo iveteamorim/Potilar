@@ -18,6 +18,17 @@ export function buildPublicProfileSlug(fullName: string, suffix?: string) {
   return `${base}-${suffix.slice(0, 6)}`;
 }
 
+export function buildProfessionalProfileSlug(
+  profile: { company_name?: string | null; full_name?: string | null },
+  userId: string
+) {
+  return buildPublicProfileSlug(profile.company_name || profile.full_name || 'anunciante', userId);
+}
+
+export function isProfessionalAccountType(accountType?: string | null) {
+  return accountType === 'corretor' || accountType === 'imobiliaria';
+}
+
 export function getPublicProfilePath(slug: string) {
   return `/anunciante/${slug}`;
 }

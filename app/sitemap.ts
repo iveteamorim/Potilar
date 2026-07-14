@@ -27,11 +27,32 @@ function buildCityRoutes() {
   }));
 }
 
+function buildHouseCityAliasRoutes() {
+  return getAllCitySlugs().flatMap((citySlug) => [
+    {
+      url: `${BASE_URL}/alugar-casa-em/${citySlug}`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly' as const,
+      priority: 0.82
+    },
+    {
+      url: `${BASE_URL}/comprar-casa-em/${citySlug}`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly' as const,
+      priority: 0.82
+    }
+  ]);
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const routes = [
     '',
     '/imoveis',
     '/imoveis/cidades',
+    '/anunciar-casa-para-alugar-gratis',
+    '/anunciar-casa-para-vender-gratis',
+    '/casa-para-alugar-no-rio-grande-do-norte',
+    '/casa-para-vender-no-rio-grande-do-norte',
     '/minha-casa-minha-vida',
     '/anunciar',
     '/imobiliarias',
@@ -76,6 +97,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   try {
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     const cityRoutes = buildCityRoutes();
+    const houseCityAliasRoutes = buildHouseCityAliasRoutes();
     const { data, error } = await supabase
       .from('listings')
       .select('slug,updated_at,created_at')
@@ -94,7 +116,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }));
 
     if (error) {
-      return [...staticRoutes, ...seoIntentRoutes, ...cityIntentRoutes, ...newsRoutes, ...dynamicNewsRoutes, ...cityRoutes];
+      return [...staticRoutes, ...seoIntentRoutes, ...cityIntentRoutes, ...newsRoutes, ...dynamicNewsRoutes, ...cityRoutes, ...houseCityAliasRoutes];
     }
 
     const propertyRoutes = ((data ?? []) as SitemapListing[]).map((listing) => ({
@@ -109,9 +131,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       ...newsRoutes,
       ...dynamicNewsRoutes,
       ...cityRoutes,
+      ...houseCityAliasRoutes,
       ...propertyRoutes
     ];
   } catch {
-    return [...staticRoutes, ...seoIntentRoutes, ...cityIntentRoutes, ...newsRoutes, ...buildCityRoutes()];
+    return [...staticRoutes, ...seoIntentRoutes, ...cityIntentRoutes, ...newsRoutes, ...buildCityRoutes(), ...buildHouseCityAliasRoutes()];
   }
 }

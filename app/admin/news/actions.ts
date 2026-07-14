@@ -93,6 +93,49 @@ export async function updateNewsStatus(formData: FormData) {
   redirect('/admin/news?success=status');
 }
 
+export async function updateNewsArticle(formData: FormData) {
+  try {
+    const id = String(formData.get('id') || '').trim();
+    const title = String(formData.get('title') || '').trim();
+    const category = String(formData.get('category') || 'Imobiliario').trim();
+    const excerpt = String(formData.get('excerpt') || '').trim();
+    const content = String(formData.get('content') || '').trim();
+    const imageUrl = String(formData.get('image_url') || '').trim();
+    const sourceName = String(formData.get('source_name') || '').trim();
+    const sourceUrl = String(formData.get('source_url') || '').trim();
+
+    if (!id) throw new Error('Noticia invalida');
+    if (!title || !excerpt || !content) throw new Error('Titulo, resumo e conteudo sao obrigatorios');
+
+    const { supabase } = await ensureAdmin();
+    const { error } = await supabase
+      .from('news_articles')
+      .update({
+        title,
+        category,
+        excerpt,
+        content,
+        image_url: imageUrl || null,
+        source_name: sourceName || null,
+        source_url: sourceUrl || null,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', id);
+
+    if (error) throw new Error(error.message);
+
+    revalidatePath('/');
+    revalidatePath('/admin/news');
+    revalidatePath('/noticias');
+    revalidatePath('/sitemap.xml');
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Erro desconhecido';
+    redirect(`/admin/news?error=${encodeURIComponent(message)}`);
+  }
+
+  redirect('/admin/news?success=saved');
+}
+
 function decodeXml(value: string) {
   return value
     .replace(/<!\[CDATA\[(.*?)\]\]>/gs, '$1')

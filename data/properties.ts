@@ -27,7 +27,7 @@ export type Property = {
   videoUrl?: string;
   tourUrl?: string;
   isFeatured?: boolean;
-  featuredPlan?: '7_days' | '30_days' | 'super_30_days';
+  featuredPlan?: '7_days' | '15_days' | '30_days' | 'super_30_days';
   contactName?: string;
   contactPhone?: string;
   contactWhatsapp?: string;
@@ -35,6 +35,9 @@ export type Property = {
   contactMethods?: string[];
   advertiserAccountType?: 'particular' | 'corretor' | 'imobiliaria' | string;
   advertiserCreciVerified?: boolean;
+  advertiserPublicSlug?: string;
+  advertiserDisplayName?: string;
+  advertiserImageUrl?: string;
   description: string;
   features: string[];
   createdAt?: string;

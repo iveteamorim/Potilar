@@ -8,6 +8,7 @@ import L from 'leaflet';
 import { BedDouble, Bath, MapPin, X } from 'lucide-react';
 import { MapContainer, Marker, TileLayer, useMap, useMapEvents } from 'react-leaflet';
 import type { Property } from '@/data/properties';
+import { showsDestaquePresentation } from '@/lib/legacyHomeFeatured';
 import { formatPropertyPrice } from '@/lib/pricing';
 import { getCleanPropertyTitle } from '@/lib/displayTitle';
 import { getListingHref } from '@/lib/listingUrls';
@@ -90,8 +91,10 @@ function formatMarkerPrice(property: Property) {
 }
 
 function getMarkerIcon(property: Property, selected = false) {
-  const color = property.featuredPlan === 'super_30_days' ? '#7c3aed' : property.isFeatured ? '#f59e0b' : '#075985';
-  const background = selected ? color : property.isFeatured ? '#fff7ed' : 'white';
+  const isSuperFeatured = property.isFeatured && property.featuredPlan === 'super_30_days';
+  const isHighlighted = showsDestaquePresentation(property);
+  const color = isSuperFeatured ? '#7c3aed' : isHighlighted ? '#f59e0b' : '#075985';
+  const background = selected ? color : isHighlighted ? '#fff7ed' : 'white';
   const label = formatMarkerPrice(property);
   const selectedStyle = selected
     ? 'transform:translateY(-2px);box-shadow:0 18px 38px rgba(15,23,42,.36);'

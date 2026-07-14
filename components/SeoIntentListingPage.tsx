@@ -25,9 +25,9 @@ async function getListings(page: SeoIntentPage) {
   }
 }
 
-export default async function SeoIntentListingPage({ page }: { page: SeoIntentPage }) {
+export default async function SeoIntentListingPage({ page, pagePath }: { page: SeoIntentPage; pagePath?: string }) {
   const listings = await getListings(page);
-  const pageUrl = `${BASE_URL}/imoveis/${page.slug}`;
+  const pageUrl = `${BASE_URL}${pagePath ?? `/imoveis/${page.slug}`}`;
   const jsonLd = {
     '@context': 'https://schema.org',
     '@graph': [

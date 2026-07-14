@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { getPaymentCode } from '@/lib/pix';
 import { PLANS } from '@/lib/plans';
-import { setMainImage, updateCreciVerification, updateHighlightStatus, updateListingPaymentStatus, updateListingStatus } from './actions';
+import { setMainImage, grantHighlight, updateCreciVerification, updateHighlightStatus, updateListingPaymentStatus, updateListingStatus } from './actions';
 
 export const metadata: Metadata = {
   title: 'Admin | Potilar'
@@ -44,6 +44,7 @@ function getListingPaymentLabel(listing: { transaction: string; payment_amount?:
 function getHighlightLabel(plan?: string | null) {
   if (plan === 'super_30_days') return 'Super destaque 30 dias';
   if (plan === '7_days') return 'Destaque 7 dias';
+  if (plan === '15_days') return 'Destaque 15 dias';
   if (plan === '30_days') return 'Destaque 30 dias';
   return 'Destaque';
 }
@@ -239,7 +240,7 @@ export default async function AdminPage({
           {[
             ['', 'Todos'],
             ['pending', 'Pendentes'],
-            ['pix', 'Pix pendente'],
+            ['pix', 'Pagamentos pendentes'],
             ['featured', 'Destaques'],
             ['approved', 'Publicados'],
             ['paused', 'Pausados'],
@@ -279,7 +280,7 @@ export default async function AdminPage({
                       {listing.listing_expires_at
                         ? `ativo ate ${formatDate(listing.listing_expires_at)}`
                         : listing.is_paid && listing.payment_status !== 'confirmed'
-                          ? 'Pix pendente'
+                          ? 'Pagamento pendente'
                           : listing.is_paid
                             ? 'Pago'
                             : 'Gratis'}
@@ -323,7 +324,7 @@ export default async function AdminPage({
                           {listing.listing_expires_at
                             ? `ativo ate ${formatDate(listing.listing_expires_at)}`
                             : listing.is_paid && listing.payment_status !== 'confirmed'
-                              ? 'Pix pendente'
+                              ? 'Pagamento pendente'
                               : listing.is_paid
                                 ? 'Pago'
                                 : 'Gratis'}
@@ -348,7 +349,7 @@ export default async function AdminPage({
                       </div>
                       {((listing.is_paid && listing.payment_status !== 'confirmed') || listing.featured_payment_status === 'pix_pending') && (
                         <div className="mt-2 rounded-xl border border-sun-200 bg-sun-50 px-3 py-2 text-sm text-slate-800">
-                          <p className="font-semibold">Pix para revisar - codigo {getPaymentCode(listing.id)}</p>
+                          <p className="font-semibold">Pagamento para revisar - codigo {getPaymentCode(listing.id)}</p>
                           <div className="mt-2 grid gap-2 sm:grid-cols-2">
                             {listing.is_paid && listing.payment_status !== 'confirmed' && (
                               <div className="rounded-lg bg-white px-3 py-2">
@@ -363,7 +364,7 @@ export default async function AdminPage({
                                     <input type="hidden" name="id" value={listing.id} />
                                     <input type="hidden" name="action" value="confirm" />
                                     <button className="rounded-xl bg-green-600 px-3 py-2 text-xs font-semibold text-white">
-                                      Confirmar Pix
+                                      Confirmar pagamento
                                     </button>
                                   </form>
                                   <form action={updateListingPaymentStatus}>
@@ -387,7 +388,7 @@ export default async function AdminPage({
                             )}
                           </div>
                           <p className="mt-2 text-xs">
-                            Compare o codigo com o comprovante enviado por WhatsApp ou email antes de aprovar.
+                            Compare o codigo do pagamento antes de aprovar manualmente.
                           </p>
                         </div>
                       )}
@@ -449,6 +450,47 @@ export default async function AdminPage({
                     {listing.property_type} - {listing.transaction} - {listing.bedrooms} quartos - {listing.bathrooms} banheiros - {listing.parking} garagem
                   </p>
 
+                  {listing.status === 'approved' && (
+                    <div className="rounded-xl border border-violet-200 bg-violet-50 p-3 dark:border-violet-900 dark:bg-slate-900">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                        <div>
+                          <p className="text-sm font-semibold text-violet-900 dark:text-violet-100">
+                            Dar destaque gratis (admin)
+                          </p>
+                          <p className="mt-1 text-xs text-violet-800 dark:text-violet-200">
+                            Cortesia admin: entra no carrossel da home e no topo das buscas, mesmo sem Pix. Vale para anuncios novos apos o corte de destaque pago.
+                          </p>
+                          {listing.featured_payment_status === 'confirmed' && listing.featured_plan && (
+                            <p className="mt-2 text-xs font-semibold text-violet-700 dark:text-violet-200">
+                              Ativo: {getHighlightLabel(listing.featured_plan)}
+                              {listing.featured_expires_at ? ` ate ${formatDate(listing.featured_expires_at)}` : ''}
+                              {Number(listing.featured_payment_amount ?? 0) === 0 ? ' (cortesia)' : ''}
+                            </p>
+                          )}
+                        </div>
+                        <form action={grantHighlight} className="flex flex-wrap items-end gap-2">
+                          <input type="hidden" name="id" value={listing.id} />
+                          <label className="text-xs font-semibold text-violet-900 dark:text-violet-100">
+                            Plano
+                            <select
+                              name="featured_plan"
+                              defaultValue={listing.featured_plan ?? '7_days'}
+                              className="mt-1 block min-w-[11rem] rounded-xl border border-violet-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 dark:border-violet-800 dark:bg-slate-950 dark:text-slate-200"
+                            >
+                              <option value="7_days">Destaque 7 dias</option>
+                              <option value="15_days">Destaque 15 dias</option>
+                              <option value="30_days">Destaque 30 dias</option>
+                              <option value="super_30_days">Super destaque 30 dias</option>
+                            </select>
+                          </label>
+                          <button className="rounded-2xl bg-violet-600 px-4 py-2 text-xs font-semibold text-white hover:bg-violet-700">
+                            Ativar destaque gratis
+                          </button>
+                        </form>
+                      </div>
+                    </div>
+                  )}
+
                   {listing.featured_plan && (
                     <div className="rounded-xl border border-ocean-100 bg-ocean-50 p-3 dark:border-ocean-900 dark:bg-slate-900">
                       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -457,8 +499,11 @@ export default async function AdminPage({
                             Pedido de destaque
                           </p>
                           <p className="mt-1 text-xs font-semibold text-ocean-700 dark:text-ocean-200">
-                            {listing.featured_plan === 'super_30_days' ? 'Super destaque 30 dias' : listing.featured_plan === '7_days' ? 'Destaque 7 dias' : 'Destaque 30 dias'} - R${' '}
-                            {formatMoney(listing.featured_payment_amount)} - {listing.featured_payment_status}
+                            {getHighlightLabel(listing.featured_plan)} -{' '}
+                            {Number(listing.featured_payment_amount ?? 0) === 0
+                              ? 'Cortesia admin'
+                              : `R$ ${formatMoney(listing.featured_payment_amount)}`}{' '}
+                            - {listing.featured_payment_status}
                           </p>
                           {listing.featured_payment_status === 'pix_pending' && (
                             <p className="mt-2 text-xs font-semibold text-ocean-700 dark:text-ocean-200">

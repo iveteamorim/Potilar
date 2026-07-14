@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { ArrowLeft, Check, CheckCheck, MessageCircle } from 'lucide-react';
+import { ArrowLeft, Check, CheckCheck } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import MessageComposer from '@/components/MessageComposer';
 
@@ -390,15 +390,6 @@ export default async function MensagensPage({ searchParams }: { searchParams?: {
                 </>
               )}
             </section>
-          </div>
-        )}
-
-        {threads.length > 0 && !selectedThread && (
-          <div className="hidden min-h-[420px] items-center justify-center rounded-2xl border border-sand-100 bg-white text-center text-sm text-slate-500 lg:flex dark:border-slate-800 dark:bg-slate-950">
-            <div>
-              <MessageCircle className="mx-auto mb-3 h-8 w-8 text-ocean-700" aria-hidden="true" />
-              Escolha uma conversa para abrir o chat.
-            </div>
           </div>
         )}
       </div>

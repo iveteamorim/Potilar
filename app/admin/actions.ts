@@ -52,7 +52,7 @@ export async function updateListingStatus(formData: FormData) {
       }
 
       if (listing.is_paid && listing.payment_status !== 'confirmed') {
-        throw new Error('Confirme o Pix do anuncio antes de aprovar.');
+        throw new Error('Confirme o pagamento do anuncio antes de aprovar.');
       }
     }
 
@@ -223,6 +223,64 @@ export async function updateHighlightStatus(formData: FormData) {
     }
 
     revalidatePath('/admin');
+    revalidatePath('/imoveis');
+    revalidatePath('/');
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Erro desconhecido';
+    redirect(`/admin?error=${encodeURIComponent(message)}`);
+  }
+
+  redirect('/admin?success=1');
+}
+
+const ADMIN_FEATURED_PLANS = ['7_days', '15_days', '30_days', 'super_30_days'] as const;
+
+export async function grantHighlight(formData: FormData) {
+  try {
+    const id = String(formData.get('id') || '');
+    const featuredPlan = String(formData.get('featured_plan') || '');
+
+    if (!id || !ADMIN_FEATURED_PLANS.includes(featuredPlan as (typeof ADMIN_FEATURED_PLANS)[number])) {
+      throw new Error('Destaque invalido');
+    }
+
+    const supabase = await ensureAdmin();
+    const { data: listing, error: listingError } = await supabase
+      .from('listings')
+      .select('id,status')
+      .eq('id', id)
+      .single();
+
+    if (listingError || !listing) {
+      throw new Error(listingError?.message ?? 'Anuncio nao encontrado');
+    }
+
+    if (listing.status !== 'approved') {
+      throw new Error('Aprove o anuncio antes de dar destaque gratis.');
+    }
+
+    const now = new Date();
+    const { data, error } = await supabase
+      .from('listings')
+      .update({
+        featured_plan: featuredPlan,
+        featured_payment_status: 'confirmed',
+        featured_payment_amount: 0,
+        featured_starts_at: now.toISOString(),
+        featured_expires_at: addDays(now, getHighlightDurationDays(featuredPlan)).toISOString(),
+        featured_payment_proof_sent_at: null,
+        updated_at: now.toISOString()
+      })
+      .eq('id', id)
+      .select('id,featured_plan,featured_payment_status')
+      .single();
+
+    if (error || !data) {
+      throw new Error(error?.message ?? 'Nao foi possivel ativar o destaque');
+    }
+
+    revalidatePath('/admin');
+    revalidatePath('/mi-cuenta');
     revalidatePath('/imoveis');
     revalidatePath('/');
   } catch (error) {

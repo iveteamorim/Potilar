@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+﻿import type { Metadata } from 'next';
 import Link from 'next/link';
 import {
   ArrowRight,
@@ -6,6 +6,7 @@ import {
   Building2,
   Check,
   CheckCircle2,
+  Info,
   LayoutDashboard,
   MapPin,
   MessageCircle,
@@ -14,7 +15,8 @@ import {
   Star,
   TrendingUp
 } from 'lucide-react';
-import { PLANS, formatPlanPrice } from '@/lib/plans';
+import ProfessionalPlanCheckoutButton from '@/components/ProfessionalPlanCheckoutButton';
+import { PLANS, formatPlanPrice, getFreeListingLimit, type ProfessionalPlanId } from '@/lib/plans';
 
 export const metadata: Metadata = {
   title: 'Planos para Corretores e Imobiliárias | Potilar',
@@ -36,28 +38,52 @@ const benefits = [
   { title: 'Gestão centralizada', text: 'Anúncios, contatos e mensagens organizados na sua conta Potilar.', Icon: LayoutDashboard }
 ];
 
+const particularPlans = [
+  {
+    name: `Até ${getFreeListingLimit()} anúncios grátis`,
+    price: 'R$ 0',
+    description: 'Para casas, apartamentos e terrenos de compra ou aluguel.',
+    details: 'Cada anúncio comum fica ativo por 60 dias.'
+  },
+  {
+    name: 'Anúncio comum adicional',
+    price: formatPlanPrice(PLANS.listing.additionalPrice),
+    description: 'Quando o particular já usou o limite grátis.',
+    details: `${PLANS.listing.standardDurationDays} dias para compra ou aluguel.`
+  }
+];
+
 const professionalPlans = [
   {
+    id: 'corretor' as ProfessionalPlanId,
     name: 'Corretor',
     price: formatPlanPrice(PLANS.professional.corretor.price, { perMonth: true }),
     description: 'Para profissionais independentes com carteira enxuta.',
     limit: PLANS.professional.corretor.listingLimit,
-    features: ['Perfil profissional', 'WhatsApp direto', 'Gestão dos anúncios', 'Renovação automática']
+    aiCredits: PLANS.professional.corretor.aiCredits,
+    cta: 'Assinar Corretor',
+    features: ['Página profissional personalizada', 'Renovação automática dos anúncios']
   },
   {
+    id: 'imobiliaria' as ProfessionalPlanId,
     name: 'Imobiliária',
     price: formatPlanPrice(PLANS.professional.imobiliaria.price, { perMonth: true }),
     description: 'Para equipes que precisam divulgar mais imóveis com marca própria.',
     limit: PLANS.professional.imobiliaria.listingLimit,
+    aiCredits: PLANS.professional.imobiliaria.aiCredits,
+    cta: 'Assinar Imobiliária',
     popular: true,
-    features: ['Logo da empresa', 'Página própria', 'Gestão centralizada', 'WhatsApp direto']
+    features: ['Página profissional personalizada', 'Renovação automática dos anúncios']
   },
   {
+    id: 'plus' as ProfessionalPlanId,
     name: 'Imobiliária Plus',
     price: formatPlanPrice(PLANS.professional.plus.price, { perMonth: true }),
     description: 'Para operações maiores que querem volume, destaque e prioridade.',
     limit: PLANS.professional.plus.listingLimit,
-    features: ['Página própria destacada', '3 destaques de 30 dias', 'Prioridade no suporte', 'Mais visibilidade']
+    aiCredits: PLANS.professional.plus.aiCredits,
+    cta: 'Assinar Plus',
+    features: ['Página profissional personalizada', 'Renovação automática dos anúncios', 'Destaque da imobiliária']
   }
 ];
 
@@ -68,9 +94,14 @@ const extras = [
     price: formatPlanPrice(PLANS.listing.seasonalPrice)
   },
   {
-    title: `Renovação ${PLANS.listing.seasonalDurationDays} dias`,
-    text: 'Renove o anúncio por mais tempo.',
-    price: formatPlanPrice(PLANS.listing.seasonalRenewalPrice)
+    title: `Renovação ${PLANS.listing.seasonalRenewal30DurationDays} dias`,
+    text: 'Renove apenas pelo período que precisa.',
+    price: formatPlanPrice(PLANS.listing.seasonalRenewal30Price)
+  },
+  {
+    title: `Renovação ${PLANS.listing.seasonalRenewal60DurationDays} dias`,
+    text: 'Mais tempo por R$ 5 a mais que a renovação curta.',
+    price: formatPlanPrice(PLANS.listing.seasonalRenewal60Price)
   },
   {
     title: PLANS.highlights['7_days'].label,
@@ -78,22 +109,32 @@ const extras = [
     price: formatPlanPrice(PLANS.highlights['7_days'].price)
   },
   {
+    title: PLANS.highlights['15_days'].label,
+    text: 'Boa visibilidade por duas semanas.',
+    price: formatPlanPrice(PLANS.highlights['15_days'].price)
+  },
+  {
     title: PLANS.highlights['30_days'].label,
     text: 'Presença reforçada durante o mês.',
     price: formatPlanPrice(PLANS.highlights['30_days'].price)
-  },
-  {
-    title: PLANS.highlights.super_30_days.label,
-    text: 'Maior exposição para imóveis prioritários.',
-    price: formatPlanPrice(PLANS.highlights.super_30_days.price)
   }
 ];
 
 const comparison = [
-  ['Imóveis ativos', '10', '50', '100'],
-  ['Página profissional', 'Sim', 'Sim', 'Destacada'],
-  ['Logo e marca', 'Perfil', 'Empresa', 'Empresa'],
-  ['Destaques incluidos', '-', '-', '3 por mes'],
+  [
+    'Imóveis ativos',
+    String(PLANS.professional.corretor.listingLimit),
+    String(PLANS.professional.imobiliaria.listingLimit),
+    String(PLANS.professional.plus.listingLimit)
+  ],
+  [
+    '✨ Melhorias com IA / mês',
+    String(PLANS.professional.corretor.aiCredits),
+    String(PLANS.professional.imobiliaria.aiCredits),
+    String(PLANS.professional.plus.aiCredits)
+  ],
+  ['Página profissional', '✔', '✔', '⭐ Em destaque'],
+  ['Destaques incluídos', '—', '—', '3/mês'],
   ['Suporte', 'Padrão', 'Padrão', 'Prioritário']
 ];
 
@@ -106,20 +147,6 @@ const faqs = [
   ['O plano tem fidelidade?', 'Não. Fale com a Potilar para ativar, ajustar ou cancelar quando precisar.'],
   ['Destaques podem ser contratados depois?', 'Sim. Você pode publicar primeiro e destacar os imóveis que precisam de mais visibilidade.']
 ];
-
-function PlanButton({ children, href = whatsappHref }: { children: string; href?: string }) {
-  return (
-    <a
-      href={href}
-      target={href.startsWith('http') ? '_blank' : undefined}
-      rel={href.startsWith('http') ? 'noreferrer' : undefined}
-      className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-ocean-700 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-ocean-800 hover:shadow-lg"
-    >
-      {children}
-      <ArrowRight className="h-4 w-4" />
-    </a>
-  );
-}
 
 function CheckItem({ children }: { children: string }) {
   return (
@@ -194,7 +221,7 @@ export default function PlanosPage() {
               </div>
               <div className="mt-6 grid gap-3 sm:grid-cols-3">
                 {[
-                  ['Imóveis ativos', '50'],
+                  ['Imóveis ativos', String(PLANS.professional.imobiliaria.listingLimit)],
                   ['Contatos', '32'],
                   ['Cidades', '8']
                 ].map(([label, value]) => (
@@ -245,6 +272,37 @@ export default function PlanosPage() {
           </div>
         </section>
 
+        <section id="particular" className="rounded-[2rem] border border-sand-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-[0.22em] text-ocean-600">Particular</p>
+              <h2 className="mt-4 text-3xl font-semibold text-slate-950 dark:text-white">
+                Preços para anunciar seu próprio imóvel.
+              </h2>
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600 dark:text-slate-300">
+                Estes valores são para anúncios comuns de compra ou aluguel. Temporada, renovações e destaques ficam na seção separada abaixo.
+              </p>
+            </div>
+            <Link href="/anunciar" className="inline-flex items-center gap-2 rounded-2xl bg-ocean-700 px-5 py-3 text-sm font-semibold text-white">
+              Anunciar imóvel
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+
+          <div className="mt-8 grid gap-4 md:grid-cols-2">
+            {particularPlans.map((plan) => (
+              <article key={plan.name} className="rounded-3xl border border-sand-200 bg-sand-50 p-5 dark:border-slate-800 dark:bg-slate-950">
+                <p className="text-3xl font-semibold text-ocean-800">{plan.price}</p>
+                <h3 className="mt-5 text-lg font-semibold text-slate-950 dark:text-white">{plan.name}</h3>
+                <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">{plan.description}</p>
+                <p className="mt-4 rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm dark:bg-slate-900 dark:text-slate-200">
+                  {plan.details}
+                </p>
+              </article>
+            ))}
+          </div>
+        </section>
+
         <section id="planos">
           <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
             <div>
@@ -278,13 +336,24 @@ export default function PlanosPage() {
                 <p className="mt-3 rounded-2xl bg-sand-50 px-4 py-3 text-sm font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-200">
                   Até {plan.limit} imóveis ativos
                 </p>
+                <div className="mt-2 flex items-center justify-between gap-3 rounded-2xl bg-ocean-50 px-4 py-3 text-sm font-semibold text-ocean-800 dark:bg-ocean-950/40 dark:text-ocean-100">
+                  <span>IA para melhorar anúncios</span>
+                  <button type="button" className="group relative inline-flex rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ocean-500" aria-label={`Até ${plan.aiCredits} utilizações por mês`}>
+                    <Info className="h-4 w-4" aria-hidden="true" />
+                    <span className="pointer-events-none absolute right-0 top-6 z-20 w-52 rounded-xl bg-slate-950 px-3 py-2 text-xs font-semibold leading-5 text-white opacity-0 shadow-soft transition group-hover:opacity-100 group-focus-within:opacity-100">
+                      Até {plan.aiCredits} utilizações por mês.
+                    </span>
+                  </button>
+                </div>
                 <ul className="mt-5 space-y-3">
                   {plan.features.map((feature) => (
                     <CheckItem key={feature}>{feature}</CheckItem>
                   ))}
                 </ul>
                 <div className="mt-7">
-                  <PlanButton>{plan.popular ? 'Começar com Imobiliária' : 'Começar'}</PlanButton>
+                  <ProfessionalPlanCheckoutButton planId={plan.id} fallbackHref={whatsappHref}>
+                    {plan.cta}
+                  </ProfessionalPlanCheckoutButton>
                 </div>
               </article>
             ))}
@@ -331,7 +400,7 @@ export default function PlanosPage() {
               Impulsos opcionais quando um imóvel precisa de mais atenção.
             </h2>
           </div>
-          <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+          <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {extras.map((extra) => (
               <article key={extra.title} className="rounded-3xl border border-sand-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
                 <div className="flex items-start justify-between gap-3">
@@ -394,3 +463,5 @@ export default function PlanosPage() {
     </main>
   );
 }
+
+

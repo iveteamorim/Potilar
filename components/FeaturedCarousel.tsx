@@ -22,11 +22,11 @@ export default function FeaturedCarousel({ items }: { items: Property[] }) {
     <div className="relative">
       <div
         ref={scrollerRef}
-        className="mt-8 flex snap-x gap-7 overflow-x-auto pb-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="mt-6 flex snap-x gap-2.5 overflow-x-auto pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {items.map((property) => (
-          <div key={property.id} className="flex w-[84vw] shrink-0 snap-start self-stretch sm:w-[380px]">
-            <PropertyCard property={property} />
+          <div key={property.id} className="flex w-[68vw] max-w-[258px] shrink-0 snap-start self-stretch sm:w-[248px]">
+            <PropertyCard property={property} variant="compact" />
           </div>
         ))}
       </div>

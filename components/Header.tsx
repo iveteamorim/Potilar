@@ -10,7 +10,7 @@ const navigation = [
   { label: 'Início', href: '/' },
   { label: 'Imóveis', href: '/imoveis' },
   { label: 'Anunciar', href: '/anunciar' },
-  { label: 'Imobiliárias', href: '/imobiliarias' },
+  { label: 'Corretores / Imobiliárias', href: '/imobiliarias' },
   { label: 'Contato', href: '/contato' }
 ];
 
@@ -82,24 +82,24 @@ export default function Header() {
               </button>
             </div>
             <nav className="grid gap-1 overflow-y-auto px-4 py-5 text-base font-semibold text-slate-800 dark:text-slate-100">
-            {mobileNavigation.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={closeMenu}
-                className={`rounded-2xl px-4 py-4 transition ${
-                  isActive(item.href)
-                    ? 'bg-ocean-50 text-ocean-700 dark:bg-ocean-950/40 dark:text-ocean-200'
-                    : 'hover:bg-sand-50 dark:hover:bg-slate-900'
-                }`}
-              >
-                <span className="inline-flex items-center gap-2">
-                  {item.href === '/minha-casa-minha-vida' && <Calculator className="h-4 w-4" aria-hidden="true" />}
-                  {item.href === '/seguranca' && <ShieldCheck className="h-4 w-4" aria-hidden="true" />}
-                  {item.label}
-                </span>
-              </Link>
-            ))}
+              {mobileNavigation.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={closeMenu}
+                  className={`rounded-2xl px-4 py-4 transition ${
+                    isActive(item.href)
+                      ? 'bg-ocean-50 text-ocean-700 dark:bg-ocean-950/40 dark:text-ocean-200'
+                      : 'hover:bg-sand-50 dark:hover:bg-slate-900'
+                  }`}
+                >
+                  <span className="inline-flex items-center gap-2">
+                    {item.href === '/minha-casa-minha-vida' && <Calculator className="h-4 w-4" aria-hidden="true" />}
+                    {item.href === '/seguranca' && <ShieldCheck className="h-4 w-4" aria-hidden="true" />}
+                    {item.label}
+                  </span>
+                </Link>
+              ))}
             </nav>
           </aside>
         </div>

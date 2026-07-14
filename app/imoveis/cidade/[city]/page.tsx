@@ -14,6 +14,7 @@ import {
   resolveCityNameFromSlug
 } from '@/lib/cityPages';
 import { fetchApprovedListingRows } from '@/lib/fetchApprovedListings';
+import { attachListingContactFields } from '@/lib/listingContactFields';
 import { listingRowToProperty } from '@/lib/listings';
 import { slugify } from '@/lib/slugify';
 import { createClient } from '@/lib/supabase/server';
@@ -41,7 +42,7 @@ type PublicListingRow = {
   lat: number;
   lng: number;
   images: string[];
-  featured_plan?: '7_days' | '30_days' | 'super_30_days' | null;
+  featured_plan?: '7_days' | '15_days' | '30_days' | 'super_30_days' | null;
   featured_payment_status?: 'not_requested' | 'pix_pending' | 'confirmed' | null;
   featured_starts_at?: string | null;
   featured_expires_at?: string | null;
@@ -79,7 +80,12 @@ async function getApprovedListings() {
   try {
     const supabase = createClient();
     const data = await fetchApprovedListingRows(supabase, { withContact: false });
-    return (data as unknown as PublicListingRow[]).map(toProperty);
+    const properties = (data as unknown as PublicListingRow[]).map(toProperty);
+    try {
+      return await attachListingContactFields(supabase, properties);
+    } catch {
+      return properties;
+    }
   } catch {
     return [];
   }

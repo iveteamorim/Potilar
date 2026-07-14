@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useRef, useState } from 'react';
-import { ChevronDown, Save, Upload, X } from 'lucide-react';
+import { ChevronDown, Save, Sparkles, Upload, X } from 'lucide-react';
 import { compressImage } from '@/lib/imageCompression';
 import { createClient } from '@/lib/supabase/client';
 import { geocodeListingAddress } from '@/lib/geocodeListing';
@@ -109,6 +109,7 @@ export default function ListingEditorForm({
   const [newPhotos, setNewPhotos] = useState<NewPhoto[]>([]);
   const [status, setStatus] = useState('');
   const [saving, setSaving] = useState(false);
+  const [isSuggesting, setIsSuggesting] = useState(false);
 
   function toggleContactMethod(method: string) {
     setContactMethods((current) =>
@@ -136,6 +137,100 @@ export default function ListingEditorForm({
       if (photo) URL.revokeObjectURL(photo.url);
       return current.filter((item) => item.url !== url);
     });
+  }
+
+  async function generateSuggestion() {
+    setStatus('');
+
+    if (!location || !propertyType || !transaction) {
+      setStatus('Informe pelo menos cidade, tipo de imóvel e negociação para gerar a sugestão.');
+      return;
+    }
+
+    setIsSuggesting(true);
+
+    try {
+      const response = await fetch('/api/ai/credits/use', { method: 'POST' });
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        setStatus(data.error ?? 'Não foi possível usar créditos de IA. Compre créditos em Minha conta.');
+        return;
+      }
+    } catch {
+      setStatus('Não foi possível verificar seus créditos de IA.');
+      return;
+    } finally {
+      setIsSuggesting(false);
+    }
+
+    setIsSuggesting(true);
+
+    const formattedPrice = price ? `R$ ${price.replace(/^R\$\s*/i, '')}${transaction === 'Temporada' ? `/${pricePeriod}` : ''}` : '';
+    const isLand = propertyType === 'Terreno';
+    const bedroomText = !isLand && Number(bedrooms) > 0 ? `${bedrooms} quarto${bedrooms === '1' ? '' : 's'}` : '';
+    const bathroomText = !isLand && Number(bathrooms) > 0 ? `${bathrooms} banheiro${bathrooms === '1' ? '' : 's'}` : '';
+    const parkingText = !isLand && Number(parking) > 0 ? `${parking} vaga${parking === '1' ? '' : 's'} de garagem` : '';
+    const highlights = [bedroomText, bathroomText, parkingText].filter(Boolean);
+    const typedFeatures = splitFeatures(features);
+    const correctedLocation = formatDisplayPlaceName(normalizeKnownCityName(location));
+    const formattedNeighborhood = neighborhood ? formatDisplayPlaceName(neighborhood) : '';
+    const formattedCommunity = community ? formatDisplayPlaceName(community) : '';
+    const locationParts = [formattedNeighborhood, formattedCommunity, correctedLocation].filter(Boolean);
+    const locationHint = locationParts.join(', ') || correctedLocation;
+    const transactionLabel = transaction === 'Aluguel' ? 'alugar' : transaction === 'Temporada' ? 'temporada' : 'venda';
+    const generatedTitle = `${propertyType} para ${transactionLabel}${formattedNeighborhood ? ` no ${formattedNeighborhood}` : correctedLocation ? ` em ${correctedLocation}` : ''}`;
+    const generatedFeatures =
+      typedFeatures.length > 0
+        ? typedFeatures
+        : [
+            formattedNeighborhood || formattedCommunity ? 'Boa localização' : '',
+            transaction === 'Temporada' ? 'Ideal para temporada' : transaction === 'Compra' ? 'Boa oportunidade de compra' : 'Pronto para morar',
+            isFurnished ? 'Mobiliado' : '',
+            isPetFriendly ? 'Aceita pet' : '',
+            condoIncluded ? 'Condomínio incluso' : ''
+          ].filter(Boolean);
+
+    const openingByTransaction =
+      transaction === 'Temporada'
+        ? `${propertyType} para temporada em ${locationHint}${formattedPrice ? `, com diária de ${formattedPrice}` : ''}. Uma opção interessante para quem quer aproveitar a região com praticidade e conforto.`
+        : transaction === 'Aluguel'
+          ? `${propertyType} para aluguel em ${locationHint}${formattedPrice ? ` por ${formattedPrice}` : ''}. Um imóvel indicado para quem busca boa localização, praticidade e um espaço funcional para o dia a dia.`
+          : `${propertyType} à venda em ${locationHint}${formattedPrice ? ` por ${formattedPrice}` : ''}. Uma oportunidade para quem procura um imóvel no Rio Grande do Norte com boa apresentação e potencial para moradia ou investimento.`;
+
+    const layoutSentence = isLand
+      ? 'O terreno oferece uma área versátil, com perfil adequado para quem deseja construir, investir ou planejar um projeto próprio.'
+      : highlights.length
+        ? `A configuração reúne ${highlights.join(', ')}, formando um conjunto funcional e fácil de avaliar durante a visita.`
+        : 'O imóvel tem uma proposta simples e funcional, com características que podem atender diferentes perfis de comprador ou inquilino.';
+
+    const comfortItems = [
+      isFurnished ? 'mobiliado' : '',
+      isPetFriendly ? 'aceita pet' : '',
+      condoIncluded ? 'condomínio incluso' : '',
+      formattedCommunity ? `referência em ${formattedCommunity}` : '',
+      addressExtra ? `referência: ${addressExtra}` : ''
+    ].filter(Boolean);
+
+    const comfortSentence = comfortItems.length
+      ? `Entre os pontos que ajudam na decisão estão: ${comfortItems.join(', ')}.`
+      : formattedNeighborhood || formattedCommunity
+        ? 'A localização facilita a comparação com outros imóveis da região e ajuda quem já procura por esse entorno.'
+        : 'A localização no RN permite avaliar o imóvel com calma e comparar com outras oportunidades da Potilar.';
+
+    const generatedDescription = [
+      openingByTransaction,
+      layoutSentence,
+      comfortSentence,
+      generatedFeatures.length ? `Destaques do imóvel: ${generatedFeatures.join(', ')}.` : '',
+      'Entre em contato para confirmar disponibilidade, combinar uma visita e tirar dúvidas diretamente com o responsável pelo anúncio.'
+    ].filter(Boolean).join('\n\n');
+
+    setTitle(generatedTitle);
+    setDescription(generatedDescription);
+    setFeatures(generatedFeatures.join(', '));
+    setStatus('Sugestão gerada. Foi usado 1 crédito de IA. Revise o texto antes de salvar.');
+    setIsSuggesting(false);
   }
 
   async function saveListing() {
@@ -345,6 +440,24 @@ export default function ListingEditorForm({
           )}
         </div>
       )}
+
+      <div className="rounded-2xl border border-ocean-100 bg-ocean-50/70 p-4 dark:border-ocean-900 dark:bg-ocean-950/30">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-sm font-semibold text-slate-950 dark:text-white">IA para melhorar anúncio</p>
+            <p className="mt-1 text-xs text-slate-600 dark:text-slate-300">Gera título e descrição profissional usando os dados preenchidos.</p>
+          </div>
+          <button
+            type="button"
+            onClick={generateSuggestion}
+            disabled={isSuggesting}
+            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-ocean-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-ocean-700 disabled:opacity-60"
+          >
+            <Sparkles className="h-4 w-4" aria-hidden="true" />
+            {isSuggesting ? 'Gerando...' : 'Gerar com IA - 1 crédito'}
+          </button>
+        </div>
+      </div>
 
       <textarea rows={5} value={description} onChange={(event) => setDescription(event.target.value)} placeholder="Descrição" className="w-full rounded-2xl border border-sand-200 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-900" />
       <input value={features} onChange={(event) => setFeatures(event.target.value)} placeholder="Diferenciais separados por vírgula" className="w-full rounded-2xl border border-sand-200 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-900" />

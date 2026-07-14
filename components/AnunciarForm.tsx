@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -17,6 +17,7 @@ import { PLANS, formatPlanPrice, getFreeListingLimit, getLaunchPromoDeadlineLabe
 const PAID_LISTING_PRICE = PLANS.listing.additionalPrice;
 const SEASONAL_LISTING_PRICE = PLANS.listing.seasonalPrice;
 const LISTING_PRICE_LABEL = formatPlanPrice(PLANS.listing.additionalPrice);
+const SEASONAL_PRICE_LABEL = formatPlanPrice(PLANS.listing.seasonalPrice);
 
 type PhotoPreview = {
   file: File;
@@ -30,6 +31,14 @@ function getErrorMessage(error: unknown) {
   }
   if (typeof error === 'string') return error;
   return 'Erro desconhecido';
+}
+
+function getPublishErrorMessage(error: unknown) {
+  const message = getErrorMessage(error);
+  if (/profiles_advertiser_document_unique_idx|duplicate key/i.test(message)) {
+    return 'Este CPF ja esta cadastrado em outra conta. Entre com a conta correta ou fale com a Potilar para revisar o cadastro.';
+  }
+  return message;
 }
 
 function slugify(value: string) {
@@ -129,6 +138,7 @@ type AnunciarFormProps = {
   defaultEmail?: string;
   defaultDocument?: string;
   accountType?: string;
+  isAdmin?: boolean;
   defaultCity?: string;
 };
 
@@ -139,6 +149,7 @@ export default function AnunciarForm({
   defaultEmail = '',
   defaultDocument = '',
   accountType = 'particular',
+  isAdmin = false,
   defaultCity = ''
 }: AnunciarFormProps) {
   const router = useRouter();
@@ -242,7 +253,7 @@ export default function AnunciarForm({
     cityInputRef.current?.focus();
   }
 
-  function generateSuggestion() {
+  async function generateSuggestion() {
     setStatus('');
 
     if (!location || !propertyType || !transaction) {
@@ -252,45 +263,99 @@ export default function AnunciarForm({
 
     setIsSuggesting(true);
 
-    const cleanPrice = price ? ` por ${price}${transaction === 'Temporada' ? `/${pricePeriod}` : ''}` : '';
+    try {
+      const response = await fetch('/api/ai/credits/use', { method: 'POST' });
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        setStatus(data.error ?? 'Nao foi possivel usar creditos de IA. Compre creditos em Minha conta.');
+        return;
+      }
+    } catch {
+      setStatus('Nao foi possivel verificar seus creditos de IA.');
+      return;
+    } finally {
+      setIsSuggesting(false);
+    }
+
+    setIsSuggesting(true);
+
+    const formattedPrice = price ? `R$ ${price.replace(/^R\$\s*/i, '')}${transaction === 'Temporada' ? `/${pricePeriod}` : ''}` : '';
     const bedroomText = !isLand && Number(bedrooms) > 0 ? `${bedrooms} quarto${bedrooms === '1' ? '' : 's'}` : '';
     const bathroomText = !isLand && Number(bathrooms) > 0 ? `${bathrooms} banheiro${bathrooms === '1' ? '' : 's'}` : '';
     const parkingText = !isLand && Number(parking) > 0 ? `${parking} vaga${parking === '1' ? '' : 's'} de garagem` : '';
-    const highlights = [bedroomText, bathroomText, parkingText].filter(Boolean);
+    const areaText = Number(areaSqm) > 0 ? `${areaSqm} m2` : '';
+    const highlights = [bedroomText, bathroomText, parkingText, areaText].filter(Boolean);
     const typedFeatures = features
       .split(',')
       .map((item) => item.trim())
       .filter(Boolean);
     const correctedLocation = formatDisplayPlaceName(normalizeKnownCityName(location));
-    const locationHint = [correctedLocation, neighborhood, community].filter(Boolean).join(', ') || correctedLocation;
+    const formattedNeighborhood = neighborhood ? formatDisplayPlaceName(neighborhood) : '';
+    const formattedCommunity = community ? formatDisplayPlaceName(community) : '';
+    const locationParts = [formattedNeighborhood, formattedCommunity, correctedLocation].filter(Boolean);
+    const locationHint = locationParts.join(', ') || correctedLocation;
     const titleLocation = correctedLocation;
     const transactionLabel =
       transaction === 'Aluguel' ? 'alugar' : transaction === 'Temporada' ? 'temporada' : 'venda';
     const generatedTitle =
       title ||
-      `${propertyType} para ${transactionLabel}${titleLocation ? ` em ${titleLocation}` : ''}`;
+      `${propertyType} para ${transactionLabel}${formattedNeighborhood ? ` no ${formattedNeighborhood}` : titleLocation ? ` em ${titleLocation}` : ''}`;
     const generatedFeatures =
       typedFeatures.length > 0
         ? typedFeatures
-        : ['Boa localização', 'Fácil acesso', 'Oportunidade no RN'];
+        : [
+            formattedNeighborhood || formattedCommunity ? 'Boa localização' : '',
+            isSeasonal ? 'Ideal para temporada' : transaction === 'Compra' ? 'Boa oportunidade de compra' : 'Pronto para morar',
+            isFurnished ? 'Mobiliado' : '',
+            isPetFriendly ? 'Aceita pet' : '',
+            condoIncluded ? 'Condomínio incluso' : '',
+            areaText ? 'Espaço bem distribuído' : ''
+          ].filter(Boolean);
+
+    const openingByTransaction =
+      transaction === 'Temporada'
+        ? `${propertyType} para temporada em ${locationHint}${formattedPrice ? `, com diária de ${formattedPrice}` : ''}. Uma opção interessante para quem quer aproveitar a região com praticidade, conforto e fácil contato com o anunciante.`
+        : transaction === 'Aluguel'
+          ? `${propertyType} para aluguel em ${locationHint}${formattedPrice ? ` por ${formattedPrice}` : ''}. Um imóvel indicado para quem busca uma rotina prática, boa localização e um espaço pronto para receber novos moradores.`
+          : `${propertyType} à venda em ${locationHint}${formattedPrice ? ` por ${formattedPrice}` : ''}. Uma oportunidade para quem procura um imóvel no Rio Grande do Norte com boa apresentação e potencial para moradia, investimento ou uso familiar.`;
+
+    const layoutSentence = isLand
+      ? `${areaText ? `O terreno possui ${areaText}` : 'O terreno oferece uma área versátil'}, com perfil adequado para quem deseja construir, investir ou planejar um projeto próprio.`
+      : highlights.length
+        ? `A configuração reúne ${highlights.join(', ')}, criando um conjunto funcional para o dia a dia e fácil de entender na visita.`
+        : `O imóvel tem uma proposta simples e funcional, com características que podem atender diferentes perfis de comprador ou inquilino.`;
+
+    const comfortItems = [
+      isFurnished ? 'mobiliado' : '',
+      isPetFriendly ? 'aceita pet' : '',
+      condoIncluded ? 'condomínio incluso' : '',
+      formattedCommunity ? `referência em ${formattedCommunity}` : '',
+      addressExtra ? `referência: ${addressExtra}` : ''
+    ].filter(Boolean);
+
+    const comfortSentence = comfortItems.length
+      ? `Entre os pontos que ajudam na decisão estão: ${comfortItems.join(', ')}.`
+      : formattedNeighborhood || formattedCommunity
+        ? `A localização facilita a comparação com outros imóveis da região e ajuda quem já procura por esse entorno.`
+        : `A localização no RN permite avaliar o imóvel com calma e comparar com outras oportunidades da Potilar.`;
+
+    const ownerNotes = details.trim()
+      ? `Observações do anunciante: ${details.trim()}`
+      : 'Entre em contato para confirmar disponibilidade, combinar uma visita e tirar dúvidas diretamente com o responsável pelo anúncio.';
 
     const generatedDetails = [
-      `${propertyType} disponível para ${transaction === 'Aluguel' ? 'aluguel' : transaction === 'Temporada' ? 'temporada' : 'venda'}${cleanPrice} em ${locationHint}.`,
-      highlights.length
-        ? `O imóvel conta com ${highlights.join(', ')}, oferecendo praticidade para quem busca conforto e boa localização.`
-        : 'Uma boa opção para quem busca praticidade, localização e oportunidade no Rio Grande do Norte.',
-      details
-        ? `Informações do proprietário: ${details}`
-        : addressExtra
-          ? `Informação adicional: ${addressExtra}. Entre em contato para confirmar disponibilidade e agendar uma visita.`
-          : 'Entre em contato para conhecer mais detalhes, confirmar disponibilidade e agendar uma visita.',
-      `Diferenciais: ${generatedFeatures.join(', ')}.`
-    ].join('\n\n');
+      openingByTransaction,
+      layoutSentence,
+      comfortSentence,
+      generatedFeatures.length ? `Destaques do imóvel: ${generatedFeatures.join(', ')}.` : '',
+      ownerNotes
+    ].filter(Boolean).join('\n\n');
 
     setTitle(generatedTitle);
     setDetails(generatedDetails);
     setFeatures(generatedFeatures.join(', '));
-    setStatus('Sugestão gerada. Revise o texto antes de publicar.');
+    setStatus('Sugestão gerada. Foi usado 1 credito de IA. Revise o texto antes de publicar.');
     setIsSuggesting(false);
   }
 
@@ -299,7 +364,7 @@ export default function AnunciarForm({
     setActiveStep(Math.min(5, Math.max(1, step)));
   }
 
-  function goNext() {
+  async function goNext() {
     setStatus('');
 
     if (activeStep === 1) {
@@ -309,9 +374,23 @@ export default function AnunciarForm({
       }
 
       const documentForListing = hasLockedDocument ? lockedDocumentDigits : ownerDocumentDigits;
-      if (accountType === 'particular' && !isValidCpf(documentForListing)) {
+      if (!isAdmin && accountType === 'particular' && !isValidCpf(documentForListing)) {
         setStatus('Informe um CPF válido para verificação interna.');
         return;
+      }
+
+      if (!isAdmin && accountType === 'particular' && !hasLockedDocument) {
+        const supabase = createClient();
+        const { data: documentExists, error: documentCheckError } = await supabase.rpc('profile_contact_exists', {
+          candidate_email: null,
+          candidate_phone: null,
+          candidate_document: documentForListing
+        });
+
+        if (!documentCheckError && documentExists) {
+          setStatus('Este CPF ja esta cadastrado em outra conta. Entre com a conta correta ou fale com a Potilar para revisar o cadastro.');
+          return;
+        }
       }
     }
 
@@ -364,12 +443,12 @@ export default function AnunciarForm({
 
     const documentForListing = hasLockedDocument ? lockedDocumentDigits : ownerDocumentDigits;
 
-    if (accountType === 'particular' && !isValidCpf(documentForListing)) {
+    if (!isAdmin && accountType === 'particular' && !isValidCpf(documentForListing)) {
       setStatus('Informe um CPF válido para verificação interna de segurança.');
       return;
     }
 
-    if (accountType === 'particular' && hasLockedDocument && ownerDocumentDigits !== lockedDocumentDigits) {
+    if (!isAdmin && accountType === 'particular' && hasLockedDocument && ownerDocumentDigits !== lockedDocumentDigits) {
       setStatus('O CPF do anúncio deve ser o mesmo CPF cadastrado na sua conta.');
       return;
     }
@@ -397,10 +476,39 @@ export default function AnunciarForm({
         return;
       }
 
-      const { data: profile } = await supabase.from('profiles').select('role, account_type').eq('id', user.id).single();
-      const isAdmin = profile?.role === 'admin';
+      let { data: profile } = await supabase
+        .from('profiles')
+        .select('role, account_type, professional_plan')
+        .eq('id', user.id)
+        .single();
+
+      if (!profile) {
+        const fallbackProfile = await supabase.from('profiles').select('role, account_type').eq('id', user.id).single();
+        profile = fallbackProfile.data ? { ...fallbackProfile.data, professional_plan: null } : null;
+      }
+
+      const canBypassDocument = isAdmin || profile?.role === 'admin';
       const accountType = profile?.account_type ?? 'particular';
-      const listingLimit = getListingLimitForAccount(accountType, isAdmin);
+      const professionalPlan = profile?.professional_plan ?? null;
+      const listingLimit = getListingLimitForAccount(accountType, canBypassDocument, professionalPlan);
+
+      if (ownerName || ownerPhone || documentForListing) {
+        const profileUpdates: Record<string, string> = {
+          id: user.id,
+          full_name: ownerName,
+          phone: ownerPhone
+        };
+
+        if (!canBypassDocument) {
+          profileUpdates.advertiser_document = documentForListing;
+        }
+
+        const { error: profileError } = await supabase.from('profiles').upsert(profileUpdates);
+
+        if (profileError) {
+          throw new Error(`Erro ao salvar dados do anunciante: ${profileError.message}`);
+        }
+      }
 
       const { count, error: countError } = await supabase
         .from('listings')
@@ -412,9 +520,9 @@ export default function AnunciarForm({
         throw new Error(`Erro ao verificar anúncios gratuitos: ${countError.message}`);
       }
 
-      if (!isAdmin && Number.isFinite(listingLimit) && (count ?? 0) >= listingLimit) {
+      if (!canBypassDocument && Number.isFinite(listingLimit) && (count ?? 0) >= listingLimit) {
         setStatus(
-          `Você atingiu o limite de ${listingLimit} anúncios ativos (${getListingLimitLabel(accountType)}). Fale com a Potilar para ampliar seu plano.`
+          `Você atingiu o limite de ${listingLimit} anúncios ativos (${getListingLimitLabel(accountType, professionalPlan)}). Fale com a Potilar para ampliar seu plano.`
         );
         setIsPublishing(false);
         return;
@@ -424,15 +532,15 @@ export default function AnunciarForm({
       const formattedNeighborhood = neighborhood ? formatDisplayPlaceName(neighborhood) : '';
       const formattedCommunity = community ? formatDisplayPlaceName(community) : '';
       const freeListingLimit = getFreeListingLimit();
-      const freeSlotsUsed = !isAdmin && (count ?? 0) >= freeListingLimit;
-      const requiresListingPix = !isAdmin && (freeSlotsUsed || isSeasonal);
+      const freeSlotsUsed = !canBypassDocument && (count ?? 0) >= freeListingLimit;
+      const requiresListingPix = !canBypassDocument && (freeSlotsUsed || isSeasonal);
       const listingPaymentAmount = isSeasonal ? SEASONAL_LISTING_PRICE : PAID_LISTING_PRICE;
 
       if (requiresListingPix && !requiresPayment) {
         setRequiresPayment(true);
         setStatus(
           isSeasonal
-            ? `Anúncio de temporada custa ${LISTING_PRICE_LABEL} por ${PLANS.listing.seasonalDurationDays} dias via Pix. Confira os dados e clique novamente para enviar.`
+            ? `Anúncio de temporada custa ${SEASONAL_PRICE_LABEL} por ${PLANS.listing.seasonalDurationDays} dias via Pix. Confira os dados e clique novamente para enviar.`
             : isLaunchPromoActive()
               ? `Você já usou os ${freeListingLimit} anúncios gratuitos da promoção (válida até ${getLaunchPromoDeadlineLabel()}). O próximo custa ${LISTING_PRICE_LABEL} via Pix. Confira os dados e clique novamente para enviar.`
               : `Você já usou seu anúncio gratuito. O próximo custa ${LISTING_PRICE_LABEL} via Pix. Confira os dados e clique novamente para enviar.`
@@ -542,19 +650,6 @@ export default function AnunciarForm({
         throw new Error(`Erro ao salvar anúncio: ${error.message}`);
       }
 
-      if (ownerName || ownerPhone || documentForListing) {
-        const { error: profileError } = await supabase.from('profiles').upsert({
-          id: user.id,
-          full_name: ownerName,
-          phone: ownerPhone,
-          advertiser_document: documentForListing
-        });
-
-        if (profileError && !profileError.message.toLowerCase().includes('advertiser_document')) {
-          throw new Error(`Erro ao salvar dados do anunciante: ${profileError.message}`);
-        }
-      }
-
       if (requiresListingPix) {
         router.push(`/mi-cuenta/pagar/${listingId}?tipo=${isSeasonal ? 'seasonal' : 'listing'}`);
         return;
@@ -564,7 +659,7 @@ export default function AnunciarForm({
       router.push('/mi-cuenta');
     } catch (error) {
       console.error('Publish listing error', error);
-      setStatus(`Não foi possível publicar. ${getErrorMessage(error)}`);
+      setStatus(`Não foi possível publicar. ${getPublishErrorMessage(error)}`);
     } finally {
       setIsPublishing(false);
     }
@@ -631,33 +726,35 @@ export default function AnunciarForm({
 
             <input type="email" placeholder="Email" value={ownerEmail} onChange={(event) => setOwnerEmail(event.target.value)} className={inputClass} />
 
-            <details className="rounded-2xl border border-sand-200 bg-sand-50 p-4 dark:border-slate-800 dark:bg-slate-900">
-              <summary className="cursor-pointer text-sm font-semibold text-slate-900 dark:text-white">Verificação de identidade</summary>
-              <div className="mt-4">
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  placeholder="CPF"
-                  value={ownerDocument}
-                  onChange={(event) => {
-                    if (!hasLockedDocument) setOwnerDocument(formatCpfDocument(event.target.value));
-                  }}
-                  readOnly={hasLockedDocument}
-                  maxLength={14}
-                  className={`w-full rounded-2xl border bg-white px-4 py-3 text-sm dark:bg-slate-950 ${
-                    ownerDocumentHasError ? 'border-red-300 text-red-700' : 'border-sand-200 dark:border-slate-700'
-                  }`}
-                />
-                {ownerDocumentHasError && (
-                  <p className="mt-2 text-xs font-semibold text-red-600">
-                    {ownerDocumentDigits.length < 11 ? 'CPF deve ter 11 dígitos.' : 'CPF inválido.'}
+            {accountType === 'particular' && (
+              <details className="rounded-2xl border border-sand-200 bg-sand-50 p-4 dark:border-slate-800 dark:bg-slate-900">
+                <summary className="cursor-pointer text-sm font-semibold text-slate-900 dark:text-white">Verificação de identidade</summary>
+                <div className="mt-4">
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="CPF"
+                    value={ownerDocument}
+                    onChange={(event) => {
+                      if (!hasLockedDocument) setOwnerDocument(formatCpfDocument(event.target.value));
+                    }}
+                    readOnly={hasLockedDocument}
+                    maxLength={14}
+                    className={`w-full rounded-2xl border bg-white px-4 py-3 text-sm dark:bg-slate-950 ${
+                      ownerDocumentHasError ? 'border-red-300 text-red-700' : 'border-sand-200 dark:border-slate-700'
+                    }`}
+                  />
+                  {ownerDocumentHasError && (
+                    <p className="mt-2 text-xs font-semibold text-red-600">
+                      {ownerDocumentDigits.length < 11 ? 'CPF deve ter 11 dígitos.' : 'CPF inválido.'}
+                    </p>
+                  )}
+                  <p className="mt-2 text-xs leading-5 text-slate-500">
+                    Este dado não aparece no anúncio. Usamos apenas para verificação interna.
                   </p>
-                )}
-                <p className="mt-2 text-xs leading-5 text-slate-500">
-                  Este dado não aparece no anúncio. Usamos apenas para verificação interna.
-                </p>
-              </div>
-            </details>
+                </div>
+              </details>
+            )}
 
             <div className="grid gap-3 sm:grid-cols-3">
               {[
@@ -841,7 +938,7 @@ export default function AnunciarForm({
 
             <button type="button" onClick={generateSuggestion} disabled={isSuggesting} className="flex w-full items-center justify-center gap-2 rounded-2xl bg-ocean-600 px-5 py-4 text-sm font-semibold text-white transition hover:bg-ocean-700 disabled:opacity-60">
               <Sparkles className="h-4 w-4" aria-hidden="true" />
-              {isSuggesting ? 'Criando anúncio...' : 'Criar anúncio com IA'}
+              {isSuggesting ? 'Criando anúncio...' : 'Gerar título + descrição - 1 crédito'}
             </button>
 
             <input type="text" placeholder="Título" value={title} onChange={(event) => setTitle(event.target.value)} className={inputClass} />
@@ -919,6 +1016,7 @@ export default function AnunciarForm({
     </form>
   );
 }
+
 
 
 

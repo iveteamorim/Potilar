@@ -2,7 +2,8 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import { generateNewsDrafts, updateNewsStatus } from './actions';
+import { getNewsImageUrl } from '@/data/news';
+import { generateNewsDrafts, updateNewsArticle, updateNewsStatus } from './actions';
 import SubmitButton from '@/components/SubmitButton';
 
 export const metadata: Metadata = {
@@ -17,6 +18,8 @@ type NewsAdminRow = {
   slug: string;
   category: string;
   excerpt: string;
+  content: string;
+  image_url: string | null;
   status: string;
   ai_generated: boolean;
   source_name: string | null;
@@ -69,7 +72,7 @@ export default async function AdminNewsPage({
 
   const { data, error } = await supabase
     .from('news_articles')
-    .select('id,title,slug,category,excerpt,status,ai_generated,source_name,source_url,published_at,updated_at,created_at')
+    .select('id,title,slug,category,excerpt,content,image_url,status,ai_generated,source_name,source_url,published_at,updated_at,created_at')
     .order('created_at', { ascending: false })
     .limit(40);
 
@@ -113,6 +116,8 @@ export default async function AdminNewsPage({
               ? 'Noticias novas geradas como rascunho. Revise e publique para aparecerem no site.'
               : searchParams.success === 'status'
                 ? 'Status da noticia atualizado com sucesso.'
+                : searchParams.success === 'saved'
+                  ? 'Noticia atualizada com sucesso.'
                 : 'Acao concluida com sucesso.'}
           </div>
         )}
@@ -163,9 +168,16 @@ export default async function AdminNewsPage({
             </p>
           </div>
           {articles.map((article) => (
-            <article key={article.id} className="border border-sand-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
-              <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-                <div>
+            <article key={article.id} className="overflow-hidden border border-sand-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+              <div className="grid gap-0 lg:grid-cols-[260px_1fr]">
+                <div className="relative min-h-52 bg-sand-100 dark:bg-slate-800">
+                  <img
+                    src={getNewsImageUrl(article.category, article.image_url, article.slug)}
+                    alt=""
+                    className="h-full min-h-52 w-full object-cover"
+                  />
+                </div>
+                <div className="p-5">
                   <div className="flex flex-wrap items-center gap-2 text-xs font-semibold">
                     <span className="rounded-full bg-ocean-50 px-2.5 py-1 text-ocean-700">{article.category}</span>
                     <span className={`rounded-full border px-2.5 py-1 ${getStatusClass(article.status)}`}>
@@ -185,29 +197,80 @@ export default async function AdminNewsPage({
                       Fonte: {article.source_name || article.source_url}
                     </a>
                   )}
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {article.status !== 'published' && (
-                    <form action={updateNewsStatus}>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <Link href={`/noticias/${article.slug}`} className="rounded-2xl border border-ocean-200 px-4 py-2 text-xs font-semibold text-ocean-700">
+                      Previsualizar
+                    </Link>
+                    {article.status !== 'published' && (
+                      <form action={updateNewsStatus}>
+                        <input type="hidden" name="id" value={article.id} />
+                        <input type="hidden" name="status" value="published" />
+                        <button className="rounded-2xl bg-green-600 px-4 py-2 text-xs font-semibold text-white">
+                          Publicar
+                        </button>
+                      </form>
+                    )}
+                    {article.status === 'published' && (
+                      <form action={updateNewsStatus}>
+                        <input type="hidden" name="id" value={article.id} />
+                        <input type="hidden" name="status" value="draft" />
+                        <button className="rounded-2xl border border-sand-300 px-4 py-2 text-xs font-semibold text-slate-700">
+                          Nao publicar
+                        </button>
+                      </form>
+                    )}
+                    {article.status !== 'archived' && (
+                      <form action={updateNewsStatus}>
+                        <input type="hidden" name="id" value={article.id} />
+                        <input type="hidden" name="status" value="archived" />
+                        <button className="rounded-2xl border border-red-200 px-4 py-2 text-xs font-semibold text-red-700">
+                          Arquivar
+                        </button>
+                      </form>
+                    )}
+                  </div>
+
+                  <details className="mt-5 border-t border-sand-100 pt-4 dark:border-slate-800">
+                    <summary className="cursor-pointer text-sm font-bold text-ocean-700">
+                      Editar noticia e imagem
+                    </summary>
+                    <form action={updateNewsArticle} className="mt-4 grid gap-3">
                       <input type="hidden" name="id" value={article.id} />
-                      <input type="hidden" name="status" value="published" />
-                      <button className="rounded-2xl bg-green-600 px-4 py-2 text-xs font-semibold text-white">
-                        Publicar
+                      <label className="grid gap-1 text-sm font-semibold text-slate-700 dark:text-slate-200">
+                        Titulo
+                        <input name="title" defaultValue={article.title} className="h-11 border border-sand-200 px-3 font-normal dark:border-slate-700 dark:bg-slate-950" />
+                      </label>
+                      <label className="grid gap-1 text-sm font-semibold text-slate-700 dark:text-slate-200">
+                        Categoria
+                        <input name="category" defaultValue={article.category} className="h-11 border border-sand-200 px-3 font-normal dark:border-slate-700 dark:bg-slate-950" />
+                      </label>
+                      <label className="grid gap-1 text-sm font-semibold text-slate-700 dark:text-slate-200">
+                        Imagem
+                        <input name="image_url" defaultValue={article.image_url ?? ''} placeholder="URL da imagem" className="h-11 border border-sand-200 px-3 font-normal dark:border-slate-700 dark:bg-slate-950" />
+                      </label>
+                      <label className="grid gap-1 text-sm font-semibold text-slate-700 dark:text-slate-200">
+                        Resumo
+                        <textarea name="excerpt" defaultValue={article.excerpt} rows={3} className="border border-sand-200 px-3 py-2 font-normal dark:border-slate-700 dark:bg-slate-950" />
+                      </label>
+                      <label className="grid gap-1 text-sm font-semibold text-slate-700 dark:text-slate-200">
+                        Conteudo
+                        <textarea name="content" defaultValue={article.content} rows={7} className="border border-sand-200 px-3 py-2 font-normal dark:border-slate-700 dark:bg-slate-950" />
+                      </label>
+                      <div className="grid gap-3 md:grid-cols-2">
+                        <label className="grid gap-1 text-sm font-semibold text-slate-700 dark:text-slate-200">
+                          Nome da fonte
+                          <input name="source_name" defaultValue={article.source_name ?? ''} className="h-11 border border-sand-200 px-3 font-normal dark:border-slate-700 dark:bg-slate-950" />
+                        </label>
+                        <label className="grid gap-1 text-sm font-semibold text-slate-700 dark:text-slate-200">
+                          Link da fonte
+                          <input name="source_url" defaultValue={article.source_url ?? ''} className="h-11 border border-sand-200 px-3 font-normal dark:border-slate-700 dark:bg-slate-950" />
+                        </label>
+                      </div>
+                      <button className="inline-flex h-11 items-center justify-center rounded-2xl bg-ocean-700 px-5 text-sm font-bold text-white md:w-fit">
+                        Salvar alteracoes
                       </button>
                     </form>
-                  )}
-                  {article.status !== 'archived' && (
-                    <form action={updateNewsStatus}>
-                      <input type="hidden" name="id" value={article.id} />
-                      <input type="hidden" name="status" value="archived" />
-                      <button className="rounded-2xl border border-red-200 px-4 py-2 text-xs font-semibold text-red-700">
-                        Arquivar
-                      </button>
-                    </form>
-                  )}
-                  <Link href={`/noticias/${article.slug}`} className="rounded-2xl border border-ocean-200 px-4 py-2 text-xs font-semibold text-ocean-700">
-                    Previsualizar
-                  </Link>
+                  </details>
                 </div>
               </div>
             </article>

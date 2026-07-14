@@ -1,4 +1,5 @@
-export type FeaturedPlanId = '7_days' | '30_days' | 'super_30_days';
+export type FeaturedPlanId = '7_days' | '15_days' | '30_days';
+export type ProfessionalPlanId = 'corretor' | 'imobiliaria' | 'plus';
 
 export const PLANS = {
   listing: {
@@ -12,22 +13,26 @@ export const PLANS = {
     /** Apos a promo de lancamento */
     standardFreeListingLimit: 1,
     additionalPrice: 19.9,
-    seasonalPrice: 19.9,
-    seasonalRenewalPrice: 9.9,
+    seasonalPrice: 29.9,
+    seasonalRenewal30Price: 19.9,
+    seasonalRenewal60Price: 24.9,
+    seasonalRenewalPrice: 24.9,
     standardDurationDays: 60,
     seasonalDurationDays: 60,
+    seasonalRenewal30DurationDays: 30,
+    seasonalRenewal60DurationDays: 60,
     seasonalRenewalNoticeDays: 7
   },
   highlights: {
-    '7_days': { label: 'Destaque 7 dias', days: 7, price: 9.99 },
-    '30_days': { label: 'Destaque 30 dias', days: 30, price: 19.99 },
-    super_30_days: { label: 'Super destaque 30 dias', days: 30, price: 49.99 }
+    '7_days': { label: 'Destaque 7 dias', days: 7, price: 9.9 },
+    '15_days': { label: 'Destaque 15 dias', days: 15, price: 17.9 },
+    '30_days': { label: 'Destaque 30 dias', days: 30, price: 24.9 }
   } satisfies Record<FeaturedPlanId, { label: string; days: number; price: number }>,
   professional: {
-    corretor: { label: 'Plano Corretor', price: 149.9, listingLimit: 10 },
-    imobiliaria: { label: 'Plano Imobiliaria', price: 249.9, listingLimit: 50 },
-    plus: { label: 'Plano Imobiliaria Plus', price: 399.9, listingLimit: 100 }
-  }
+    corretor: { label: 'Plano Corretor', price: 159.9, listingLimit: 10, aiCredits: 5 },
+    imobiliaria: { label: 'Plano Imobiliaria', price: 259.9, listingLimit: 30, aiCredits: 15 },
+    plus: { label: 'Plano Imobiliaria Plus', price: 389.9, listingLimit: 75, aiCredits: 30 }
+  } satisfies Record<ProfessionalPlanId, { label: string; price: number; listingLimit: number; aiCredits: number }>
 } as const;
 
 export function isLaunchPromoActive(now = new Date()) {
@@ -60,17 +65,31 @@ export function formatPlanPrice(value: number, options?: { perMonth?: boolean })
   return options?.perMonth ? `R$ ${formatted}/mes` : `R$ ${formatted}`;
 }
 
+export function getProfessionalPlan(planId?: string | null) {
+  if (planId === 'corretor' || planId === 'imobiliaria' || planId === 'plus') {
+    return { id: planId, ...PLANS.professional[planId] };
+  }
+
+  return null;
+}
+
+export function getProfessionalAccountType(planId: ProfessionalPlanId) {
+  return planId === 'corretor' ? 'corretor' : 'imobiliaria';
+}
+
 export function getHighlightPrice(plan: FeaturedPlanId) {
   return PLANS.highlights[plan].price;
 }
 
-export function getHighlightLabel(plan: FeaturedPlanId) {
+export function getHighlightLabel(plan?: string | null) {
+  if (plan === 'super_30_days') return 'Super destaque 30 dias';
+  if (plan !== '7_days' && plan !== '15_days' && plan !== '30_days') return 'Destaque';
   return PLANS.highlights[plan].label;
 }
 
 export function getHighlightDurationDays(plan?: string | null) {
   if (plan === '7_days') return PLANS.highlights['7_days'].days;
-  if (plan === '30_days') return PLANS.highlights['30_days'].days;
-  if (plan === 'super_30_days') return PLANS.highlights.super_30_days.days;
+  if (plan === '15_days') return PLANS.highlights['15_days'].days;
+  if (plan === '30_days' || plan === 'super_30_days') return 30;
   return PLANS.highlights['30_days'].days;
 }

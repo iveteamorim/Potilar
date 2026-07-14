@@ -44,7 +44,7 @@ create table if not exists public.listings (
   payment_amount numeric(10,2),
   payment_confirmed_at timestamptz,
   listing_expires_at timestamptz,
-  featured_plan text check (featured_plan in ('7_days', '30_days', 'super_30_days')),
+  featured_plan text check (featured_plan in ('7_days', '15_days', '30_days', 'super_30_days')),
   featured_payment_status text not null default 'not_requested' check (featured_payment_status in ('not_requested', 'pix_pending', 'confirmed')),
   featured_payment_amount numeric(10,2),
   featured_starts_at timestamptz,
@@ -133,7 +133,7 @@ begin
   ) then
     alter table public.listings
     add constraint listings_featured_plan_check
-    check (featured_plan in ('7_days', '30_days', 'super_30_days'));
+    check (featured_plan in ('7_days', '15_days', '30_days', 'super_30_days'));
   end if;
 end $$;
 
@@ -433,7 +433,7 @@ security definer
 set search_path = public
 as $$
 begin
-  if new_featured_plan not in ('7_days', '30_days', 'super_30_days') then
+  if new_featured_plan not in ('7_days', '15_days', '30_days') then
     raise exception 'Invalid highlight plan';
   end if;
 

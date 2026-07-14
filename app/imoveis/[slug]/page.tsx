@@ -79,7 +79,7 @@ async function getAdvertiserProfile(ownerId?: string) {
     const supabase = createClient();
     let { data, error } = await supabase
       .from('profiles')
-      .select('public_slug,company_name,full_name,account_type,creci,creci_verified')
+      .select('public_slug,company_name,full_name,account_type,creci,creci_verified,profile_image_url')
       .eq('id', ownerId)
       .in('account_type', ['corretor', 'imobiliaria'])
       .maybeSingle();
@@ -87,11 +87,21 @@ async function getAdvertiserProfile(ownerId?: string) {
     if (error) {
       const fallback = await supabase
         .from('profiles')
-        .select('public_slug,company_name,full_name,account_type,creci')
+        .select('public_slug,company_name,full_name,account_type,creci,profile_image_url')
         .eq('id', ownerId)
         .in('account_type', ['corretor', 'imobiliaria'])
         .maybeSingle();
       data = fallback.data ? { ...fallback.data, creci_verified: false } : null;
+    }
+
+    if (!data?.public_slug) {
+      const minimal = await supabase
+        .from('profiles')
+        .select('public_slug,full_name,account_type,creci,profile_image_url')
+        .eq('id', ownerId)
+        .in('account_type', ['corretor', 'imobiliaria'])
+        .maybeSingle();
+      data = minimal.data ? { ...minimal.data, company_name: null, creci_verified: false } : null;
     }
 
     if (!data?.public_slug) return null;
@@ -167,8 +177,16 @@ export default async function PropertyDetailPage({ params }: { params: { slug: s
   const whatsappNumber = cleanPhone(property.contactWhatsapp);
   const phoneNumber = cleanPhone(contactPhone);
   const contactName = getPublicFirstName(property.contactName) || 'Anunciante';
+  const advertiserDisplayName = advertiserProfile?.company_name || advertiserProfile?.full_name || contactName;
+  const advertiserInitials = String(advertiserDisplayName)
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join('')
+    .toUpperCase();
   const hasAdvertiserContact = Boolean(property.contactPhone || property.contactWhatsapp || property.contactEmail);
-  const isSuperFeatured = property.featuredPlan === 'super_30_days';
+  const isSuperFeatured = property.isFeatured && property.featuredPlan === 'super_30_days';
   const dateLabel = formatListingDateLabel(property.createdAt, property.updatedAt);
   const detailUrl = `${BASE_URL}/imoveis/${property.slug}`;
   const whatsappHref =
@@ -207,6 +225,115 @@ export default async function PropertyDetailPage({ params }: { params: { slug: s
     property.isPetFriendly && 'Aceita pet',
     property.isFurnished && 'Mobiliado'
   ].filter(Boolean) as string[];
+  const contactCard = (
+    <div className="glass-card space-y-4 p-5">
+      <div>
+        <h3 className="text-base font-semibold text-slate-900 dark:text-white">
+          {hasAdvertiserContact ? 'Contato do anunciante' : 'Contato Potilar'}
+        </h3>
+        {advertiserProfile?.public_slug && (
+          <div className="mt-3 flex items-center gap-3">
+            <Link
+              href={getPublicProfilePath(advertiserProfile.public_slug)}
+              className="flex h-14 w-14 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl bg-slate-950 text-sm font-semibold text-white"
+              aria-label={`Ver pagina de ${advertiserDisplayName}`}
+            >
+              {advertiserProfile.profile_image_url ? (
+                <img
+                  src={advertiserProfile.profile_image_url}
+                  alt={advertiserDisplayName}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                advertiserInitials || 'P'
+              )}
+            </Link>
+            <div className="min-w-0 text-sm text-slate-600 dark:text-slate-300">
+              <span>Anunciante:</span>{' '}
+              <Link
+                href={getPublicProfilePath(advertiserProfile.public_slug)}
+                className="font-semibold text-ocean-700 underline"
+              >
+                {advertiserDisplayName}
+              </Link>
+              {advertiserProfile.creci && advertiserProfile.creci_verified && (
+                <span className="mt-2 inline-flex items-center gap-1 rounded-full bg-ocean-50 px-2.5 py-1 text-[11px] font-semibold text-ocean-700">
+                  <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
+                  CRECI verificado
+                </span>
+              )}
+            </div>
+          </div>
+        )}
+        {!advertiserProfile?.public_slug && (
+          <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">{contactName}</p>
+        )}
+      </div>
+      <div className="grid gap-3 sm:grid-cols-3">
+        {property.contactWhatsapp && whatsappNumber && (
+          <WhatsAppStatLink
+            listingId={property.id}
+            href={whatsappHref}
+            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-green-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-green-600/20"
+          >
+            <MessageCircle className="h-4 w-4" aria-hidden="true" />
+            WhatsApp
+          </WhatsAppStatLink>
+        )}
+        {property.contactPhone && phoneNumber && (
+          <a
+            href={`tel:+${phoneNumber}`}
+            className="inline-flex items-center justify-center gap-2 rounded-2xl border border-ocean-200 px-4 py-3 text-sm font-semibold text-ocean-700 dark:border-slate-700 dark:text-slate-200"
+          >
+            <Phone className="h-4 w-4" aria-hidden="true" />
+            Telefone
+          </a>
+        )}
+        {property.contactEmail && (
+          <a
+            href={`mailto:${property.contactEmail}?subject=${encodeURIComponent(`Interesse no anuncio ${property.title}`)}`}
+            className="inline-flex items-center justify-center gap-2 rounded-2xl border border-ocean-200 px-4 py-3 text-sm font-semibold text-ocean-700 dark:border-slate-700 dark:text-slate-200"
+          >
+            <Mail className="h-4 w-4" aria-hidden="true" />
+            Email
+          </a>
+        )}
+        {property.ownerId && (
+          <ListingMessageButton listingId={property.id} ownerId={property.ownerId} title={displayTitle} />
+        )}
+        {!hasAdvertiserContact && (
+          <a
+            href={whatsappHref}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-green-600 px-4 py-3 text-sm font-semibold text-white"
+          >
+            <MessageCircle className="h-4 w-4" aria-hidden="true" />
+            WhatsApp Potilar
+          </a>
+        )}
+      </div>
+      <div className="grid grid-cols-2 gap-2 border-t border-sand-100 pt-4 text-xs dark:border-slate-800">
+        <ShareButtons title={displayTitle} url={detailUrl} compact />
+        <a
+          href={reportHref}
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex items-center justify-center gap-2 rounded-full border border-red-200 px-3 py-2 text-center font-semibold text-red-700 transition hover:bg-red-50 dark:border-red-900/60 dark:text-red-300 dark:hover:bg-red-950/30"
+        >
+          <Flag className="h-4 w-4" aria-hidden="true" />
+          Denunciar anuncio
+        </a>
+        <a
+          href="/seguranca"
+          className="inline-flex items-center justify-center gap-2 rounded-full border border-ocean-200 px-3 py-2 text-center font-semibold text-ocean-700 transition hover:bg-ocean-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+        >
+          <ShieldCheck className="h-4 w-4" aria-hidden="true" />
+          Dicas de seguranca
+        </a>
+      </div>
+    </div>
+  );
 
   return (
     <main className="px-4 py-5 sm:px-6 lg:px-8 lg:py-7">
@@ -215,12 +342,13 @@ export default async function PropertyDetailPage({ params }: { params: { slug: s
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <div className="mx-auto max-w-6xl space-y-7">
-        <div className="grid gap-5 lg:grid-cols-[1.15fr_0.85fr]">
-          <PropertyGallery images={property.images} />
-          <div className="space-y-3">
-            <FavoriteButton propertyId={property.id} title={displayTitle} variant="inline" />
-            <div className="flex flex-wrap gap-2">
+      <div className="mx-auto max-w-6xl">
+        <div className="grid gap-7 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start">
+          <div className="space-y-7">
+            <PropertyGallery images={property.images} />
+        <div className="space-y-3">
+          <FavoriteButton propertyId={property.id} title={displayTitle} variant="inline" />
+          <div className="flex flex-wrap gap-2">
               <span className="inline-flex items-center gap-1 rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-700">
                 <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
                 Anuncio revisado pela Potilar
@@ -251,9 +379,6 @@ export default async function PropertyDetailPage({ params }: { params: { slug: s
                 {dateLabel}
               </p>
             )}
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
-              Codigo do anuncio: {getListingCode(property.id)}
-            </p>
             {property.addressExtra && (
               <p className="text-sm font-semibold text-slate-600 dark:text-slate-300">
                 Referencia: {property.addressExtra}
@@ -279,129 +404,42 @@ export default async function PropertyDetailPage({ params }: { params: { slug: s
                 ))}
               </div>
             )}
-            {advertiserProfile?.public_slug && (
-              <p className="flex flex-wrap items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
-                Anunciante:{' '}
-                <Link
-                  href={getPublicProfilePath(advertiserProfile.public_slug)}
-                  className="font-semibold text-ocean-700 underline"
-                >
-                  {advertiserProfile.company_name || advertiserProfile.full_name}
-                </Link>
-                {advertiserProfile.creci && advertiserProfile.creci_verified && (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-ocean-50 px-2.5 py-1 text-[11px] font-semibold text-ocean-700">
-                    <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
-                    CRECI verificado
-                  </span>
-                )}
-              </p>
-            )}
-            <div className="glass-card space-y-4 p-5">
-              <div>
-                <h3 className="text-base font-semibold text-slate-900 dark:text-white">
-                  {hasAdvertiserContact ? 'Contato do anunciante' : 'Contato Potilar'}
-                </h3>
-                <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">{contactName}</p>
-              </div>
-              <div className="grid gap-3 sm:grid-cols-3">
-                {property.contactWhatsapp && whatsappNumber && (
-                  <WhatsAppStatLink
-                    listingId={property.id}
-                    href={whatsappHref}
-                    className="inline-flex items-center justify-center gap-2 rounded-2xl bg-green-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-green-600/20"
-                  >
-                    <MessageCircle className="h-4 w-4" aria-hidden="true" />
-                    WhatsApp
-                  </WhatsAppStatLink>
-                )}
-                {property.contactPhone && phoneNumber && (
-                  <a
-                    href={`tel:+${phoneNumber}`}
-                    className="inline-flex items-center justify-center gap-2 rounded-2xl border border-ocean-200 px-4 py-3 text-sm font-semibold text-ocean-700 dark:border-slate-700 dark:text-slate-200"
-                  >
-                    <Phone className="h-4 w-4" aria-hidden="true" />
-                    Telefone
-                  </a>
-                )}
-                {property.contactEmail && (
-                  <a
-                    href={`mailto:${property.contactEmail}?subject=${encodeURIComponent(`Interesse no anuncio ${property.title}`)}`}
-                    className="inline-flex items-center justify-center gap-2 rounded-2xl border border-ocean-200 px-4 py-3 text-sm font-semibold text-ocean-700 dark:border-slate-700 dark:text-slate-200"
-                  >
-                    <Mail className="h-4 w-4" aria-hidden="true" />
-                    Email
-                  </a>
-                )}
-                {property.ownerId && (
-                  <ListingMessageButton listingId={property.id} ownerId={property.ownerId} title={displayTitle} />
-                )}
-                {!hasAdvertiserContact && (
-                  <a
-                    href={whatsappHref}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center justify-center gap-2 rounded-2xl bg-green-600 px-4 py-3 text-sm font-semibold text-white"
-                  >
-                    <MessageCircle className="h-4 w-4" aria-hidden="true" />
-                    WhatsApp Potilar
-                  </a>
-                )}
-              </div>
-              <div className="flex flex-wrap gap-3 border-t border-sand-100 pt-4 text-xs dark:border-slate-800">
-                <a
-                  href={reportHref}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-2 rounded-full border border-red-200 px-4 py-2 font-semibold text-red-700 transition hover:bg-red-50 dark:border-red-900/60 dark:text-red-300 dark:hover:bg-red-950/30"
-                >
-                  <Flag className="h-4 w-4" aria-hidden="true" />
-                  Denunciar anuncio
-                </a>
-                <a
-                  href="/seguranca"
-                  className="inline-flex items-center gap-2 rounded-full border border-ocean-200 px-4 py-2 font-semibold text-ocean-700 transition hover:bg-ocean-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
-                >
-                  <ShieldCheck className="h-4 w-4" aria-hidden="true" />
-                  Dicas de seguranca
-                </a>
-              </div>
-            </div>
           </div>
-        </div>
-        <section className="grid gap-5 lg:grid-cols-[0.85fr_1.15fr]">
-          <div className="space-y-4">
-            <ShareButtons title={displayTitle} url={detailUrl} />
+        <section className="space-y-4">
+          <p className="text-sm leading-6 text-slate-600 dark:text-slate-300">{property.description}</p>
+          {property.features.length > 0 && (
+            <ul className="grid gap-2 text-sm text-slate-600 dark:text-slate-300 sm:grid-cols-2">
+              {property.features.map((feature) => (
+                <li key={feature} className="flex items-center gap-2">
+                  <span className="h-2 w-2 rounded-full bg-ocean-500" />
+                  {feature}
+                </li>
+              ))}
+            </ul>
+          )}
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
+            Codigo do anuncio: {getListingCode(property.id)}
+          </p>
+          <div className="lg:hidden">
+            {contactCard}
           </div>
-          <div className="space-y-4">
-            <p className="text-sm leading-6 text-slate-600 dark:text-slate-300">{property.description}</p>
-            {property.videoUrl && (
-              <a
-                href={property.videoUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-2 rounded-2xl border border-ocean-200 bg-ocean-50 px-5 py-3 text-sm font-semibold text-ocean-800 transition hover:border-ocean-400 hover:bg-ocean-100 dark:border-ocean-900 dark:bg-ocean-950/40 dark:text-ocean-100"
-              >
-                <PlayCircle className="h-4 w-4" aria-hidden="true" />
-                Ver video do imovel
-              </a>
-            )}
-            {property.features.length > 0 && (
-              <ul className="grid gap-2 text-sm text-slate-600 dark:text-slate-300 sm:grid-cols-2">
-                {property.features.map((feature) => (
-                  <li key={feature} className="flex items-center gap-2">
-                    <span className="h-2 w-2 rounded-full bg-ocean-500" />
-                    {feature}
-                  </li>
-                ))}
-              </ul>
-            )}
-            <div className="flex gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-100">
-              <AlertTriangle className="mt-0.5 h-5 w-5 flex-shrink-0" aria-hidden="true" />
-              <p>
-                Evite pagamentos antecipados sem visitar o imovel e confirmar os dados do anunciante.
-                A Potilar revisa anuncios, mas a negociacao deve ser feita com cuidado.
-              </p>
-            </div>
+          {property.videoUrl && (
+            <a
+              href={property.videoUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 rounded-2xl border border-ocean-200 bg-ocean-50 px-5 py-3 text-sm font-semibold text-ocean-800 transition hover:border-ocean-400 hover:bg-ocean-100 dark:border-ocean-900 dark:bg-ocean-950/40 dark:text-ocean-100"
+            >
+              <PlayCircle className="h-4 w-4" aria-hidden="true" />
+              Ver video do imovel
+            </a>
+          )}
+          <div className="flex gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-100">
+            <AlertTriangle className="mt-0.5 h-5 w-5 flex-shrink-0" aria-hidden="true" />
+            <p>
+              Evite pagamentos antecipados sem visitar o imovel e confirmar os dados do anunciante.
+              A Potilar revisa anuncios, mas a negociacao deve ser feita com cuidado.
+            </p>
           </div>
         </section>
         <section className="space-y-4">
@@ -440,10 +478,15 @@ export default async function PropertyDetailPage({ params }: { params: { slug: s
           </h2>
           <div className="mt-6 grid gap-6 md:grid-cols-3">
             {similar.map((item) => (
-              <PropertyCard key={item.id} property={item} />
+              <PropertyCard key={item.id} property={item} variant={advertiserListings.length > 0 ? 'compact' : 'grid'} />
             ))}
           </div>
         </section>
+          </div>
+          <aside className="hidden lg:sticky lg:top-24 lg:block">
+            {contactCard}
+          </aside>
+        </div>
       </div>
       <div className="fixed inset-x-0 bottom-0 z-50 border-t border-sand-200 bg-white/95 p-3 shadow-[0_-12px_30px_rgba(15,23,42,0.12)] backdrop-blur md:hidden">
         <div className="mx-auto flex max-w-md gap-2">

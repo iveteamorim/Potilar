@@ -56,6 +56,7 @@ export default async function AnunciarPage({
   let defaultEmail = '';
   let defaultDocument = '';
   let accountType = 'particular';
+  let isAdmin = false;
   const referralCode = normalizeReferral(searchParams?.ref);
   const defaultCity = resolveCityPrefill(searchParams?.cidade);
 
@@ -70,7 +71,7 @@ export default async function AnunciarPage({
       defaultEmail = user.email ?? '';
       const { data: profile } = await supabase
         .from('profiles')
-        .select('full_name,phone,account_type,advertiser_document')
+        .select('full_name,phone,account_type,advertiser_document,role')
         .eq('id', user.id)
         .single();
 
@@ -78,6 +79,7 @@ export default async function AnunciarPage({
       defaultPhone = profile?.phone ?? '';
       defaultDocument = profile?.advertiser_document ?? '';
       accountType = profile?.account_type ?? 'particular';
+      isAdmin = profile?.role === 'admin';
     }
   } catch {
     isAuthenticated = false;
@@ -117,6 +119,7 @@ export default async function AnunciarPage({
               defaultEmail={defaultEmail}
               defaultDocument={defaultDocument}
               accountType={accountType}
+              isAdmin={isAdmin}
               defaultCity={defaultCity}
             />
           </div>

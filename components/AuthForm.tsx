@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Eye, EyeOff } from 'lucide-react';
 import { BASE_URL } from '@/lib/config';
+import type { ProfessionalPlanId } from '@/lib/plans';
 import { buildPublicProfileSlug } from '@/lib/publicProfile';
 import { createClient } from '@/lib/supabase/client';
 
@@ -91,6 +92,18 @@ function getFriendlyAuthMessage(value: string) {
   return value;
 }
 
+function getRequestedPlan(value: string | null): ProfessionalPlanId | null {
+  if (value === 'corretor' || value === 'imobiliaria' || value === 'plus') return value;
+  return null;
+}
+
+function getAccountTypeFromRequest(plan: ProfessionalPlanId | null, requestedAccount: string | null): AccountType {
+  if (requestedAccount === 'corretor' || requestedAccount === 'imobiliaria') return requestedAccount;
+  if (plan === 'corretor') return 'corretor';
+  if (plan === 'imobiliaria' || plan === 'plus') return 'imobiliaria';
+  return 'particular';
+}
+
 export default function AuthForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -98,6 +111,10 @@ export default function AuthForm() {
   const initialEmail = searchParams.get('email') ?? '';
   const intent = searchParams.get('intent');
   const requestedMode = searchParams.get('mode');
+  const requestedAccount = searchParams.get('account');
+  const requestedPlan = getRequestedPlan(searchParams.get('plan'));
+  const requestedBillingMode = searchParams.get('billing') === 'manual' ? 'manual' : 'automatic';
+  const isProfessionalPlanFlow = Boolean(requestedPlan);
   const isBuyerIntent = intent === 'favorite' || intent === 'alert' || intent === 'chat';
   const confirmed = searchParams.get('confirmed') === '1';
   const reset = searchParams.get('reset') === '1';
@@ -110,12 +127,15 @@ export default function AuthForm() {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [phone, setPhone] = useState('');
-  const [accountType, setAccountType] = useState<AccountType>('particular');
+  const [accountType, setAccountType] = useState<AccountType>(
+    getAccountTypeFromRequest(requestedPlan, requestedAccount)
+  );
   const [cpf, setCpf] = useState('');
   const [cnpj, setCnpj] = useState('');
   const [creci, setCreci] = useState('');
   const [email, setEmail] = useState(initialEmail);
   const [password, setPassword] = useState('');
+  const [passwordConfirm, setPasswordConfirm] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [message, setMessage] = useState('');
@@ -127,6 +147,23 @@ export default function AuthForm() {
   const cpfHasLengthError = cpfDigits.length > 0 && cpfDigits.length < 11;
   const cnpjHasLengthError = cnpjDigits.length > 0 && cnpjDigits.length < 14;
   const phoneHasError = phone.length > 0 && !isValidBrazilMobilePhone(phone);
+
+  async function startProfessionalCheckout(planId: ProfessionalPlanId) {
+    const response = await fetch('/api/professional-plans/checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ planId, billingMode: requestedBillingMode })
+    });
+    const payload = await response.json();
+
+    if (!response.ok || !payload.initPoint) {
+      setMessage(payload.error ?? 'Conta criada, mas nao foi possivel abrir o pagamento agora. Entre em Planos e tente novamente.');
+      setLoading(false);
+      return;
+    }
+
+    window.location.href = payload.initPoint;
+  }
 
   function getAuthOrigin() {
     if (typeof window === 'undefined') return BASE_URL;
@@ -265,6 +302,12 @@ export default function AuthForm() {
         return;
       }
 
+      if (passwordConfirm !== password) {
+        setMessage('As senhas nao coincidem.');
+        setLoading(false);
+        return;
+      }
+
       if (!isBuyerIntent && (!firstName.trim() || !lastName.trim())) {
         setMessage('Informe nome e sobrenome para criar sua conta.');
         setLoading(false);
@@ -375,8 +418,17 @@ export default function AuthForm() {
 
       if (!data.session) {
         setSignupEmailSent(true);
-        setMessage('Email enviado. Confirme seu email.');
+        setMessage(
+          isProfessionalPlanFlow
+            ? 'Conta criada. Confirme seu email para entrar e concluir o pagamento do plano.'
+            : 'Email enviado. Confirme seu email.'
+        );
         setLoading(false);
+        return;
+      }
+
+      if (requestedPlan) {
+        await startProfessionalCheckout(requestedPlan);
         return;
       }
 
@@ -401,6 +453,11 @@ export default function AuthForm() {
       }
     }
 
+    if (requestedPlan) {
+      await startProfessionalCheckout(requestedPlan);
+      return;
+    }
+
     router.push(next);
     router.refresh();
   }
@@ -412,7 +469,7 @@ export default function AuthForm() {
           Entrar
         </button>
         <button type="button" onClick={() => setMode('signup')} disabled={isRecovery} className={`border-b-2 px-3 py-2.5 transition sm:px-4 sm:py-3 ${mode === 'signup' ? 'border-ocean-600 text-ocean-700' : 'border-transparent text-slate-500 hover:text-slate-800'} disabled:cursor-not-allowed disabled:opacity-60`}>
-          Comecar gratis
+          {isProfessionalPlanFlow ? 'Criar conta' : 'Comecar gratis'}
         </button>
       </div>
 
@@ -451,22 +508,28 @@ export default function AuthForm() {
                   </p>
                 )}
               </div>
-              <div className="grid grid-cols-3 rounded-2xl bg-sand-100 p-1 text-xs font-semibold dark:bg-slate-800">
-                {[
-                  ['particular', 'Particular'],
-                  ['corretor', 'Corretor'],
-                  ['imobiliaria', 'Imobiliaria']
-                ].map(([value, label]) => (
-                  <button
-                    key={value}
-                    type="button"
-                    onClick={() => setAccountType(value as AccountType)}
-                    className={`rounded-xl px-2 py-2 ${accountType === value ? 'bg-white text-ocean-700 shadow-sm dark:bg-slate-950' : 'text-slate-500'}`}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
+              {isProfessionalPlanFlow ? (
+                <div className="rounded-2xl border border-ocean-100 bg-ocean-50 px-4 py-3 text-sm font-semibold text-ocean-900 dark:border-ocean-900 dark:bg-ocean-950/40 dark:text-ocean-100">
+                  Conta profissional: {accountType === 'corretor' ? 'Corretor' : 'Imobiliaria'}
+                </div>
+              ) : (
+                <div className="grid grid-cols-3 rounded-2xl bg-sand-100 p-1 text-xs font-semibold dark:bg-slate-800">
+                  {[
+                    ['particular', 'Particular'],
+                    ['corretor', 'Corretor'],
+                    ['imobiliaria', 'Imobiliaria']
+                  ].map(([value, label]) => (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => setAccountType(value as AccountType)}
+                      className={`rounded-xl px-2 py-2 ${accountType === value ? 'bg-white text-ocean-700 shadow-sm dark:bg-slate-950' : 'text-slate-500'}`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              )}
               {accountType !== 'imobiliaria' ? (
                 <div>
                   <input
@@ -537,6 +600,26 @@ export default function AuthForm() {
       </div>
 
       {mode === 'signup' && !isRecovery && (
+        <div className="relative">
+          <input
+            type={showPassword ? 'text' : 'password'}
+            value={passwordConfirm}
+            onChange={(event) => setPasswordConfirm(event.target.value)}
+            placeholder="Repetir senha"
+            className="w-full rounded-xl border border-sand-200 bg-white px-4 py-2.5 pr-12 text-sm dark:border-slate-700 dark:bg-slate-900"
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword((current) => !current)}
+            className="absolute right-3 top-1/2 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full text-slate-500 transition hover:bg-sand-100 hover:text-ocean-700 dark:hover:bg-slate-800"
+            aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+          >
+            {showPassword ? <EyeOff className="h-4 w-4" aria-hidden="true" /> : <Eye className="h-4 w-4" aria-hidden="true" />}
+          </button>
+        </div>
+      )}
+
+      {mode === 'signup' && !isRecovery && (
         <label className="flex items-start gap-3 rounded-xl border border-sand-200 bg-sand-50 px-3 py-2.5 text-[11px] text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 sm:rounded-2xl sm:px-4 sm:py-3 sm:text-xs">
           <input
             type="checkbox"
@@ -576,7 +659,21 @@ export default function AuthForm() {
       )}
 
       <button type="button" onClick={submit} disabled={loading} className="w-full rounded-2xl bg-ocean-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-ocean-700 hover:shadow-lg disabled:translate-y-0 disabled:opacity-60">
-        {loading ? 'Aguarde...' : isRecovery ? 'Guardar nova senha' : mode === 'signup' ? 'Comecar gratis' : 'Entrar'}
+        {loading
+      ? 'Aguarde...'
+          : isRecovery
+            ? 'Guardar nova senha'
+            : mode === 'signup'
+              ? isProfessionalPlanFlow
+                ? requestedBillingMode === 'manual'
+                  ? 'Criar conta e pagar 30 dias'
+                  : 'Criar conta e assinar'
+                : 'Comecar gratis'
+              : requestedPlan
+                ? requestedBillingMode === 'manual'
+                  ? 'Entrar e pagar 30 dias'
+                  : 'Entrar e assinar'
+                : 'Entrar'}
       </button>
 
       {mode === 'login' && !isRecovery && (

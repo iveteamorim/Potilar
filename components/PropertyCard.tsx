@@ -8,7 +8,10 @@ import type { Property } from '@/data/properties';
 import { formatListingDateLabel } from '@/lib/dateLabels';
 import { getCleanPropertyTitle } from '@/lib/displayTitle';
 import { getListingHref } from '@/lib/listingUrls';
+import { getPublicProfilePath } from '@/lib/publicProfile';
+import { showsDestaquePresentation } from '@/lib/legacyHomeFeatured';
 import FavoriteButton from './FavoriteButton';
+import ListingMessageButton from './ListingMessageButton';
 
 function formatPrice(value: number) {
   return new Intl.NumberFormat('pt-BR', {
@@ -28,36 +31,36 @@ function cleanPhone(value?: string) {
   return value?.replace(/\D/g, '') ?? '';
 }
 
-export default function PropertyCard({ property, variant = 'grid' }: { property: Property; variant?: 'grid' | 'horizontal' }) {
+export default function PropertyCard({
+  property,
+  variant = 'grid'
+}: {
+  property: Property;
+  variant?: 'grid' | 'horizontal' | 'compact';
+}) {
   const [imageIndex, setImageIndex] = useState(0);
   const isUserListing = property.id.startsWith('user-');
   const images = property.images.length > 0 ? property.images : ['/og-home.svg'];
   const image = images[imageIndex] ?? images[0];
   const displayTitle = getCleanPropertyTitle(property);
   const imageAlt = `Anuncio de ${property.propertyType.toLowerCase()} em ${property.location}: ${displayTitle}`;
-  const isSuperFeatured = property.featuredPlan === 'super_30_days';
+  const isSuperFeatured = property.isFeatured && property.featuredPlan === 'super_30_days';
   const showVerifiedProfessional =
     (Boolean(property.advertiserCreciVerified) &&
       ['corretor', 'imobiliaria'].includes(property.advertiserAccountType ?? '')) ||
     (property.location === 'Parnamirim' && property.price === 660);
+  const showDestaquePresentation = showsDestaquePresentation(property);
   const cardClassName = isSuperFeatured
-    ? 'group relative flex h-full flex-col overflow-hidden rounded-xl border-2 border-violet-500 bg-white shadow-[0_26px_80px_rgba(15,23,42,0.16)] ring-2 ring-violet-200/70 transition hover:-translate-y-[3px] hover:shadow-[0_32px_90px_rgba(124,58,237,0.24)] dark:border-violet-400 dark:bg-slate-900 dark:ring-violet-500/30'
-    : property.isFeatured
-      ? 'group relative flex h-full flex-col overflow-hidden rounded-xl border border-sun-300 bg-white shadow-[0_24px_76px_rgba(15,23,42,0.13)] transition hover:-translate-y-[3px] hover:shadow-[0_32px_90px_rgba(245,158,11,0.2)] dark:border-sun-500 dark:bg-slate-900'
-    : 'group relative flex h-full flex-col overflow-hidden rounded-xl border border-sand-200 bg-white shadow-[0_18px_60px_rgba(15,23,42,0.11)] transition hover:-translate-y-[3px] hover:shadow-[0_28px_76px_rgba(15,23,42,0.17)] dark:border-slate-800 dark:bg-slate-900';
-  const featuredBarClassName = isSuperFeatured
-    ? 'relative overflow-hidden bg-violet-600 after:absolute after:inset-y-0 after:-left-1/3 after:w-1/3 after:animate-[shine_2.8s_ease-in-out_infinite] after:bg-white/40 after:skew-x-[-20deg]'
-    : 'bg-sun-500';
+    ? 'group relative flex h-full w-full flex-col overflow-hidden rounded-xl border-2 border-violet-500 bg-white shadow-[0_0_0_1px_rgba(124,58,237,0.35)] transition hover:-translate-y-[2px] hover:shadow-[0_8px_28px_rgba(124,58,237,0.22)] dark:border-violet-400 dark:bg-slate-900'
+    : showDestaquePresentation
+      ? 'group relative flex h-full w-full flex-col overflow-hidden rounded-xl border-2 border-[#ef8f1f] bg-white shadow-[0_0_0_1px_rgba(239,143,31,0.45)] transition hover:-translate-y-[2px] hover:shadow-[0_8px_28px_rgba(239,143,31,0.22)] dark:border-sun-400 dark:bg-slate-900'
+      : 'group relative flex h-full w-full flex-col overflow-hidden rounded-xl border border-sand-200 bg-white shadow-[0_18px_60px_rgba(15,23,42,0.11)] transition hover:-translate-y-[3px] hover:shadow-[0_28px_76px_rgba(15,23,42,0.17)] dark:border-slate-800 dark:bg-slate-900';
   const featuredBadgeClassName = isSuperFeatured
     ? 'rounded-full bg-violet-600 px-3 py-1 text-xs font-semibold text-white shadow-md shadow-violet-500/30'
     : 'rounded-full bg-sun-500 px-3 py-1 text-xs font-semibold text-white shadow-sm';
   const featuredLabel = isSuperFeatured ? 'Super destaque' : 'Destaque';
   const dateLabel = formatListingDateLabel(property.createdAt, property.updatedAt);
   const hasVideo = Boolean(property.videoUrl);
-  const isCompleteListing =
-    images.length >= 3 &&
-    property.description.trim().length >= 40 &&
-    Boolean(property.contactWhatsapp || property.contactPhone || property.contactEmail);
   const contactMethods =
     property.contactMethods && property.contactMethods.length > 0
       ? property.contactMethods
@@ -69,6 +72,7 @@ export default function PropertyCard({ property, variant = 'grid' }: { property:
   const whatsappNumber = cleanPhone(property.contactWhatsapp);
   const phoneNumber = cleanPhone(property.contactPhone);
   const emailAddress = property.contactEmail?.trim();
+  const advertiserProfileHref = property.advertiserPublicSlug ? getPublicProfilePath(property.advertiserPublicSlug) : '';
   const contactButtons = [
     contactMethods.includes('whatsapp') && whatsappNumber
       ? {
@@ -101,11 +105,48 @@ export default function PropertyCard({ property, variant = 'grid' }: { property:
         }
       : null
   ].filter(Boolean);
+  const hasPotilarChat = Boolean(property.ownerId);
+  const hasContactActions = hasPotilarChat || contactButtons.length > 0;
+  const contactActionCount = contactButtons.length + (hasPotilarChat ? 1 : 0);
+  const isDenseContactRow = contactActionCount >= 3;
   const isHorizontal = variant === 'horizontal';
+  const isCompact = variant === 'compact';
+  const horizontalImageRowStart = 'md:row-start-1';
+  const horizontalTextRowStart = 'md:row-start-1';
+  const horizontalContactRowStart = 'md:row-start-2';
   const cardShellClassName = isHorizontal
-    ? `${cardClassName} md:grid md:grid-cols-[minmax(260px,36%)_1fr] md:flex-none`
+    ? `${cardClassName} md:grid md:grid-cols-[minmax(240px,34%)_1fr] md:items-stretch`
     : cardClassName;
-  const imageClassName = isHorizontal ? 'relative h-56 w-full overflow-hidden md:h-full md:min-h-[220px]' : 'relative h-60 w-full overflow-hidden lg:h-64';
+  const imageClassName = isHorizontal
+    ? `relative h-56 w-full overflow-hidden md:col-start-1 ${horizontalImageRowStart} md:row-span-2 md:h-full md:min-h-[220px]`
+    : isCompact
+      ? 'relative aspect-[8/5] w-full shrink-0 overflow-hidden'
+      : 'relative h-60 w-full overflow-hidden lg:h-64';
+  const favoriteFloatingClassName =
+    hasContactActions
+      ? isHorizontal
+        ? 'absolute bottom-40 right-5 z-20 h-10 w-10 md:bottom-36'
+        : isCompact
+          ? isDenseContactRow
+            ? 'absolute bottom-[4.1rem] right-3 z-20 h-8 w-8'
+            : 'absolute bottom-[3.7rem] right-3 z-20 h-8 w-8'
+          : isDenseContactRow
+            ? 'absolute bottom-[4.8rem] right-5 z-20 h-10 w-10'
+            : 'absolute bottom-24 right-5 z-20 h-10 w-10'
+      : 'absolute bottom-3 right-3 z-20 h-10 w-10';
+  const listingIdForChat = property.id.startsWith('user-') ? property.id.replace(/^user-/, '') : property.id;
+  const advertiserBadge = advertiserProfileHref && property.advertiserImageUrl ? (
+    <Link
+      href={advertiserProfileHref}
+      className={`absolute z-30 block overflow-hidden transition hover:-translate-y-0.5 ${
+        isHorizontal ? 'right-5 top-6 h-20 w-20' : 'right-3 top-3 h-12 w-12'
+      }`}
+      aria-label="Ver pagina profissional"
+      onClick={(event) => event.stopPropagation()}
+    >
+      <img src={property.advertiserImageUrl} alt="" className="h-full w-full object-contain" />
+    </Link>
+  ) : null;
 
   function showPreviousImage(event: React.MouseEvent<HTMLButtonElement>) {
     event.preventDefault();
@@ -121,20 +162,17 @@ export default function PropertyCard({ property, variant = 'grid' }: { property:
 
   const content = (
     <>
-      {property.isFeatured && (
-        <div className={`h-1.5 w-full ${featuredBarClassName}`} />
-      )}
       <div className={imageClassName}>
         {image.startsWith('data:') || image.startsWith('blob:') ? (
           <img src={image} alt={imageAlt} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
         ) : (
           <Image src={image} alt={imageAlt} fill className="object-cover transition duration-500 group-hover:scale-105" />
         )}
-        <div className="absolute left-3 top-3 flex flex-wrap items-center gap-2">
-          <span className="bg-sun-500 px-3 py-1 text-xs font-bold text-white">
+        <div className={`absolute left-3 top-3 flex flex-wrap items-center ${isCompact ? 'gap-1' : 'gap-2'}`}>
+          <span className={`bg-sun-500 font-bold text-white ${isCompact ? 'px-2 py-0.5 text-[10px]' : 'px-3 py-1 text-xs'}`}>
             {property.transaction}
           </span>
-          <span className="bg-white/95 px-3 py-1 text-xs font-bold text-slate-800">
+          <span className={`bg-white/95 font-bold text-slate-800 ${isCompact ? 'px-2 py-0.5 text-[10px]' : 'px-3 py-1 text-xs'}`}>
             {property.propertyType}
           </span>
           {isUserListing && (
@@ -142,7 +180,7 @@ export default function PropertyCard({ property, variant = 'grid' }: { property:
               Novo
             </span>
           )}
-          {property.isFeatured && (
+          {showDestaquePresentation && (
             <span className={featuredBadgeClassName}>
               {featuredLabel}
             </span>
@@ -185,30 +223,24 @@ export default function PropertyCard({ property, variant = 'grid' }: { property:
           </>
         )}
       </div>
-      <div className="flex flex-1 flex-col gap-3 p-5">
-        <div className="min-h-[116px]">
-          <h3 className={`${isHorizontal ? 'text-xl md:text-2xl' : 'text-xl'} line-clamp-2 font-semibold leading-snug text-ocean-700 dark:text-ocean-200`}>{displayTitle}</h3>
-          <p className="mt-2 flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+      <div className={`flex flex-1 flex-col ${isCompact ? 'gap-1.5 p-3' : 'gap-3 p-5'} ${isHorizontal ? `md:col-start-2 ${horizontalTextRowStart} md:self-start` : ''} ${isHorizontal && advertiserBadge ? 'md:pr-28' : ''}`}>
+        <div className={isCompact ? 'min-h-[62px]' : 'min-h-[116px]'}>
+          <h3 className={`${isHorizontal ? 'text-xl md:text-2xl' : isCompact ? 'text-base' : 'text-xl'} line-clamp-2 font-semibold leading-snug text-ocean-700 dark:text-ocean-200`}>{displayTitle}</h3>
+          <p className={`${isCompact ? 'mt-1.5 text-xs' : 'mt-2 text-sm'} flex items-center gap-2 text-slate-500 dark:text-slate-400`}>
             <MapPin className="h-4 w-4" />
             {property.location}, RN
           </p>
           {dateLabel && (
-            <div className="mt-2 flex flex-wrap items-center gap-2">
+            <div className={isCompact ? 'mt-1.5 flex flex-wrap items-center gap-2' : 'mt-2 flex flex-wrap items-center gap-2'}>
               <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">{dateLabel}</span>
-              {isCompleteListing && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-green-50 px-2.5 py-1 text-[11px] font-semibold text-green-700 dark:bg-green-950/40 dark:text-green-200">
-                  <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
-                  Completo
-                </span>
-              )}
             </div>
           )}
         </div>
-        <div className={`${isHorizontal ? 'mt-1' : 'mt-auto'} border-t border-sand-100 pt-4 dark:border-slate-800`}>
-          <span className="block text-[1.7rem] font-bold leading-tight text-ocean-800 dark:text-sand-50">
+        <div className={`${isHorizontal ? 'mt-1' : isCompact ? 'mt-auto min-h-[72px]' : 'mt-auto min-h-[142px]'} border-t border-sand-100 ${isCompact ? 'pt-2' : 'pt-4'} dark:border-slate-800`}>
+          <span className={`block ${isCompact ? 'text-[1.15rem]' : 'text-[1.7rem]'} font-bold leading-tight text-ocean-800 dark:text-sand-50`}>
             {formatPropertyPrice(property)}
           </span>
-          <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm font-semibold text-slate-500 dark:text-slate-400">
+          <div className={`${isCompact ? 'mt-1.5 gap-x-3 gap-y-1 text-xs' : 'mt-3 gap-x-5 gap-y-2 text-sm'} flex flex-wrap items-center font-semibold text-slate-500 dark:text-slate-400`}>
             <span className="inline-flex items-center gap-1">
               <BedDouble className="h-4 w-4" />
               {property.bedrooms}
@@ -229,7 +261,7 @@ export default function PropertyCard({ property, variant = 'grid' }: { property:
             )}
           </div>
           {(property.condoIncluded || property.isFurnished || property.isPetFriendly) && (
-            <div className="mt-3 flex flex-wrap gap-2">
+            <div className={`${isCompact ? 'mt-2' : 'mt-3'} flex flex-wrap gap-2`}>
               {property.condoIncluded && (
                 <span className="rounded-full bg-ocean-50 px-2.5 py-1 text-[11px] font-semibold text-ocean-700 dark:bg-ocean-950/40 dark:text-ocean-200">
                   Condomínio incluso
@@ -252,43 +284,59 @@ export default function PropertyCard({ property, variant = 'grid' }: { property:
     </>
   );
 
+  const contactActions = hasContactActions ? (
+    <div className={isHorizontal ? `border-t border-sand-100 p-3 dark:border-slate-800 md:col-start-2 ${horizontalContactRowStart} md:border-t-0 md:p-5 md:pt-0` : isCompact ? 'border-t border-sand-100 p-2.5 dark:border-slate-800' : 'border-t border-sand-100 p-4 dark:border-slate-800'}>
+      <div className={isDenseContactRow ? 'grid grid-cols-3 gap-1.5' : 'grid grid-cols-2 gap-2'}>
+        {hasPotilarChat && (
+          <ListingMessageButton
+            listingId={listingIdForChat}
+            ownerId={property.ownerId!}
+            title={displayTitle}
+            label="Chat"
+            buttonClassName={`inline-flex w-full items-center justify-center rounded-lg border border-ocean-200 font-semibold text-ocean-700 transition hover:bg-ocean-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800 ${isDenseContactRow ? 'gap-1 px-1.5 py-2 text-[11px]' : 'gap-1.5 px-2.5 py-2 text-xs'}`}
+          />
+        )}
+        {contactButtons.map((button) => {
+          if (!button) return null;
+          const Icon = button.icon;
+          const denseLabel =
+            button.key === 'whatsapp' ? 'Zap' : button.key === 'phone' ? 'Tel' : button.key === 'email' ? 'Email' : button.label;
+          return (
+            <a
+              key={button.key}
+              href={button.href}
+              target={button.external ? '_blank' : undefined}
+              rel={button.external ? 'noreferrer' : undefined}
+              className={`inline-flex w-full items-center justify-center rounded-lg font-semibold ${button.className} ${isDenseContactRow ? 'gap-1 px-1.5 py-2 text-[11px]' : 'gap-1.5 px-2.5 py-2 text-xs'}`}
+            >
+              <Icon className="h-4 w-4" aria-hidden="true" />
+              {isDenseContactRow ? denseLabel : button.label}
+            </a>
+          );
+        })}
+      </div>
+    </div>
+  ) : null;
+
   if (isUserListing) {
     return (
       <article className={cardShellClassName}>
-        <FavoriteButton propertyId={property.id} title={displayTitle} variant="floating" />
+        <FavoriteButton propertyId={property.id} title={displayTitle} variant="floating" floatingClassName={favoriteFloatingClassName} />
+        {advertiserBadge}
         {content}
+        {contactActions}
       </article>
     );
   }
 
   return (
     <article className={cardShellClassName}>
-      <FavoriteButton propertyId={property.id} title={displayTitle} variant="floating" />
+      <FavoriteButton propertyId={property.id} title={displayTitle} variant="floating" floatingClassName={favoriteFloatingClassName} />
+      {advertiserBadge}
       <Link href={getListingHref(property)} className={isHorizontal ? 'contents' : 'flex h-full flex-col'}>
         {content}
       </Link>
-      {contactButtons.length > 0 && (
-        <div className={isHorizontal ? 'border-t border-sand-100 p-4 dark:border-slate-800 md:col-start-2 md:p-6 md:pt-0' : 'border-t border-sand-100 p-4 dark:border-slate-800'}>
-          <div className={`grid gap-2 ${contactButtons.length > 1 ? 'sm:grid-cols-2' : ''}`}>
-            {contactButtons.map((button) => {
-              if (!button) return null;
-              const Icon = button.icon;
-              return (
-                <a
-                  key={button.key}
-                  href={button.href}
-                  target={button.external ? '_blank' : undefined}
-                  rel={button.external ? 'noreferrer' : undefined}
-                  className={`inline-flex w-full items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-sm font-semibold ${button.className}`}
-                >
-                  <Icon className="h-4 w-4" aria-hidden="true" />
-                  {button.label}
-                </a>
-              );
-            })}
-          </div>
-        </div>
-      )}
+      {contactActions}
     </article>
   );
 }

@@ -1,11 +1,10 @@
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
-import { CheckCircle2 } from 'lucide-react';
-import PixPaymentPanel from '@/components/PixPaymentPanel';
+import { CreditCard } from 'lucide-react';
+import ListingMercadoPagoButton from '@/components/ListingMercadoPagoButton';
 import { createClient } from '@/lib/supabase/server';
 import { PLANS, getHighlightLabel } from '@/lib/plans';
 import type { PixPaymentKind } from '@/lib/pix';
-import { markPixProofSent } from '../../actions';
 
 type Props = {
   params: { id: string };
@@ -24,12 +23,22 @@ function resolvePayment(
     transaction: string;
   },
   tipo?: string
-): { kind: PixPaymentKind; amount: number; headline: string } | null {
-  if (tipo === 'renewal') {
+): { kind: PixPaymentKind; checkoutKind: 'listing' | 'seasonal' | 'highlight' | 'renewal30' | 'renewal60'; amount: number; headline: string } | null {
+  if (tipo === 'renewal30') {
     return {
       kind: 'renewal',
-      amount: PLANS.listing.seasonalRenewalPrice,
-      headline: 'Renovacao de temporada'
+      checkoutKind: 'renewal30',
+      amount: PLANS.listing.seasonalRenewal30Price,
+      headline: `Renovacao de temporada - ${PLANS.listing.seasonalRenewal30DurationDays} dias`
+    };
+  }
+
+  if (tipo === 'renewal' || tipo === 'renewal60') {
+    return {
+      kind: 'renewal',
+      checkoutKind: 'renewal60',
+      amount: PLANS.listing.seasonalRenewal60Price,
+      headline: `Renovacao de temporada - ${PLANS.listing.seasonalRenewal60DurationDays} dias`
     };
   }
 
@@ -37,14 +46,16 @@ function resolvePayment(
     if (listing.featured_payment_status !== 'pix_pending' || !listing.featured_plan) return null;
     return {
       kind: 'highlight',
+      checkoutKind: 'highlight',
       amount: Number(listing.featured_payment_amount ?? 0),
-      headline: getHighlightLabel(listing.featured_plan as '7_days' | '30_days' | 'super_30_days')
+      headline: getHighlightLabel(listing.featured_plan as '7_days' | '15_days' | '30_days')
     };
   }
 
   if (listing.payment_status === 'pix_pending') {
     return {
       kind: listing.transaction === 'Temporada' ? 'seasonal' : 'listing',
+      checkoutKind: listing.transaction === 'Temporada' ? 'seasonal' : 'listing',
       amount: Number(listing.payment_amount ?? 0),
       headline: listing.transaction === 'Temporada' ? 'Anuncio de temporada' : 'Publicacao do anuncio'
     };
@@ -77,9 +88,6 @@ export default async function PagarPixPage({ params, searchParams }: Props) {
     redirect('/mi-cuenta');
   }
 
-  const proofSentAt =
-    payment.kind === 'highlight' ? listing.featured_payment_proof_sent_at : listing.payment_proof_sent_at;
-
   return (
     <main className="section-padding">
       <div className="mx-auto max-w-4xl space-y-6">
@@ -87,49 +95,30 @@ export default async function PagarPixPage({ params, searchParams }: Props) {
           <Link href="/mi-cuenta" className="text-sm font-semibold text-ocean-700">
             Voltar para Minha conta
           </Link>
-          <h1 className="mt-4 text-3xl font-semibold text-slate-900 dark:text-white">Pagamento Pix</h1>
-          <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-            Pague com QR Code ou copia e cola. Depois envie o comprovante para liberarmos seu anuncio.
-          </p>
+          <h1 className="mt-4 text-3xl font-semibold text-slate-900 dark:text-white">Pagamento do anuncio</h1>
         </div>
 
-        {proofSentAt ? (
-          <div className="rounded-3xl border border-sun-200 bg-sun-50 p-6 text-slate-800 shadow-sm dark:border-sun-900 dark:bg-sun-950/20 dark:text-slate-100">
-            <div className="flex items-start gap-3">
-              <CheckCircle2 className="mt-0.5 h-6 w-6 text-green-600" aria-hidden="true" />
-              <div>
-                <h2 className="text-xl font-semibold">Comprovante enviado</h2>
-                <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
-                  Recebemos sua confirmacao. Agora a Potilar vai revisar o Pix e liberar o anuncio ou destaque.
-                </p>
-                <Link href="/mi-cuenta" className="mt-5 inline-flex rounded-2xl bg-ocean-700 px-5 py-3 text-sm font-semibold text-white">
-                  Voltar para meus anuncios
-                </Link>
-              </div>
+        <section className="rounded-3xl border border-ocean-100 bg-white p-6 shadow-soft dark:border-slate-800 dark:bg-slate-900">
+          <div className="grid gap-5 md:grid-cols-[1fr_auto] md:items-center">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-ocean-600">Potilar - Mercado Pago</p>
+              <h2 className="mt-2 text-2xl font-semibold text-slate-950 dark:text-white">{payment.headline}</h2>
+              <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">{listing.title}</p>
+            </div>
+            <div className="rounded-2xl bg-ocean-50 px-5 py-4 text-right dark:bg-ocean-950/40">
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-ocean-700 dark:text-ocean-200">Total</p>
+              <p className="mt-1 text-3xl font-semibold text-ocean-900 dark:text-ocean-100">
+                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(payment.amount)}
+              </p>
             </div>
           </div>
-        ) : (
-          <div className="space-y-4">
-            <PixPaymentPanel
-              listingId={listing.id}
-              amount={payment.amount}
-              title={listing.title}
-              kind={payment.kind}
-              headline={payment.headline}
-            />
-            <form action={markPixProofSent} className="rounded-3xl border border-green-200 bg-gradient-to-br from-green-50 to-white p-5 shadow-sm dark:border-green-900 dark:from-green-950/30 dark:to-slate-950">
-              <input type="hidden" name="id" value={listing.id} />
-              <input type="hidden" name="kind" value={payment.kind === 'highlight' ? 'highlight' : 'listing'} />
-              <button type="submit" className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-green-600 px-5 py-4 text-sm font-bold text-white shadow-lg shadow-green-600/20 transition hover:bg-green-700">
-                <CheckCircle2 className="h-5 w-5" aria-hidden="true" />
-                Ja paguei e enviei o comprovante
-              </button>
-              <p className="mt-2 text-center text-xs font-semibold text-green-800 dark:text-green-100">
-                Clique aqui depois de enviar o comprovante pelo WhatsApp.
-              </p>
-            </form>
+          <div className="mt-6 rounded-2xl border border-sand-200 bg-sand-50 p-4 dark:border-slate-800 dark:bg-slate-950">
+            <div className="mb-4 flex items-start gap-3 text-sm text-slate-600 dark:text-slate-300">
+              <CreditCard className="mt-0.5 h-5 w-5 shrink-0 text-ocean-700" aria-hidden="true" />
+            </div>
+            <ListingMercadoPagoButton listingId={listing.id} kind={payment.checkoutKind} label="Pagar agora" />
           </div>
-        )}
+        </section>
       </div>
     </main>
   );

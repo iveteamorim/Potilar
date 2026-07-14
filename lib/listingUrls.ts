@@ -8,13 +8,14 @@ export function getListingShortCode(id: string) {
 export function getListingHref(property: Pick<Property, 'id' | 'slug'>) {
   const slug = property.slug?.trim().toLowerCase() ?? '';
   const id = property.id?.trim() ?? '';
+  const listingId = id.startsWith('user-') ? id.replace(/^user-/, '') : id;
 
-  if (id && !id.startsWith('user-')) {
+  if (listingId) {
     const query = slug ? `?slug=${encodeURIComponent(slug)}` : '';
-    return `/ver-anuncio/${encodeURIComponent(id)}${query}`;
+    return `/ver-anuncio/${encodeURIComponent(listingId)}${query}`;
   }
 
-  const code = getListingShortCode(id);
+  const code = getListingShortCode(listingId);
   if (code.length >= 4) {
     return `/a/${code}`;
   }
