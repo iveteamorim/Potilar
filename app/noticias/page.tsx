@@ -4,9 +4,9 @@ import { createClient } from '@/lib/supabase/server';
 import { dedupeNewsArticles, fallbackNewsArticles, formatNewsDate, getNewsImageUrl, withUniqueNewsImages, type NewsArticle } from '@/data/news';
 
 export const metadata: Metadata = {
-  title: 'Potilar Noticias | Mercado imobiliario no RN',
+  title: 'Potilar Notícias | Mercado imobiliário no RN',
   description:
-    'Noticias, orientacoes e tendencias sobre imoveis, aluguel, compra, construcao e documentacao no Rio Grande do Norte.',
+    'Notícias, orientações e tendências sobre imóveis, aluguel, compra, construção e documentação no Rio Grande do Norte.',
   alternates: {
     canonical: '/noticias'
   }
@@ -25,14 +25,14 @@ type NewsRow = {
 };
 
 function rowToArticle(row: NewsRow): NewsArticle {
-  const isOldAiDraft = row.excerpt.includes('Rascunho para revisao') || row.content.includes('Rascunho gerado automaticamente');
+  const isOldAiDraft = row.excerpt.includes('Rascunho para revisão') || row.content.includes('Rascunho gerado automaticamente');
 
   return {
     slug: row.slug,
     category: row.category,
     title: row.title,
     excerpt: isOldAiDraft
-      ? `${row.title}. Entenda por que esse tema pode influenciar o mercado imobiliario no Rio Grande do Norte.`
+      ? `${row.title}. Entenda por que esse tema pode influenciar o mercado imobiliário no Rio Grande do Norte.`
       : row.excerpt,
     content: row.content.split('\n').filter(Boolean),
     imageUrl: getNewsImageUrl(row.category, row.image_url, row.slug),
@@ -96,13 +96,13 @@ export default async function NewsPage({
         <section className="border-b border-sand-200 pb-8 dark:border-slate-800">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
             <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-ocean-600">Potilar Noticias</p>
+              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-ocean-600">Potilar Notícias</p>
               <h1 className="mt-4 max-w-3xl text-4xl font-semibold leading-tight text-slate-950 dark:text-white sm:text-5xl">
-                Mercado imobiliario do RN em foco.
+                Mercado imobiliário do RN em foco.
               </h1>
             </div>
             <p className="max-w-xl text-base leading-7 text-slate-600 dark:text-slate-300">
-              Atualizacoes sobre imoveis, construcao, financiamento, aluguel, documentacao e seguranca para quem compra,
+              Atualizações sobre imóveis, construção, financiamento, aluguel, documentação e segurança para quem compra,
               vende, aluga ou anuncia no Rio Grande do Norte.
             </p>
           </div>

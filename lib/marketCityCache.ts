@@ -464,7 +464,7 @@ export async function resolveCityReference(location: string): Promise<ResolvedCi
     state: 'RN',
     saleSqm: Math.round(natal.saleSqm * RN_STATE_FALLBACK_MULTIPLIER.sale),
     rentSqm: Math.round(natal.rentSqm * RN_STATE_FALLBACK_MULTIPLIER.rent * 100) / 100,
-    source: 'Sem indice oficial para esta cidade - nao usamos comparacao automatica',
+    source: 'Sem índice oficial para esta cidade - não usamos comparação automática',
     referencePeriod: natal.referencePeriod,
     syncedAt: natal.syncedAt,
     isApproximate: true,

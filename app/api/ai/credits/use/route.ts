@@ -21,8 +21,8 @@ export async function POST() {
 
   if (error) {
     const message = /INSUFFICIENT_AI_CREDITS/i.test(error.message)
-      ? 'Voce nao tem creditos de IA suficientes. Compre creditos em Minha conta.'
-      : 'Nao foi possivel consumir creditos de IA. Verifique se o SQL de creditos foi aplicado no Supabase.';
+      ? 'Você não tem créditos de IA suficientes. Compre créditos em Minha conta.'
+      : 'Não foi possível consumir créditos de IA. Verifique se o SQL de créditos foi aplicado no Supabase.';
 
     return NextResponse.json({ error: message }, { status: 402 });
   }

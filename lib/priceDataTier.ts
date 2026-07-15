@@ -12,10 +12,10 @@ export function getDataTierLabel(tier: PriceDataTier, sampleCount?: number) {
   switch (tier) {
     case 'potilar_listings':
       return sampleCount
-        ? `Media de ${sampleCount} anuncio${sampleCount === 1 ? '' : 's'} na Potilar`
-        : 'Anuncios publicados na Potilar';
+        ? `Média de ${sampleCount} anúncio${sampleCount === 1 ? '' : 's'} na Potilar`
+        : 'Anúncios publicados na Potilar';
     case 'fipezap_city':
-      return 'Indice FipeZAP (Natal)';
+      return 'Índice FipeZAP (Natal)';
     case 'fipezap_neighborhood':
       return 'FipeZAP Natal + ajuste de bairro';
     case 'calibrated_estimate':
@@ -23,25 +23,25 @@ export function getDataTierLabel(tier: PriceDataTier, sampleCount?: number) {
     case 'land_estimate':
       return 'Estimativa Potilar (terrenos)';
     case 'generic_estimate':
-      return 'Sem dados confiaveis';
+      return 'Sem dados confiáveis';
     default:
-      return 'Sem referencia';
+      return 'Sem referência';
   }
 }
 
 export function getConfidenceLabel(tier: PriceDataTier) {
   switch (tier) {
     case 'potilar_listings':
-      return 'Anuncios reais';
+      return 'Anúncios reais';
     case 'fipezap_city':
-      return 'Indice oficial';
+      return 'Índice oficial';
     case 'fipezap_neighborhood':
-      return 'Indice + bairro';
+      return 'Índice + bairro';
     case 'calibrated_estimate':
     case 'land_estimate':
       return 'Estimativa';
     default:
-      return 'Indisponivel';
+      return 'Indisponível';
   }
 }
 

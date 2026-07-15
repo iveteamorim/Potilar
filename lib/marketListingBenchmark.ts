@@ -113,5 +113,5 @@ export async function getPotilarListingBenchmark(input: {
 }
 
 function getPotilarListingBenchmarkSource(sampleCount: number, cityLabel: string) {
-  return `${sampleCount} anuncio${sampleCount === 1 ? '' : 's'} ativos na Potilar em ${cityLabel}`;
+  return `${sampleCount} anúncio${sampleCount === 1 ? '' : 's'} ativos na Potilar em ${cityLabel}`;
 }

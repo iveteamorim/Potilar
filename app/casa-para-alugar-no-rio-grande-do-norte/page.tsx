@@ -10,9 +10,9 @@ const page = {
   title: 'Casa para alugar no Rio Grande do Norte',
   h1: 'Casa para alugar no Rio Grande do Norte',
   description:
-    'Encontre casa para alugar no Rio Grande do Norte. Veja anuncios com fotos, preco, cidade, mapa e contato direto na Potilar.',
+    'Encontre casa para alugar no Rio Grande do Norte. Veja anúncios com fotos, preço, cidade, mapa e contato direto na Potilar.',
   intro:
-    'Busque casas para aluguel no RN por cidade, bairro, preco e caracteristicas do imovel. Fale direto com proprietarios, corretores ou imobiliarias.'
+    'Busque casas para aluguel no RN por cidade, bairro, preço e características do imóvel. Fale direto com proprietários, corretores ou imobiliárias.'
 };
 
 export const revalidate = 300;

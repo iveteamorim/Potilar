@@ -51,13 +51,13 @@ export default async function PerfilPublicoPage() {
           <Link href="/mi-cuenta" className="text-sm font-semibold text-ocean-700">
             Voltar para Minha conta
           </Link>
-          <h1 className="mt-4 text-3xl font-semibold text-slate-900 dark:text-white">Perfil publico</h1>
+          <h1 className="mt-4 text-3xl font-semibold text-slate-900 dark:text-white">Perfil público</h1>
           <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-            Corretores e imobiliarias podem ter uma pagina com todos os anuncios ativos.
+            Corretores e imobiliárias podem ter uma página com todos os anúncios ativos.
           </p>
           {profile?.public_slug && (
             <p className="mt-3 text-sm font-semibold text-ocean-700">
-              Sua pagina:{' '}
+              Sua página:{' '}
               <Link href={getPublicProfilePath(profile.public_slug)} className="underline">
                 {getPublicProfilePath(profile.public_slug)}
               </Link>

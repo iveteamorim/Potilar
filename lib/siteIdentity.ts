@@ -50,22 +50,22 @@ export function getFaqItems(now = new Date()): FaqItem[] {
       answer: pricingAnswer
     },
     {
-      title: 'A Potilar faz intermediacao?',
+      title: 'A Potilar faz intermediação?',
       answer:
         'Não. Atuamos como plataforma de divulgação imobiliária. A negociação acontece diretamente entre proprietários, anunciantes e interessados.'
     },
     {
-      title: 'Como divulgo meu imovel?',
+      title: 'Como divulgo meu imóvel?',
       answer:
         'Crie sua conta, preencha o anúncio, envie fotos reais, informe cidade, tipo de negociação, preço e dados de contato.'
     },
     {
-      title: 'Posso acompanhar meu anuncio?',
+      title: 'Posso acompanhar meu anúncio?',
       answer:
         'Sim. Na área Minha conta você acompanha o status, edita informações, organiza fotos e atualiza contatos.'
     },
     {
-      title: 'A Potilar verifica os anuncios?',
+      title: 'A Potilar verifica os anúncios?',
       answer:
         'Os anúncios podem passar por revisão antes de aparecerem publicamente. Mesmo assim, recomendamos confirmar dados, documentos e identidade do anunciante antes de qualquer pagamento.'
     },

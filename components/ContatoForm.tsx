@@ -11,7 +11,7 @@ export default function ContatoForm() {
 
   function handleSubmit() {
     const body = [
-      'Ola, vim pelo site Potilar e quero informacoes sobre imoveis.',
+      'Olá, vim pelo site Potilar e quero informações sobre imóveis.',
       '',
       `Nome: ${name || '-'}`,
       `Email: ${email || '-'}`,
@@ -40,7 +40,7 @@ export default function ContatoForm() {
       />
       <textarea
         rows={4}
-        placeholder="Conte sobre o imovel que procura ou deseja divulgar"
+        placeholder="Conte sobre o imóvel que procura ou deseja divulgar"
         value={message}
         onChange={(event) => setMessage(event.target.value)}
         className="w-full rounded-2xl border border-sand-200 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-900"

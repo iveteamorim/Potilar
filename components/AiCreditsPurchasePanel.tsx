@@ -28,19 +28,19 @@ export default function AiCreditsPurchasePanel({ balance }: Props) {
       const data = await response.json();
 
       if (!response.ok) {
-        setStatus(data.error ?? 'Nao foi possivel iniciar o pagamento.');
+        setStatus(data.error ?? 'Não foi possível iniciar o pagamento.');
         return;
       }
 
       const checkoutUrl = data.initPoint ?? data.sandboxInitPoint;
       if (!checkoutUrl) {
-        setStatus('Pagamento criado, mas o link de checkout nao foi retornado.');
+        setStatus('Pagamento criado, mas o link de checkout não foi retornado.');
         return;
       }
 
       window.location.href = checkoutUrl;
     } catch {
-      setStatus('Nao foi possivel conectar ao pagamento.');
+      setStatus('Não foi possível conectar ao pagamento.');
     } finally {
       setIsLoading(false);
     }
@@ -60,7 +60,7 @@ export default function AiCreditsPurchasePanel({ balance }: Props) {
           </span>
         </div>
         <div className="mt-5 rounded-2xl border border-sand-200 bg-sand-50 p-4 text-sm leading-6 text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">
-          Cada credito gera uma nova versao com titulo e descricao profissional. Se quiser duas opcoes para o mesmo imovel, use dois creditos.
+          Cada crédito gera uma nova versão com título e descrição profissional. Se quiser duas opções para o mesmo imóvel, use dois créditos.
         </div>
       </section>
 

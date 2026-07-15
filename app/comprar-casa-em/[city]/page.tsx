@@ -11,10 +11,10 @@ export function generateStaticParams() {
 }
 
 export function generateMetadata({ params }: { params: { city: string } }): Metadata {
-  if (!isKnownCitySlug(params.city)) return { title: 'Cidade nao encontrada' };
+  if (!isKnownCitySlug(params.city)) return { title: 'Cidade não encontrada' };
   const cityName = resolveCityNameFromSlug(params.city)!;
   const title = `Comprar casa em ${cityName}, RN`;
-  const description = `Casas para comprar em ${cityName}, Rio Grande do Norte. Veja casas a venda com fotos, preco, mapa e contato direto na Potilar.`;
+  const description = `Casas para comprar em ${cityName}, Rio Grande do Norte. Veja casas a venda com fotos, preço, mapa e contato direto na Potilar.`;
   const canonical = `${BASE_URL}${getCityHouseAliasPath(cityName, 'comprar')}`;
 
   return {

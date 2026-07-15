@@ -73,7 +73,7 @@ export default function AlertsManager() {
         <Link href="/imoveis" className="font-semibold text-ocean-700">
           Imoveis
         </Link>{' '}
-        e clique em Criar alerta para acompanhar novos anuncios com esses filtros.
+        e clique em Criar alerta para acompanhar novos anúncios com esses filtros.
       </div>
     );
   }

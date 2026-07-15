@@ -268,11 +268,11 @@ export default function AnunciarForm({
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        setStatus(data.error ?? 'Nao foi possivel usar creditos de IA. Compre creditos em Minha conta.');
+        setStatus(data.error ?? 'Não foi possível usar créditos de IA. Compre créditos em Minha conta.');
         return;
       }
     } catch {
-      setStatus('Nao foi possivel verificar seus creditos de IA.');
+      setStatus('Não foi possível verificar seus créditos de IA.');
       return;
     } finally {
       setIsSuggesting(false);
@@ -355,7 +355,7 @@ export default function AnunciarForm({
     setTitle(generatedTitle);
     setDetails(generatedDetails);
     setFeatures(generatedFeatures.join(', '));
-    setStatus('Sugestão gerada. Foi usado 1 credito de IA. Revise o texto antes de publicar.');
+    setStatus('Sugestão gerada. Foi usado 1 crédito de IA. Revise o texto antes de publicar.');
     setIsSuggesting(false);
   }
 

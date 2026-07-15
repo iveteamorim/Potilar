@@ -21,7 +21,7 @@ export default function MapModalButton({ items, floating = false }: Props) {
             <div className="relative h-full overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-slate-950">
               <div className="absolute left-0 right-0 top-0 z-[10000] flex items-center justify-between border-b border-sand-200 bg-white/95 px-4 py-3 backdrop-blur dark:border-slate-800 dark:bg-slate-950/95">
                 <div>
-                  <p className="text-sm font-semibold text-slate-950 dark:text-white">Mapa dos imoveis</p>
+                  <p className="text-sm font-semibold text-slate-950 dark:text-white">Mapa dos imóveis</p>
                 </div>
                 <button
                   type="button"

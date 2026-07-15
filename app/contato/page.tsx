@@ -25,7 +25,7 @@ export default function ContatoPage() {
           </div>
           <div className="grid gap-3 text-sm text-slate-700 dark:text-slate-200 sm:grid-cols-2">
             <a
-              href="https://wa.me/5521969724141?text=Ola%2C%20vim%20pelo%20site%20Potilar%20e%20quero%20falar%20com%20atendimento."
+              href={`https://wa.me/5521969724141?text=${encodeURIComponent('Olá, vim pelo site Potilar e quero falar com atendimento.')}`}
               target="_blank"
               rel="noreferrer"
               className="flex min-h-16 items-center gap-3 rounded-2xl border border-green-200 bg-white px-4 py-3 font-semibold transition hover:border-green-400 dark:border-slate-800 dark:bg-slate-900"

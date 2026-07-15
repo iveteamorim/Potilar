@@ -25,7 +25,7 @@ export default async function AlertasPage() {
           </Link>
           <h1 className="mt-4 text-3xl font-semibold text-slate-900 dark:text-white">Meus alertas</h1>
           <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-            Buscas salvas na sua conta para acompanhar novidades por cidade, tipo de imovel e faixa de preco.
+            Buscas salvas na sua conta para acompanhar novidades por cidade, tipo de imóvel e faixa de preço.
           </p>
         </div>
         <AlertsManager />

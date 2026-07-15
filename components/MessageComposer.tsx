@@ -46,14 +46,14 @@ export default function MessageComposer({ mode, listingId, ownerId, conversation
       const payload = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        throw new Error(payload.error ?? 'Nao foi possivel enviar.');
+        throw new Error(payload.error ?? 'Não foi possível enviar.');
       }
 
       setMessage('');
       setStatus('Enviado');
       router.refresh();
     } catch (error) {
-      setStatus(error instanceof Error ? error.message : 'Nao foi possivel enviar.');
+      setStatus(error instanceof Error ? error.message : 'Não foi possível enviar.');
     } finally {
       setLoading(false);
     }

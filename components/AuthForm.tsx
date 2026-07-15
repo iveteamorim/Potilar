@@ -157,7 +157,7 @@ export default function AuthForm() {
     const payload = await response.json();
 
     if (!response.ok || !payload.initPoint) {
-      setMessage(payload.error ?? 'Conta criada, mas nao foi possivel abrir o pagamento agora. Entre em Planos e tente novamente.');
+      setMessage(payload.error ?? 'Conta criada, mas não foi possível abrir o pagamento agora. Entre em Planos e tente novamente.');
       setLoading(false);
       return;
     }
@@ -303,7 +303,7 @@ export default function AuthForm() {
       }
 
       if (passwordConfirm !== password) {
-        setMessage('As senhas nao coincidem.');
+        setMessage('As senhas não coincidem.');
         setLoading(false);
         return;
       }
@@ -469,7 +469,7 @@ export default function AuthForm() {
           Entrar
         </button>
         <button type="button" onClick={() => setMode('signup')} disabled={isRecovery} className={`border-b-2 px-3 py-2.5 transition sm:px-4 sm:py-3 ${mode === 'signup' ? 'border-ocean-600 text-ocean-700' : 'border-transparent text-slate-500 hover:text-slate-800'} disabled:cursor-not-allowed disabled:opacity-60`}>
-          {isProfessionalPlanFlow ? 'Criar conta' : 'Comecar gratis'}
+          {isProfessionalPlanFlow ? 'Criar conta' : 'Começar grátis'}
         </button>
       </div>
 
@@ -652,7 +652,7 @@ export default function AuthForm() {
           <p>{message || 'Email confirmado. Agora entre com seu email e senha para anunciar.'}</p>
           {resetEmailSent && (
             <p className="mt-2 text-xs font-medium">
-              Depois de confirmar, volte para esta pagina e entre com seu email e senha.
+              Depois de confirmar, volte para esta página e entre com seu email e senha.
             </p>
           )}
         </div>
@@ -668,7 +668,7 @@ export default function AuthForm() {
                 ? requestedBillingMode === 'manual'
                   ? 'Criar conta e pagar 30 dias'
                   : 'Criar conta e assinar'
-                : 'Comecar gratis'
+                : 'Começar grátis'
               : requestedPlan
                 ? requestedBillingMode === 'manual'
                   ? 'Entrar e pagar 30 dias'

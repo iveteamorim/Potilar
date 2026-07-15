@@ -95,13 +95,13 @@ export default async function AdminNewsPage({
             <Link href="/admin" className="text-sm font-bold text-ocean-700">
               Admin
             </Link>
-            <h1 className="mt-3 text-3xl font-semibold text-slate-950 dark:text-white">Noticias</h1>
+            <h1 className="mt-3 text-3xl font-semibold text-slate-950 dark:text-white">Notícias</h1>
             <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-              Crie rascunhos, revise fontes e publique noticias na Potilar.
+              Crie rascunhos, revise fontes e publique notícias na Potilar.
             </p>
           </div>
           <a href="/noticias" className="text-sm font-bold text-ocean-700">
-            Ver noticias publicas
+            Ver notícias públicas
           </a>
         </div>
 
@@ -113,17 +113,17 @@ export default async function AdminNewsPage({
         {searchParams?.success && (
           <div className="rounded-2xl border border-green-200 bg-green-50 px-4 py-3 text-sm font-semibold text-green-700">
             {searchParams.success === 'generated'
-              ? 'Noticias novas geradas como rascunho. Revise e publique para aparecerem no site.'
+              ? 'Notícias novas geradas como rascunho. Revise e publique para aparecerem no site.'
               : searchParams.success === 'status'
-                ? 'Status da noticia atualizado com sucesso.'
+                ? 'Status da notícia atualizado com sucesso.'
                 : searchParams.success === 'saved'
-                  ? 'Noticia atualizada com sucesso.'
-                : 'Acao concluida com sucesso.'}
+                  ? 'Notícia atualizada com sucesso.'
+                : 'Ação concluída com sucesso.'}
           </div>
         )}
         {error && (
           <div className="rounded-2xl border border-sun-200 bg-sun-50 px-4 py-3 text-sm font-semibold text-slate-800">
-            A tabela de noticias ainda nao existe. Aplique o SQL de `supabase/schema.sql` no Supabase.
+            A tabela de notícias ainda não existe. Aplique o SQL de `supabase/schema.sql` no Supabase.
           </div>
         )}
 
@@ -132,12 +132,12 @@ export default async function AdminNewsPage({
             <div>
               <h2 className="text-xl font-semibold text-slate-950 dark:text-white">Busca assistida por IA</h2>
               <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
-                Arquiva os rascunhos antigos gerados por IA, busca noticias recentes em fontes externas e cria novas
-                noticias prontas para revisao com link da fonte. Nada e publicado automaticamente.
+                Arquiva os rascunhos antigos gerados por IA, busca notícias recentes em fontes externas e cria novas
+                notícias prontas para revisão com link da fonte. Nada é publicado automaticamente.
               </p>
             </div>
             <form action={generateNewsDrafts}>
-              <SubmitButton pendingText="Gerando noticias...">Regenerar noticias com IA</SubmitButton>
+              <SubmitButton pendingText="Gerando notícias...">Regenerar notícias com IA</SubmitButton>
             </form>
           </div>
           <div className="mt-5 grid gap-3 sm:grid-cols-4">
@@ -150,11 +150,11 @@ export default async function AdminNewsPage({
               <p className="mt-1 text-2xl font-semibold text-slate-900 dark:text-white">{counts.draft ?? 0}</p>
             </div>
             <div className="rounded-2xl bg-white px-4 py-3 text-sm dark:bg-slate-950">
-              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Ultima IA</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Última IA</p>
               <p className="mt-1 text-sm font-semibold text-slate-900 dark:text-white">{formatDateTime(latestGenerated)}</p>
             </div>
             <div className="rounded-2xl bg-white px-4 py-3 text-sm dark:bg-slate-950">
-              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Ultima publicacao</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Última publicação</p>
               <p className="mt-1 text-sm font-semibold text-slate-900 dark:text-white">{formatDateTime(latestPublished)}</p>
             </div>
           </div>
@@ -162,9 +162,9 @@ export default async function AdminNewsPage({
 
         <section className="space-y-4">
           <div className="flex flex-col gap-1">
-            <h2 className="text-xl font-semibold text-slate-950 dark:text-white">Noticias no admin</h2>
+            <h2 className="text-xl font-semibold text-slate-950 dark:text-white">Notícias no admin</h2>
             <p className="text-sm text-slate-600 dark:text-slate-300">
-              Somente noticias com status Publicado aparecem em /noticias e na home.
+              Somente notícias com status Publicado aparecem em /noticias e na home.
             </p>
           </div>
           {articles.map((article) => (
@@ -215,7 +215,7 @@ export default async function AdminNewsPage({
                         <input type="hidden" name="id" value={article.id} />
                         <input type="hidden" name="status" value="draft" />
                         <button className="rounded-2xl border border-sand-300 px-4 py-2 text-xs font-semibold text-slate-700">
-                          Nao publicar
+                          Não publicar
                         </button>
                       </form>
                     )}

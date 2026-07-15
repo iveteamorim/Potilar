@@ -29,7 +29,7 @@ function resolvePayment(
       kind: 'renewal',
       checkoutKind: 'renewal30',
       amount: PLANS.listing.seasonalRenewal30Price,
-      headline: `Renovacao de temporada - ${PLANS.listing.seasonalRenewal30DurationDays} dias`
+      headline: `Renovação de temporada - ${PLANS.listing.seasonalRenewal30DurationDays} dias`
     };
   }
 
@@ -38,7 +38,7 @@ function resolvePayment(
       kind: 'renewal',
       checkoutKind: 'renewal60',
       amount: PLANS.listing.seasonalRenewal60Price,
-      headline: `Renovacao de temporada - ${PLANS.listing.seasonalRenewal60DurationDays} dias`
+      headline: `Renovação de temporada - ${PLANS.listing.seasonalRenewal60DurationDays} dias`
     };
   }
 
@@ -57,7 +57,7 @@ function resolvePayment(
       kind: listing.transaction === 'Temporada' ? 'seasonal' : 'listing',
       checkoutKind: listing.transaction === 'Temporada' ? 'seasonal' : 'listing',
       amount: Number(listing.payment_amount ?? 0),
-      headline: listing.transaction === 'Temporada' ? 'Anuncio de temporada' : 'Publicacao do anuncio'
+      headline: listing.transaction === 'Temporada' ? 'Anúncio de temporada' : 'Publicação do anúncio'
     };
   }
 
@@ -95,7 +95,7 @@ export default async function PagarPixPage({ params, searchParams }: Props) {
           <Link href="/mi-cuenta" className="text-sm font-semibold text-ocean-700">
             Voltar para Minha conta
           </Link>
-          <h1 className="mt-4 text-3xl font-semibold text-slate-900 dark:text-white">Pagamento do anuncio</h1>
+          <h1 className="mt-4 text-3xl font-semibold text-slate-900 dark:text-white">Pagamento do anúncio</h1>
         </div>
 
         <section className="rounded-3xl border border-ocean-100 bg-white p-6 shadow-soft dark:border-slate-800 dark:bg-slate-900">

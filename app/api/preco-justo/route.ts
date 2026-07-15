@@ -19,7 +19,7 @@ export async function POST(request: Request) {
     const location = String(body.location ?? '').trim();
 
     if (!price || !transaction || !propertyType || !location) {
-      return NextResponse.json({ error: 'Dados incompletos para analise de preco.' }, { status: 400 });
+      return NextResponse.json({ error: 'Dados incompletos para análise de preço.' }, { status: 400 });
     }
 
     const insight = await buildPriceInsight({
@@ -34,7 +34,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ insight });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Erro ao calcular preco justo';
+    const message = error instanceof Error ? error.message : 'Erro ao calcular preço justo';
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

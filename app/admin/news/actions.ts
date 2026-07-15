@@ -12,7 +12,7 @@ async function ensureAdmin() {
     data: { user }
   } = await supabase.auth.getUser();
 
-  if (!user) throw new Error('Nao autenticado');
+  if (!user) throw new Error('Não autenticado');
 
   const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
   if (profile?.role !== 'admin') throw new Error('Sem permissao de admin');
@@ -177,15 +177,15 @@ function isRecentNewsDate(value: string, maxAgeDays = 7) {
 }
 
 function buildDraftExcerpt(title: string, category: string) {
-  return `${title}. Entenda por que esse tema pode influenciar proprietarios, compradores, inquilinos e profissionais do mercado imobiliario no Rio Grande do Norte.`;
+  return `${title}. Entenda por que esse tema pode influenciar proprietários, compradores, inquilinos e profissionais do mercado imobiliário no Rio Grande do Norte.`;
 }
 
 function buildDraftContent(title: string, category: string, sourceName: string, sourceUrl: string) {
   return [
-    `${title} chama a atencao para um movimento importante dentro do mercado imobiliario. Para quem acompanha compra, venda, aluguel ou investimento em imoveis, esse tipo de informacao ajuda a entender melhor o momento antes de tomar uma decisao.`,
-    `No Rio Grande do Norte, noticias ligadas a ${category.toLowerCase()} podem afetar a forma como proprietarios definem valores, como interessados comparam oportunidades e como corretores e imobiliarias orientam seus clientes.`,
-    `A recomendacao da Potilar e sempre comparar anuncios semelhantes, observar a localizacao, revisar a documentacao e confirmar as informacoes diretamente com as fontes oficiais ou profissionais qualificados antes de fechar qualquer negociacao.`,
-    `Esta noticia foi preparada pela Potilar a partir de informacoes publicadas por ${sourceName || 'fonte externa'}. Consulte a fonte original para conferir detalhes, datas e dados completos: ${sourceUrl}`
+    `${title} chama a atenção para um movimento importante dentro do mercado imobiliário. Para quem acompanha compra, venda, aluguel ou investimento em imóveis, esse tipo de informação ajuda a entender melhor o momento antes de tomar uma decisão.`,
+    `No Rio Grande do Norte, notícias ligadas a ${category.toLowerCase()} podem afetar a forma como proprietários definem valores, como interessados comparam oportunidades e como corretores e imobiliárias orientam seus clientes.`,
+    `A recomendação da Potilar é sempre comparar anúncios semelhantes, observar a localização, revisar a documentação e confirmar as informações diretamente com as fontes oficiais ou profissionais qualificados antes de fechar qualquer negociação.`,
+    `Esta notícia foi preparada pela Potilar a partir de informações publicadas por ${sourceName || 'fonte externa'}. Consulte a fonte original para conferir detalhes, datas e dados completos: ${sourceUrl}`
   ].join('\n');
 }
 
@@ -209,7 +209,7 @@ function extractResponseText(payload: any) {
 async function generateRealNewsArticle(title: string, category: string, sourceName: string, sourceUrl: string): Promise<GeneratedNews> {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
-    throw new Error('Falta configurar OPENAI_API_KEY na Vercel para gerar noticias reais com IA.');
+    throw new Error('Falta configurar OPENAI_API_KEY na Vercel para gerar notícias reais com IA.');
   }
 
   const response = await fetch('https://api.openai.com/v1/responses', {
@@ -225,18 +225,18 @@ async function generateRealNewsArticle(title: string, category: string, sourceNa
         {
           role: 'developer',
           content:
-            'Voce e editor de um portal imobiliario. Escreva noticias factuais em portugues do Brasil. Use busca web para verificar a fonte. Nao copie trechos da fonte. Nao invente dados. Se algo nao estiver confirmado, diga de forma cuidadosa. Responda somente JSON valido.'
+            'Você é editor de um portal imobiliário. Escreva notícias factuais em português do Brasil. Use busca web para verificar a fonte. Não copie trechos da fonte. Não invente dados. Se algo não estiver confirmado, diga de forma cuidadosa. Responda somente JSON válido.'
         },
         {
           role: 'user',
-          content: `Crie uma noticia pronta para publicacao na Potilar Noticias, sem mencionar propaganda da Potilar no corpo. Tema: ${title}. Categoria: ${category}. Fonte: ${sourceName}. Link: ${sourceUrl}. Formato JSON: {"title":"...","excerpt":"...","content":"paragrafo 1\\nparagrafo 2\\nparagrafo 3\\nparagrafo 4"}.`
+          content: `Crie uma notícia pronta para publicação na Potilar Notícias, sem mencionar propaganda da Potilar no corpo. Tema: ${title}. Categoria: ${category}. Fonte: ${sourceName}. Link: ${sourceUrl}. Formato JSON: {"title":"...","excerpt":"...","content":"paragrafo 1\\nparagrafo 2\\nparagrafo 3\\nparagrafo 4"}.`
         }
       ]
     })
   });
 
   if (!response.ok) {
-    throw new Error(`OpenAI nao conseguiu gerar a noticia (${response.status}).`);
+    throw new Error(`OpenAI não conseguiu gerar a notícia (${response.status}).`);
   }
 
   const payload = await response.json();
@@ -247,7 +247,7 @@ async function generateRealNewsArticle(title: string, category: string, sourceNa
     if (!parsed.title || !parsed.excerpt || !parsed.content) throw new Error('JSON incompleto');
     return parsed;
   } catch {
-    throw new Error('A IA nao retornou uma noticia valida. Tente novamente.');
+    throw new Error('A IA não retornou uma notícia válida. Tente novamente.');
   }
 }
 
@@ -357,7 +357,7 @@ export async function generateNewsDrafts() {
     }
 
     if (drafts.length === 0) {
-      throw new Error('Nao encontrei noticias recentes e diferentes das que ja estao cadastradas. Tente novamente mais tarde.');
+      throw new Error('Não encontrei notícias recentes e diferentes das que já estão cadastradas. Tente novamente mais tarde.');
     }
 
     const uniqueDrafts = Array.from(new Map(drafts.map((draft) => [draft.title.toLowerCase(), draft])).values()).slice(0, 6);

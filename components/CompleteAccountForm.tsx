@@ -95,7 +95,7 @@ export default function CompleteAccountForm({ userEmail }: { userEmail?: string 
       } = await supabase.auth.getUser();
 
       if (!cancelled && !user) {
-        setMessage('Nao conseguimos confirmar sua sessao. Abra novamente o link enviado por email.');
+        setMessage('Não conseguimos confirmar sua sessão. Abra novamente o link enviado por email.');
         setSessionError(true);
       }
 
@@ -136,7 +136,7 @@ export default function CompleteAccountForm({ userEmail }: { userEmail?: string 
       const { data: userData, error: userError } = await supabase.auth.getUser();
 
       if (userError || !userData.user) {
-        setMessage('Nao conseguimos confirmar sua sessao. Abra novamente o link enviado por email.');
+        setMessage('Não conseguimos confirmar sua sessão. Abra novamente o link enviado por email.');
         setLoading(false);
         return;
       }
@@ -189,7 +189,7 @@ export default function CompleteAccountForm({ userEmail }: { userEmail?: string 
     <div className="glass-card space-y-4 p-6">
       <div className="rounded-2xl border border-green-200 bg-green-50 px-4 py-3 text-sm font-semibold text-green-800 dark:border-green-900 dark:bg-green-950/40 dark:text-green-100">
         {sessionError
-          ? 'Nao conseguimos confirmar seu email.'
+          ? 'Não conseguimos confirmar seu email.'
           : sessionReady
             ? 'Email confirmado. Crie uma senha para voltar aos seus favoritos quando quiser.'
             : 'Confirmando seu email...'}

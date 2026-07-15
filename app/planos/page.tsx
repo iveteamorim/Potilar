@@ -26,8 +26,7 @@ export const metadata: Metadata = {
   }
 };
 
-const whatsappHref =
-  'https://wa.me/5521969724141?text=Ola%2C%20vim%20pelo%20site%20Potilar%20e%20quero%20conhecer%20os%20planos%20para%20corretores%20e%20imobiliarias.';
+const whatsappHref = `https://wa.me/5521969724141?text=${encodeURIComponent('Olá, vim pelo site Potilar e quero conhecer os planos para corretores e imobiliárias.')}`;
 
 const benefits = [
   { title: 'Contato direto', text: 'Interessados falam com você pelo canal escolhido no anúncio.', Icon: MessageCircle },

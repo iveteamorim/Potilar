@@ -3,24 +3,24 @@ import Link from 'next/link';
 import { AlertTriangle, CheckCircle2, Flag, ShieldCheck } from 'lucide-react';
 
 export const metadata: Metadata = {
-  title: 'Seguranca | Potilar',
-  description: 'Dicas de seguranca para buscar, visitar e negociar imoveis anunciados na Potilar.'
+  title: 'Segurança | Potilar',
+  description: 'Dicas de segurança para buscar, visitar e negociar imóveis anunciados na Potilar.'
 };
 
 const checks = [
-  'Anuncios passam por revisao antes de aparecerem no site.',
-  'Contas, anuncios, dados profissionais e pagamentos podem ser analisados manualmente em ate 24 horas.',
-  'O codigo do anuncio ajuda nossa equipe a localizar rapidamente qualquer publicacao.',
-  'Canais de contato e fotos podem ser avaliados antes da publicacao.',
-  'Anuncios suspeitos podem ser denunciados para nova revisao.'
+  'Anúncios passam por revisão antes de aparecerem no site.',
+  'Contas, anúncios, dados profissionais e pagamentos podem ser analisados manualmente em até 24 horas.',
+  'O código do anúncio ajuda nossa equipe a localizar rapidamente qualquer publicação.',
+  'Canais de contato e fotos podem ser avaliados antes da publicação.',
+  'Anúncios suspeitos podem ser denunciados para nova revisão.'
 ];
 
 const alerts = [
-  'Pedido de Pix, sinal, caucao ou reserva antes de visitar o imovel.',
-  'Anunciante que evita chamada, visita ou comprovacao de identidade.',
-  'Preco muito abaixo do normal sem explicacao clara.',
-  'Fotos genericas, copiadas ou que nao parecem do mesmo imovel.',
-  'Pressao para fechar negocio com urgencia.'
+  'Pedido de Pix, sinal, caução ou reserva antes de visitar o imóvel.',
+  'Anunciante que evita chamada, visita ou comprovação de identidade.',
+  'Preço muito abaixo do normal sem explicação clara.',
+  'Fotos genéricas, copiadas ou que não parecem do mesmo imóvel.',
+  'Pressão para fechar negócio com urgência.'
 ];
 
 export default function SegurancaPage() {
@@ -30,16 +30,16 @@ export default function SegurancaPage() {
         <section className="space-y-5">
           <span className="inline-flex items-center gap-2 rounded-full bg-green-50 px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-green-700">
             <ShieldCheck className="h-4 w-4" aria-hidden="true" />
-            Seguranca Potilar
+            Segurança Potilar
           </span>
           <div className="max-w-3xl space-y-4">
             <h1 className="text-4xl font-semibold text-slate-900 dark:text-white">
-              Busque imoveis com mais cuidado e transparencia.
+              Busque imóveis com mais cuidado e transparência.
             </h1>
             <p className="text-base leading-7 text-slate-600 dark:text-slate-300">
-              A Potilar e uma plataforma de divulgacao imobiliaria. A negociacao acontece diretamente entre anunciante
-              e interessado, por isso recomendamos verificar dados, visitar o imovel e nunca fazer pagamentos antecipados
-              sem seguranca.
+              A Potilar é uma plataforma de divulgação imobiliária. A negociação acontece diretamente entre anunciante
+              e interessado, por isso recomendamos verificar dados, visitar o imóvel e nunca fazer pagamentos antecipados
+              sem segurança.
             </p>
           </div>
         </section>
@@ -79,9 +79,9 @@ export default function SegurancaPage() {
         <section className="rounded-3xl border border-sand-200 bg-white p-6 shadow-soft dark:border-slate-800 dark:bg-slate-900">
           <h2 className="text-xl font-semibold text-slate-900 dark:text-white">Antes de negociar</h2>
           <div className="mt-5 grid gap-4 text-sm text-slate-600 dark:text-slate-300 md:grid-cols-3">
-            <p>Visite o imovel ou confirme sua existencia por videochamada.</p>
-            <p>Confira documentos, endereco e identidade do anunciante.</p>
-            <p>Nao envie dinheiro para reservar imovel sem contrato e verificacao.</p>
+            <p>Visite o imóvel ou confirme sua existência por videochamada.</p>
+            <p>Confira documentos, endereço e identidade do anunciante.</p>
+            <p>Não envie dinheiro para reservar imóvel sem contrato e verificação.</p>
           </div>
         </section>
 
@@ -90,11 +90,11 @@ export default function SegurancaPage() {
             <div>
               <h2 className="text-xl font-semibold">Viu algo suspeito?</h2>
               <p className="mt-2 text-sm text-ocean-50">
-                Envie o codigo do anuncio para nossa equipe revisar.
+                Envie o código do anúncio para nossa equipe revisar.
               </p>
             </div>
             <a
-              href="https://wa.me/5521969724141?text=Ola%2C%20quero%20denunciar%20um%20anuncio%20suspeito%20na%20Potilar."
+              href={`https://wa.me/5521969724141?text=${encodeURIComponent('Olá, quero denunciar um anúncio suspeito na Potilar.')}`}
               target="_blank"
               rel="noreferrer"
               className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-ocean-700"
@@ -106,7 +106,7 @@ export default function SegurancaPage() {
         </section>
 
         <Link href="/imoveis" className="inline-flex rounded-full border border-ocean-200 px-5 py-3 text-sm font-semibold text-ocean-700">
-          Ver imoveis
+          Ver imóveis
         </Link>
       </div>
     </main>

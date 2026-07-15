@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server';
 import type { Property } from '@/data/properties';
 import { fetchApprovedListingRows } from '@/lib/fetchApprovedListings';
 import { listingRowToProperty } from '@/lib/listings';
+import { enrichPublicListings } from '@/lib/advertiserProfiles';
 import PropertyCard from '@/components/PropertyCard';
 
 export const metadata: Metadata = {
@@ -29,7 +30,7 @@ export default async function FavoritosPage() {
       withContact: false,
       listingIds: favoriteIds
     });
-    properties = data.map((listing: any) => listingRowToProperty(listing));
+    properties = await enrichPublicListings(supabase, data.map((listing: any) => listingRowToProperty(listing)));
   }
 
   return (
@@ -58,10 +59,10 @@ export default async function FavoritosPage() {
           <div className="glass-card p-8 text-center">
             <p className="text-base font-semibold text-slate-900 dark:text-white">Nenhum favorito salvo ainda</p>
             <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-              Toque no coracao dos anuncios para guarda-los aqui.
+              Toque no coração dos anúncios para guardá-los aqui.
             </p>
             <Link href="/imoveis" className="mt-4 inline-flex rounded-full bg-ocean-700 px-5 py-3 text-sm font-semibold text-white">
-              Ver imoveis
+              Ver imóveis
             </Link>
           </div>
         )}

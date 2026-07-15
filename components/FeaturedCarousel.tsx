@@ -37,7 +37,7 @@ export default function FeaturedCarousel({ items }: { items: Property[] }) {
             type="button"
             onClick={() => scroll('left')}
             className="flex h-10 w-10 items-center justify-center rounded-full border border-sand-200 bg-white text-slate-700 shadow-soft transition hover:border-ocean-300 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
-            aria-label="Ver imoveis anteriores"
+            aria-label="Ver imóveis anteriores"
           >
             <ChevronLeft className="h-5 w-5" aria-hidden="true" />
           </button>
@@ -45,7 +45,7 @@ export default function FeaturedCarousel({ items }: { items: Property[] }) {
             type="button"
             onClick={() => scroll('right')}
             className="flex h-10 w-10 items-center justify-center rounded-full bg-ocean-600 text-white shadow-soft transition hover:bg-ocean-700"
-            aria-label="Ver mais imoveis em destaque"
+            aria-label="Ver mais imóveis em destaque"
           >
             <ChevronRight className="h-5 w-5" aria-hidden="true" />
           </button>

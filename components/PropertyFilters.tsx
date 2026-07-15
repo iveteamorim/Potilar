@@ -184,7 +184,7 @@ export default function PropertyFilters() {
       </div>
 
       <div>
-        <label className="mb-2 block text-sm font-bold text-slate-900 dark:text-white">Tipo de imovel</label>
+        <label className="mb-2 block text-sm font-bold text-slate-900 dark:text-white">Tipo de imóvel</label>
         <select
           value={filters.propertyType}
           onChange={(event) => updateParam('propertyType', event.target.value)}
@@ -199,7 +199,7 @@ export default function PropertyFilters() {
       </div>
 
       <div>
-        <label className="mb-2 block text-sm font-bold text-slate-900 dark:text-white">Preco</label>
+        <label className="mb-2 block text-sm font-bold text-slate-900 dark:text-white">Preço</label>
         <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
           <input
             value={filters.minPrice}
@@ -306,7 +306,7 @@ export default function PropertyFilters() {
         onClick={applyAllFilters}
         className="w-full rounded-2xl bg-ocean-700 px-5 py-4 text-sm font-bold text-white transition hover:bg-ocean-800"
       >
-        Buscar imoveis
+        Buscar imóveis
       </button>
 
       <button

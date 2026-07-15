@@ -261,7 +261,7 @@ export default async function MensagensPage({ searchParams }: { searchParams?: {
 
         {!error && threads.length === 0 && (
           <div className="glass-card p-6 text-sm text-slate-600 dark:text-slate-300">
-            Ainda nao ha mensagens. Quando alguem enviar uma consulta por um anuncio, ela aparecera aqui.
+            Ainda não há mensagens. Quando alguém enviar uma consulta por um anúncio, ela aparecerá aqui.
           </div>
         )}
 

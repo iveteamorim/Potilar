@@ -52,8 +52,8 @@ export function getLaunchPromoDeadlineLabel() {
 
 export function getLaunchPromoShortLabel() {
   return isLaunchPromoActive()
-    ? `2 anuncios gratis ate ${getLaunchPromoDeadlineLabel()}`
-    : '1 anuncio gratis';
+    ? `2 anúncios grátis até ${getLaunchPromoDeadlineLabel()}`
+    : '1 anúncio grátis';
 }
 
 export function formatPlanPrice(value: number, options?: { perMonth?: boolean }) {

@@ -88,7 +88,7 @@ export default async function AiCreditsPage({
 
         {searchParams?.pagamento === 'erro' && (
           <AccountNotice tone="error">
-            Pagamento nao concluido. Voce pode tentar novamente.
+            Pagamento não concluído. Você pode tentar novamente.
           </AccountNotice>
         )}
 

@@ -8,7 +8,7 @@ export type PixPaymentKind = 'listing' | 'seasonal' | 'highlight' | 'renewal';
 const PAYMENT_KIND_LABELS: Record<PixPaymentKind, string> = {
   listing: 'Anuncio adicional',
   seasonal: 'Anuncio de temporada',
-  highlight: 'Destaque do anuncio',
+  highlight: 'Destaque do anúncio',
   renewal: 'Renovacao temporada'
 };
 

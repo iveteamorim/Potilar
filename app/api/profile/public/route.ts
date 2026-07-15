@@ -9,7 +9,7 @@ export async function PATCH(request: Request) {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return NextResponse.json({ error: 'Nao autenticado' }, { status: 401 });
+    return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
   }
 
   const body = (await request.json()) as {
@@ -24,7 +24,7 @@ export async function PATCH(request: Request) {
 
   const publicSlug = body.public_slug ? slugify(body.public_slug) : '';
   if (!publicSlug) {
-    return NextResponse.json({ error: 'Endereco publico invalido' }, { status: 400 });
+    return NextResponse.json({ error: 'Endereço público inválido' }, { status: 400 });
   }
 
   const { data: profile } = await supabase
@@ -34,7 +34,7 @@ export async function PATCH(request: Request) {
     .single();
 
   if (!profile || !['corretor', 'imobiliaria'].includes(profile.account_type)) {
-    return NextResponse.json({ error: 'Perfil publico disponivel apenas para corretores e imobiliarias' }, { status: 403 });
+    return NextResponse.json({ error: 'Perfil público disponível apenas para corretores e imobiliárias' }, { status: 403 });
   }
 
   const { data: existing } = await supabase
@@ -45,7 +45,7 @@ export async function PATCH(request: Request) {
     .maybeSingle();
 
   if (existing) {
-    return NextResponse.json({ error: 'Este endereco publico ja esta em uso' }, { status: 409 });
+    return NextResponse.json({ error: 'Este endereço público já está em uso' }, { status: 409 });
   }
 
   const nextCreci = body.creci?.trim() || null;

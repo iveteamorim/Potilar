@@ -222,11 +222,11 @@ async function confirmListingPayment({
     .maybeSingle();
 
   if (listingError || !listing) {
-    return { error: listingError?.message ?? 'Anuncio nao encontrado.', status: 404 };
+    return { error: listingError?.message ?? 'Anúncio não encontrado.', status: 404 };
   }
 
   if (listing.owner_id !== userId) {
-    return { error: 'Pagamento sem permissao para este anuncio.', status: 403 };
+    return { error: 'Pagamento sem permissão para este anúncio.', status: 403 };
   }
 
   const now = new Date();
@@ -279,7 +279,7 @@ export async function POST(request: Request) {
   const accessToken = process.env.MERCADO_PAGO_ACCESS_TOKEN;
   if (!accessToken) {
     return NextResponse.json(
-      { error: 'Webhook nao configurado. Defina MERCADO_PAGO_ACCESS_TOKEN no ambiente.' },
+      { error: 'Webhook não configurado. Defina MERCADO_PAGO_ACCESS_TOKEN no ambiente.' },
       { status: 501 }
     );
   }
@@ -302,7 +302,7 @@ export async function POST(request: Request) {
     const preapproval = await preapprovalResponse.json().catch(() => ({}));
 
     if (!preapprovalResponse.ok) {
-      return NextResponse.json({ error: preapproval.message ?? 'Nao foi possivel consultar assinatura.' }, { status: 502 });
+      return NextResponse.json({ error: preapproval.message ?? 'Não foi possível consultar assinatura.' }, { status: 502 });
     }
 
     const reference = parseExternalReference(preapproval.external_reference);
@@ -335,7 +335,7 @@ export async function POST(request: Request) {
   const payment = await paymentResponse.json().catch(() => ({}));
 
   if (!paymentResponse.ok) {
-    return NextResponse.json({ error: payment.message ?? 'Nao foi possivel consultar pagamento.' }, { status: 502 });
+    return NextResponse.json({ error: payment.message ?? 'Não foi possível consultar pagamento.' }, { status: 502 });
   }
 
   if (payment.status !== 'approved') {
@@ -394,7 +394,7 @@ export async function POST(request: Request) {
     const renewalDays = payment.metadata?.renewal_days ? Number(payment.metadata.renewal_days) : null;
 
     if (!userId || !listingId) {
-      return NextResponse.json({ error: 'Pagamento sem usuario ou anuncio valido.' }, { status: 400 });
+      return NextResponse.json({ error: 'Pagamento sem usuário ou anúncio válido.' }, { status: 400 });
     }
 
     const result = await confirmListingPayment({

@@ -27,12 +27,12 @@ function rowToArticle(row: NewsRow): NewsArticle {
       slug: row.slug,
       category: row.category,
       title: row.title,
-      excerpt: `${row.title}. Entenda por que esse tema pode influenciar proprietarios, compradores, inquilinos e profissionais do mercado imobiliario no Rio Grande do Norte.`,
+      excerpt: `${row.title}. Entenda por que esse tema pode influenciar proprietários, compradores, inquilinos e profissionais do mercado imobiliário no Rio Grande do Norte.`,
       content: [
-        `${row.title} e um tema relevante para quem acompanha o mercado imobiliario e a construcao civil no Rio Grande do Norte.`,
-        `Noticias ligadas a ${row.category.toLowerCase()} podem influenciar decisoes de compra, venda, aluguel, investimento e divulgacao de imoveis, principalmente quando envolvem atividade economica, obras, financiamento, documentacao ou novas oportunidades de negocio.`,
-        `Para proprietarios e anunciantes, acompanhar esse tipo de informacao ajuda a entender melhor o momento do mercado, ajustar expectativas e comparar oportunidades com mais criterio.`,
-        `A Potilar recomenda sempre conferir os dados completos na fonte original antes de tomar decisoes comerciais, juridicas ou financeiras.`
+        `${row.title} é um tema relevante para quem acompanha o mercado imobiliário e a construção civil no Rio Grande do Norte.`,
+        `Notícias ligadas a ${row.category.toLowerCase()} podem influenciar decisões de compra, venda, aluguel, investimento e divulgação de imóveis, principalmente quando envolvem atividade econômica, obras, financiamento, documentação ou novas oportunidades de negócio.`,
+        `Para proprietários e anunciantes, acompanhar esse tipo de informação ajuda a entender melhor o momento do mercado, ajustar expectativas e comparar oportunidades com mais critério.`,
+        `A Potilar recomenda sempre conferir os dados completos na fonte original antes de tomar decisões comerciais, jurídicas ou financeiras.`
       ],
       imageUrl: getNewsImageUrl(row.category, row.image_url, row.slug),
       sourceName: row.source_name,
@@ -101,10 +101,10 @@ async function getArticle(slug: string): Promise<NewsArticle | null> {
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const article = await getArticle(params.slug);
-  if (!article) return { title: 'Artigo nao encontrado' };
+  if (!article) return { title: 'Artigo não encontrado' };
 
   return {
-    title: `${article.title} | Potilar Noticias`,
+    title: `${article.title} | Potilar Notícias`,
     description: article.excerpt,
     alternates: {
       canonical: `/noticias/${params.slug}`
@@ -189,7 +189,7 @@ export default async function NewsArticlePage({ params }: { params: { slug: stri
 
         <div className="mt-10 border-t border-sand-200 pt-6 dark:border-slate-800">
           <Link href="/imoveis" className="text-sm font-bold text-ocean-700">
-            Ver imoveis publicados na Potilar
+            Ver imóveis publicados na Potilar
           </Link>
         </div>
       </article>

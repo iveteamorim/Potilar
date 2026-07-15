@@ -36,7 +36,7 @@ export default function ProfileEditorForm({ fullName, companyName, bio, publicSl
 
     const normalizedSlug = slugify(slug);
     if (!normalizedSlug) {
-      setStatus('Informe um endereco publico valido.');
+      setStatus('Informe um endereço público válido.');
       setLoading(false);
       return;
     }
@@ -56,18 +56,18 @@ export default function ProfileEditorForm({ fullName, companyName, bio, publicSl
     setLoading(false);
 
     if (!response.ok) {
-      setStatus(payload.error ?? 'Nao foi possivel salvar o perfil.');
+      setStatus(payload.error ?? 'Não foi possível salvar o perfil.');
       return;
     }
 
-    setStatus('Perfil publico atualizado.');
+    setStatus('Perfil público atualizado.');
     router.refresh();
   }
 
   if (!isProfessional) {
     return (
       <p className="text-sm text-slate-600 dark:text-slate-300">
-        Perfis publicos estao disponiveis para contas de corretor ou imobiliaria.
+        Perfis públicos estão disponíveis para contas de corretor ou imobiliária.
       </p>
     );
   }
@@ -75,7 +75,7 @@ export default function ProfileEditorForm({ fullName, companyName, bio, publicSl
   return (
     <form onSubmit={handleSubmit} className="glass-card space-y-4 p-6">
       <div>
-        <label className="text-sm font-semibold text-slate-700 dark:text-slate-200">Endereco publico</label>
+        <label className="text-sm font-semibold text-slate-700 dark:text-slate-200">Endereço público</label>
         <div className="mt-2 flex items-center gap-2 text-sm text-slate-500">
           <span>potilar.com.br{getPublicProfilePath('')}</span>
           <input
@@ -109,12 +109,12 @@ export default function ProfileEditorForm({ fullName, companyName, bio, publicSl
         </p>
       </div>
       <div>
-        <label className="text-sm font-semibold text-slate-700 dark:text-slate-200">Sobre voce</label>
+        <label className="text-sm font-semibold text-slate-700 dark:text-slate-200">Sobre você</label>
         <textarea
           rows={4}
           value={about}
           onChange={(event) => setAbout(event.target.value)}
-          placeholder="Conte em poucas linhas como voce atua no RN."
+          placeholder="Conte em poucas linhas como você atua no RN."
           className="mt-2 w-full rounded-2xl border border-sand-200 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-900"
         />
       </div>
@@ -124,7 +124,7 @@ export default function ProfileEditorForm({ fullName, companyName, bio, publicSl
         disabled={loading}
         className="rounded-2xl bg-ocean-700 px-5 py-3 text-sm font-semibold text-white disabled:opacity-60"
       >
-        {loading ? 'Salvando...' : 'Salvar perfil publico'}
+        {loading ? 'Salvando...' : 'Salvar perfil público'}
       </button>
     </form>
   );

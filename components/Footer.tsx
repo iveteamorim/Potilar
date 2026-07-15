@@ -54,7 +54,7 @@ export default function Footer() {
           <p className="text-base font-semibold text-slate-900 dark:text-white">Contato</p>
           <div className="mt-3 flex flex-wrap gap-2">
             <a
-              href="https://wa.me/5521969724141?text=Ola%2C%20vim%20pelo%20site%20Potilar%20e%20quero%20falar%20com%20atendimento."
+              href={`https://wa.me/5521969724141?text=${encodeURIComponent('Olá, vim pelo site Potilar e quero falar com atendimento.')}`}
               target="_blank"
               rel="noreferrer"
               aria-label="WhatsApp Potilar"

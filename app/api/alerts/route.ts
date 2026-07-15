@@ -9,7 +9,7 @@ export async function GET() {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return NextResponse.json({ error: 'Nao autenticado' }, { status: 401 });
+    return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
   }
 
   const { data, error } = await supabase
@@ -32,7 +32,7 @@ export async function POST(request: Request) {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return NextResponse.json({ error: 'Nao autenticado' }, { status: 401 });
+    return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
   }
 
   const body = (await request.json()) as { filters?: SavedSearchFilters; label?: string };
@@ -65,7 +65,7 @@ export async function PATCH(request: Request) {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return NextResponse.json({ error: 'Nao autenticado' }, { status: 401 });
+    return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
   }
 
   const body = (await request.json()) as { id?: string; is_active?: boolean; mark_seen?: boolean };
@@ -99,7 +99,7 @@ export async function DELETE(request: Request) {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return NextResponse.json({ error: 'Nao autenticado' }, { status: 401 });
+    return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
   }
 
   const { searchParams } = new URL(request.url);

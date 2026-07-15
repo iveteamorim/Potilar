@@ -110,7 +110,7 @@ function getMarkerIcon(property: Property, selected = false) {
 }
 
 function getClusterIcon(cluster: MapCluster) {
-  const label = `${cluster.count} imoveis`;
+  const label = `${cluster.count} imóveis`;
 
   return L.divIcon({
     className: '',
@@ -311,9 +311,9 @@ export default function PropertyMap({
         role="status"
       >
         <MapPin className="h-8 w-8 text-slate-400" aria-hidden="true" />
-        <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">Nenhum anuncio com localizacao nesta busca</p>
+        <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">Nenhum anúncio com localização nesta busca</p>
         <p className="max-w-xs text-xs text-slate-500 dark:text-slate-400">
-          Ajuste os filtros ou explore outras cidades para ver imoveis no mapa.
+          Ajuste os filtros ou explore outras cidades para ver imóveis no mapa.
         </p>
         <Link
           href="/imoveis"
@@ -330,7 +330,7 @@ export default function PropertyMap({
       <div
         className="relative overflow-hidden rounded-3xl border border-sand-200 shadow-soft dark:border-slate-800"
         style={{ height }}
-        aria-label="Mapa de imoveis no Rio Grande do Norte"
+        aria-label="Mapa de imóveis no Rio Grande do Norte"
       >
         <MapContainer
           center={center ? mapCenter : undefined}
@@ -444,7 +444,7 @@ export default function PropertyMap({
               type="button"
               onClick={() => setSelectedProperty(null)}
               className="absolute right-2.5 top-2.5 flex h-8 w-8 items-center justify-center rounded-full border border-sand-200 bg-white text-slate-500 shadow-sm transition hover:bg-sand-50 hover:text-slate-800 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800 dark:hover:text-white"
-              aria-label="Fechar anuncio no mapa"
+              aria-label="Fechar anúncio no mapa"
             >
               <X className="h-4 w-4" aria-hidden="true" />
             </button>
@@ -457,7 +457,7 @@ export default function PropertyMap({
                 disabled={!canOpenListing}
                 className="flex w-full items-center justify-center rounded-xl bg-ocean-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-ocean-800 disabled:cursor-wait disabled:opacity-70"
               >
-                {canOpenListing ? 'Ver anuncio' : 'Abrindo...'}
+                {canOpenListing ? 'Ver anúncio' : 'Abrindo...'}
               </button>
             </div>
           )}

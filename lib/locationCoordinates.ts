@@ -508,10 +508,10 @@ export function getLocationReview(value: string) {
     requiresConfirmation: trimmed.length > 0 && (!hasKnownCity || hasSuspiciousRepeatedLetter),
     wasCorrected,
     message: wasCorrected
-      ? `Encontramos uma possivel correcao: ${correctedValue}.`
+      ? `Encontramos uma possível correção: ${correctedValue}.`
       : hasKnownCity
         ? ''
-        : 'Nao reconhecemos essa cidade no mapa. Revise o nome ou confirme se esta correto.'
+        : 'Não reconhecemos essa cidade no mapa. Revise o nome ou confirme se está correto.'
   };
 }
 

@@ -9,7 +9,7 @@ export default function PropertyList({ items }: Props) {
   if (items.length === 0) {
     return (
       <div className="glass-card p-8 text-center">
-        <p className="text-base font-semibold text-slate-900 dark:text-white">Nenhum anuncio encontrado</p>
+        <p className="text-base font-semibold text-slate-900 dark:text-white">Nenhum anúncio encontrado</p>
         <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
           Ajuste os filtros ou tente outra cidade para ver novas opcoes.
         </p>

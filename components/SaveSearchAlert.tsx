@@ -60,7 +60,7 @@ export default function SaveSearchAlert() {
         throw new Error(payload.error ?? 'Erro ao salvar busca');
       }
 
-      setStatus('Alerta criado. Voce pode ver suas buscas salvas em Minha conta.');
+      setStatus('Alerta criado. Você pode ver suas buscas salvas em Minha conta.');
     } catch (error) {
       setStatus(error instanceof Error ? error.message : 'Erro ao salvar busca');
     } finally {

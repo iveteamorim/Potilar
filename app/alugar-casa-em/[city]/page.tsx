@@ -11,10 +11,10 @@ export function generateStaticParams() {
 }
 
 export function generateMetadata({ params }: { params: { city: string } }): Metadata {
-  if (!isKnownCitySlug(params.city)) return { title: 'Cidade nao encontrada' };
+  if (!isKnownCitySlug(params.city)) return { title: 'Cidade não encontrada' };
   const cityName = resolveCityNameFromSlug(params.city)!;
   const title = `Alugar casa em ${cityName}, RN`;
-  const description = `Casas para alugar em ${cityName}, Rio Grande do Norte. Veja anuncios com fotos, preco, mapa e contato direto na Potilar.`;
+  const description = `Casas para alugar em ${cityName}, Rio Grande do Norte. Veja anúncios com fotos, preço, mapa e contato direto na Potilar.`;
   const canonical = `${BASE_URL}${getCityHouseAliasPath(cityName, 'alugar')}`;
 
   return {

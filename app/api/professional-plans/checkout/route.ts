@@ -33,7 +33,7 @@ export async function POST(request: Request) {
 
   const accessToken = process.env.MERCADO_PAGO_ACCESS_TOKEN;
   if (!accessToken) {
-    return NextResponse.json({ error: 'Mercado Pago ainda nao esta configurado.' }, { status: 501 });
+    return NextResponse.json({ error: 'Mercado Pago ainda não está configurado.' }, { status: 501 });
   }
 
   const baseUrl = getBaseUrl(request);
@@ -50,7 +50,7 @@ export async function POST(request: Request) {
           {
             id: selectedPlan.id,
             title: `Potilar - ${selectedPlan.label}`,
-            description: `${selectedPlan.listingLimit} imoveis ativos e ${selectedPlan.aiCredits} melhorias com IA por 30 dias.`,
+            description: `${selectedPlan.listingLimit} imóveis ativos e ${selectedPlan.aiCredits} melhorias com IA por 30 dias.`,
             quantity: 1,
             currency_id: 'BRL',
             unit_price: selectedPlan.price
@@ -76,7 +76,7 @@ export async function POST(request: Request) {
     const data = await response.json().catch(() => ({}));
 
     if (!response.ok) {
-      return NextResponse.json({ error: data.message ?? 'Nao foi possivel criar o pagamento.' }, { status: 502 });
+      return NextResponse.json({ error: data.message ?? 'Não foi possível criar o pagamento.' }, { status: 502 });
     }
 
     return NextResponse.json({
@@ -112,7 +112,7 @@ export async function POST(request: Request) {
   const data = await response.json().catch(() => ({}));
 
   if (!response.ok) {
-    return NextResponse.json({ error: data.message ?? 'Nao foi possivel criar a assinatura.' }, { status: 502 });
+    return NextResponse.json({ error: data.message ?? 'Não foi possível criar a assinatura.' }, { status: 502 });
   }
 
   try {

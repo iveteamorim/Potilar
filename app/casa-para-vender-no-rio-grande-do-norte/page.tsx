@@ -10,9 +10,9 @@ const page = {
   title: 'Casa para vender no Rio Grande do Norte',
   h1: 'Casa para vender no Rio Grande do Norte',
   description:
-    'Encontre casa para vender no Rio Grande do Norte. Veja casas a venda com fotos, preco, cidade, mapa e contato direto na Potilar.',
+    'Encontre casa para vender no Rio Grande do Norte. Veja casas a venda com fotos, preço, cidade, mapa e contato direto na Potilar.',
   intro:
-    'Busque casas a venda no RN por cidade, bairro, preco e caracteristicas do imovel. Compare oportunidades e fale direto com o anunciante.'
+    'Busque casas a venda no RN por cidade, bairro, preço e características do imóvel. Compare oportunidades e fale direto com o anunciante.'
 };
 
 export const revalidate = 300;

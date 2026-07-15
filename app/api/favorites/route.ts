@@ -29,7 +29,7 @@ export async function POST(request: Request) {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return NextResponse.json({ error: 'Nao autenticado' }, { status: 401 });
+    return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
   }
 
   const body = (await request.json()) as { listingId?: string; favorite?: boolean };

@@ -11,7 +11,7 @@ async function ensureAdmin() {
     data: { user }
   } = await supabase.auth.getUser();
 
-  if (!user) throw new Error('Nao autenticado');
+  if (!user) throw new Error('Não autenticado');
 
   const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
   if (profile?.role !== 'admin') throw new Error('Sem permissao de admin');
@@ -48,11 +48,11 @@ export async function updateListingStatus(formData: FormData) {
         .single();
 
       if (listingError || !listing) {
-        throw new Error(listingError?.message ?? 'Anuncio nao encontrado');
+        throw new Error(listingError?.message ?? 'Anúncio não encontrado');
       }
 
       if (listing.is_paid && listing.payment_status !== 'confirmed') {
-        throw new Error('Confirme o pagamento do anuncio antes de aprovar.');
+        throw new Error('Confirme o pagamento do anúncio antes de aprovar.');
       }
     }
 
@@ -130,7 +130,7 @@ export async function updateListingPaymentStatus(formData: FormData) {
       .single();
 
     if (listingError || !listing) {
-      throw new Error(listingError?.message ?? 'Anuncio nao encontrado');
+      throw new Error(listingError?.message ?? 'Anúncio não encontrado');
     }
 
     const now = new Date();
@@ -158,7 +158,7 @@ export async function updateListingPaymentStatus(formData: FormData) {
       .single();
 
     if (error || !data) {
-      throw new Error(error?.message ?? 'Nao foi possivel atualizar o pagamento');
+      throw new Error(error?.message ?? 'Não foi possível atualizar o pagamento');
     }
 
     revalidatePath('/admin');
@@ -190,7 +190,7 @@ export async function updateHighlightStatus(formData: FormData) {
       .single();
 
     if (listingError || !listing) {
-      throw new Error(listingError?.message ?? 'Anuncio nao encontrado');
+      throw new Error(listingError?.message ?? 'Anúncio não encontrado');
     }
 
     const now = new Date();
@@ -219,7 +219,7 @@ export async function updateHighlightStatus(formData: FormData) {
       .single();
 
     if (error || !data) {
-      throw new Error(error?.message ?? 'Nao foi possivel atualizar o destaque');
+      throw new Error(error?.message ?? 'Não foi possível atualizar o destaque');
     }
 
     revalidatePath('/admin');
@@ -252,11 +252,11 @@ export async function grantHighlight(formData: FormData) {
       .single();
 
     if (listingError || !listing) {
-      throw new Error(listingError?.message ?? 'Anuncio nao encontrado');
+      throw new Error(listingError?.message ?? 'Anúncio não encontrado');
     }
 
     if (listing.status !== 'approved') {
-      throw new Error('Aprove o anuncio antes de dar destaque gratis.');
+      throw new Error('Aprove o anúncio antes de dar destaque grátis.');
     }
 
     const now = new Date();
@@ -276,7 +276,7 @@ export async function grantHighlight(formData: FormData) {
       .single();
 
     if (error || !data) {
-      throw new Error(error?.message ?? 'Nao foi possivel ativar o destaque');
+      throw new Error(error?.message ?? 'Não foi possível ativar o destaque');
     }
 
     revalidatePath('/admin');
@@ -312,7 +312,7 @@ export async function updateCreciVerification(formData: FormData) {
       .single();
 
     if (error || !data) {
-      throw new Error(error?.message ?? 'Nao foi possivel atualizar o CRECI');
+      throw new Error(error?.message ?? 'Não foi possível atualizar o CRECI');
     }
 
     revalidatePath('/admin');

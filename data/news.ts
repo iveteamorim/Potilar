@@ -175,41 +175,41 @@ export function dedupeNewsArticles<T extends Pick<NewsArticle, 'title' | 'source
 export const fallbackNewsArticles: NewsArticle[] = [
   {
     slug: 'precos-imoveis-rn',
-    category: 'Mercado imobiliario',
-    title: 'Como acompanhar os precos de imoveis no Rio Grande do Norte',
+    category: 'Mercado imobiliário',
+    title: 'Como acompanhar os preços de imóveis no Rio Grande do Norte',
     excerpt:
-      'Entenda quais sinais observar para comparar anuncios, bairros, cidades e oportunidades antes de comprar, vender ou alugar.',
+      'Entenda quais sinais observar para comparar anúncios, bairros, cidades e oportunidades antes de comprar, vender ou alugar.',
     imageUrl: fallbackNewsImage,
     content: [
-      'O primeiro passo e olhar imoveis do mesmo tipo, na mesma cidade e com caracteristicas semelhantes. Uma casa com garagem, quintal e boa localizacao nao deve ser comparada diretamente com um imovel menor ou em outro bairro.',
-      'No RN, a procura pode variar muito entre cidades, praias, bairros centrais e areas em crescimento. Imoveis bem localizados tendem a receber mais contatos e permitem uma leitura melhor do preco praticado.',
-      'Anuncios antigos podem estar com preco defasado. Sempre que possivel, compare anuncios atualizados recentemente e revise fotos, descricao e contato antes de tomar uma decisao.'
+      'O primeiro passo é olhar imóveis do mesmo tipo, na mesma cidade e com características semelhantes. Uma casa com garagem, quintal e boa localização não deve ser comparada diretamente com um imóvel menor ou em outro bairro.',
+      'No RN, a procura pode variar muito entre cidades, praias, bairros centrais e áreas em crescimento. Imóveis bem localizados tendem a receber mais contatos e permitem uma leitura melhor do preço praticado.',
+      'Anúncios antigos podem estar com preço defasado. Sempre que possível, compare anúncios atualizados recentemente e revise fotos, descrição e contato antes de tomar uma decisão.'
     ]
   },
   {
     slug: 'cuidados-negociar-imovel-online',
-    category: 'Seguranca',
-    title: 'Cuidados antes de visitar ou negociar um imovel anunciado online',
+    category: 'Segurança',
+    title: 'Cuidados antes de visitar ou negociar um imóvel anunciado online',
     excerpt:
-      'Medidas simples para reduzir riscos em contatos, visitas, pagamentos e negociacoes iniciadas pela internet.',
+      'Medidas simples para reduzir riscos em contatos, visitas, pagamentos e negociações iniciadas pela internet.',
     imageUrl: 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=900&q=80',
     content: [
-      'Antes de visitar ou enviar qualquer valor, confirme telefone, nome, localizacao e coerencia das informacoes do anuncio. Desconfie de pressa excessiva ou ofertas muito abaixo do mercado.',
-      'Nao envie sinal, taxa ou reserva sem verificar a existencia do imovel e a legitimidade de quem esta anunciando. Quando houver duvida, procure orientacao profissional.',
-      'Combine visitas em horarios seguros, avise alguem de confianca e prefira locais com endereco claro. A seguranca vale tanto para interessados quanto para proprietarios.'
+      'Antes de visitar ou enviar qualquer valor, confirme telefone, nome, localização e coerência das informações do anúncio. Desconfie de pressa excessiva ou ofertas muito abaixo do mercado.',
+      'Não envie sinal, taxa ou reserva sem verificar a existência do imóvel e a legitimidade de quem está anunciando. Quando houver dúvida, procure orientação profissional.',
+      'Combine visitas em horários seguros, avise alguém de confiança e prefira locais com endereço claro. A segurança vale tanto para interessados quanto para proprietários.'
     ]
   },
   {
     slug: 'documentos-vender-alugar-imovel',
-    category: 'Documentacao',
-    title: 'Documentos importantes para vender ou alugar um imovel',
+    category: 'Documentação',
+    title: 'Documentos importantes para vender ou alugar um imóvel',
     excerpt:
-      'Uma visao geral do que proprietarios costumam organizar antes de publicar um anuncio ou iniciar uma negociacao.',
+      'Uma visão geral do que proprietários costumam organizar antes de publicar um anúncio ou iniciar uma negociação.',
     imageUrl: 'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&w=900&q=80',
     content: [
-      'Tenha em maos metragem aproximada, endereco, cidade, bairro, numero de quartos, vagas, fotos atuais e uma descricao clara. Isso evita perguntas repetidas e melhora a qualidade do anuncio.',
-      'Para venda, documentos como matricula, escritura, IPTU e dados do proprietario podem ser solicitados durante a negociacao. Para aluguel, tambem podem entrar contrato e comprovantes.',
-      'Se houver duvidas sobre escritura, inventario, financiamento, dividas ou contrato, o ideal e buscar apoio de corretor, imobiliaria, advogado ou cartorio antes de fechar negocio.'
+      'Tenha em mãos metragem aproximada, endereço, cidade, bairro, número de quartos, vagas, fotos atuais e uma descrição clara. Isso evita perguntas repetidas e melhora a qualidade do anúncio.',
+      'Para venda, documentos como matrícula, escritura, IPTU e dados do proprietário podem ser solicitados durante a negociação. Para aluguel, também podem entrar contrato e comprovantes.',
+      'Se houver dúvidas sobre escritura, inventário, financiamento, dívidas ou contrato, o ideal é buscar apoio de corretor, imobiliária, advogado ou cartório antes de fechar negócio.'
     ]
   }
 ];

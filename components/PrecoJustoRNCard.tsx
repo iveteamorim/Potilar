@@ -40,9 +40,9 @@ export default function PrecoJustoRNCard({ insight, compact = false }: Props) {
   const confidence = getConfidenceLabel(insight.dataTier);
   const referenceStatLabel =
     insight.dataTier === 'potilar_listings'
-      ? 'Media na Potilar'
+      ? 'Média na Potilar'
       : insight.dataTier === 'fipezap_city' || insight.dataTier === 'fipezap_neighborhood'
-        ? 'Indice FipeZAP'
+        ? 'Índice FipeZAP'
         : 'Estimativa Potilar';
 
   const rangeStatus = hasComparison
@@ -56,11 +56,11 @@ export default function PrecoJustoRNCard({ insight, compact = false }: Props) {
   const rangeTitle = isNoData
     ? insight.title
     : rangeStatus === 'below'
-      ? 'Preco abaixo da faixa'
+      ? 'Preço abaixo da faixa'
       : rangeStatus === 'above'
-        ? 'Preco acima da faixa'
+        ? 'Preço acima da faixa'
         : rangeStatus === 'inside'
-          ? 'Preco dentro da faixa'
+          ? 'Preço dentro da faixa'
           : insight.title;
 
   const rangeBadge = isNoData
@@ -86,10 +86,10 @@ export default function PrecoJustoRNCard({ insight, compact = false }: Props) {
   const diffLabel = !hasComparison
     ? tierLabel
     : insight.percentVsMedian === 0
-      ? 'Dentro da referencia'
+      ? 'Dentro da referência'
       : `${insight.percentVsMedian > 0 ? '+' : ''}${insight.percentVsMedian}% ${
           insight.percentVsMedian > 0 ? 'acima' : 'abaixo'
-        } da referencia`;
+        } da referência`;
 
   const diffAmount = hasComparison ? insight.listingPrice - insight.medianPrice : 0;
   const diffAmountLabel =
@@ -109,11 +109,11 @@ export default function PrecoJustoRNCard({ insight, compact = false }: Props) {
   return (
     <section
       className={`rounded-2xl border bg-white p-4 shadow-sm dark:bg-slate-900 sm:p-5 ${rangeBorder}`}
-      aria-label="Analise Preco Justo RN"
+      aria-label="Análise Preço Justo RN"
     >
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-ocean-600">Preco Justo RN</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-ocean-600">Preço Justo RN</p>
           <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{tierLabel}</p>
         </div>
         <span
@@ -126,10 +126,10 @@ export default function PrecoJustoRNCard({ insight, compact = false }: Props) {
 
       {hasComparison ? (
         <p className="mt-3 text-base leading-7 text-slate-700 dark:text-slate-300">
-          Seu imovel em <strong className="text-slate-950 dark:text-white">{insight.scopeLabel}</strong> foi comparado
+          Seu imóvel em <strong className="text-slate-950 dark:text-white">{insight.scopeLabel}</strong> foi comparado
           com {referenceStatLabel.toLowerCase()}.
           {rangeStatus === 'below' && ' Isso pode atrair mais interessados.'}
-          {rangeStatus === 'above' && ' Reforce os diferenciais reais do imovel.'}
+          {rangeStatus === 'above' && ' Reforce os diferenciais reais do imóvel.'}
         </p>
       ) : (
         <p className="mt-3 text-sm leading-6 text-slate-700 dark:text-slate-300">{insight.summary}</p>
@@ -137,9 +137,9 @@ export default function PrecoJustoRNCard({ insight, compact = false }: Props) {
 
       {hasComparison && (
         <div className="mt-4 grid gap-3 sm:grid-cols-3">
-          <Stat label="Seu preco" value={formatMoney(insight.listingPrice)} featured />
+          <Stat label="Seu preço" value={formatMoney(insight.listingPrice)} featured />
           <Stat label={referenceStatLabel} value={formatMoney(insight.medianPrice)} featured />
-          <Stat label="Diferenca" value={diffAmountLabel} featured />
+          <Stat label="Diferença" value={diffAmountLabel} featured />
         </div>
       )}
 
@@ -163,34 +163,34 @@ export default function PrecoJustoRNCard({ insight, compact = false }: Props) {
 
       {hasComparison && insight.isApproximate && (
         <p className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs leading-5 text-amber-950 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-100">
-          Esta comparacao usa estimativa Potilar, nao indice oficial. Confirme com portais e anuncios locais antes de
-          decidir o preco.
+          Esta comparação usa estimativa Potilar, não índice oficial. Confirme com portais e anúncios locais antes de
+          decidir o preço.
         </p>
       )}
 
       {hasComparison && (insight.dataTier === 'fipezap_city' || insight.dataTier === 'fipezap_neighborhood') && (
         <p className="mt-3 rounded-xl border border-green-200 bg-green-50 px-3 py-2.5 text-xs leading-5 text-green-950 dark:border-green-900 dark:bg-green-950/30 dark:text-green-100">
-          Referencia baseada no indice FipeZAP (Zap, Viva Real, OLX) para Natal.
-          {insight.dataTier === 'fipezap_neighborhood' && ' O bairro ajusta a media da cidade.'}
+          Referência baseada no índice FipeZAP (Zap, Viva Real, OLX) para Natal.
+          {insight.dataTier === 'fipezap_neighborhood' && ' O bairro ajusta a média da cidade.'}
         </p>
       )}
 
       {hasComparison && insight.dataTier === 'potilar_listings' && (
         <p className="mt-3 rounded-xl border border-ocean-200 bg-ocean-50 px-3 py-2.5 text-xs leading-5 text-ocean-950 dark:border-ocean-900 dark:bg-ocean-950/30 dark:text-ocean-100">
-          Comparacao com {insight.sampleCount} anuncio{insight.sampleCount === 1 ? '' : 's'} reais publicados na
-          Potilar. Amostra pequena - use tambem portais externos.
+          Comparação com {insight.sampleCount} anúncio{insight.sampleCount === 1 ? '' : 's'} reais publicados na
+          Potilar. Amostra pequena - use também portais externos.
         </p>
       )}
 
       <details className="mt-4 rounded-xl border border-sand-200 bg-sand-50 px-3 py-2.5 text-xs leading-6 text-slate-600 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-300">
         <summary className="cursor-pointer font-extrabold text-slate-950 dark:text-white">Como calculamos?</summary>
         <p className="mt-2">
-          So mostramos comparacao quando ha base defensavel: anuncios reais na Potilar (minimo 3), indice FipeZAP em
-          Natal, ou estimativa Potilar calibrada para cidades do interior. Cidades sem dados nao recebem numero
-          automatico.
+          Só mostramos comparação quando há base defensável: anúncios reais na Potilar (mínimo 3), índice FipeZAP em
+          Natal, ou estimativa Potilar calibrada para cidades do interior. Cidades sem dados não recebem número
+          automático.
         </p>
         {insight.referencePeriod && (
-          <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">Periodo de referencia: {insight.referencePeriod}</p>
+          <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">Período de referência: {insight.referencePeriod}</p>
         )}
       </details>
 
@@ -201,7 +201,7 @@ export default function PrecoJustoRNCard({ insight, compact = false }: Props) {
       )}
 
       <p className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs leading-5 text-amber-950 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-100">
-        Orientacao informativa. Nao substitui avaliacao oficial nem visita ao imovel.
+        Orientação informativa. Não substitui avaliação oficial nem visita ao imóvel.
       </p>
     </section>
   );

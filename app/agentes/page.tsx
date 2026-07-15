@@ -5,7 +5,7 @@ import { PLANS, formatPlanPrice } from '@/lib/plans';
 
 export const metadata: Metadata = {
   title: 'Corretores no RN | Potilar',
-  description: 'Corretores e imobiliarias podem anunciar imoveis no Rio Grande do Norte com a Potilar.'
+  description: 'Corretores e imobiliárias podem anunciar imóveis no Rio Grande do Norte com a Potilar.'
 };
 
 const whatsappHref =
@@ -18,10 +18,10 @@ export default function AgentesPage() {
         <section className="max-w-3xl">
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-ocean-600">Profissionais</p>
           <h1 className="mt-4 text-4xl font-semibold text-slate-950 dark:text-white">
-            Corretores e imobiliarias do RN na Potilar
+            Corretores e imobiliárias do RN na Potilar
           </h1>
           <p className="mt-4 text-base leading-7 text-slate-600 dark:text-slate-300">
-            Publique imoveis com contato direto pelo WhatsApp, destaque anuncios estrategicos e gerencie tudo em um painel
+            Publique imóveis com contato direto pelo WhatsApp, destaque anúncios estratégicos e gerencie tudo em um painel
             simples.
           </p>
         </section>
@@ -29,9 +29,9 @@ export default function AgentesPage() {
         <section className="grid gap-5 md:grid-cols-3">
           {(
             [
-              { title: `Ate ${PLANS.professional.corretor.listingLimit} anuncios ativos`, text: `Plano Corretor ${formatPlanPrice(PLANS.professional.corretor.price, { perMonth: true })} com ${PLANS.professional.corretor.aiCredits} usos de IA`, Icon: Users },
-              { title: `Ate ${PLANS.professional.imobiliaria.listingLimit} anuncios ativos`, text: `Plano Imobiliaria ${formatPlanPrice(PLANS.professional.imobiliaria.price, { perMonth: true })} com ate ${PLANS.professional.imobiliaria.aiCredits} usos de IA`, Icon: BadgeCheck },
-              { title: 'Mapa e busca local', text: 'Destaques para vender ou alugar mais rapido', Icon: MapPin }
+              { title: `Até ${PLANS.professional.corretor.listingLimit} anúncios ativos`, text: `Plano Corretor ${formatPlanPrice(PLANS.professional.corretor.price, { perMonth: true })} com ${PLANS.professional.corretor.aiCredits} usos de IA`, Icon: Users },
+              { title: `Até ${PLANS.professional.imobiliaria.listingLimit} anúncios ativos`, text: `Plano Imobiliária ${formatPlanPrice(PLANS.professional.imobiliaria.price, { perMonth: true })} com até ${PLANS.professional.imobiliaria.aiCredits} usos de IA`, Icon: BadgeCheck },
+              { title: 'Mapa e busca local', text: 'Destaques para vender ou alugar mais rápido', Icon: MapPin }
             ] as const
           ).map(({ title, text, Icon }) => (
             <article key={title} className="glass-card p-6">
@@ -43,10 +43,10 @@ export default function AgentesPage() {
         </section>
 
         <section className="rounded-3xl border border-ocean-200 bg-ocean-50 p-6 dark:border-ocean-900 dark:bg-ocean-950/40">
-          <h2 className="text-2xl font-semibold text-slate-950 dark:text-white">Como comecar</h2>
+          <h2 className="text-2xl font-semibold text-slate-950 dark:text-white">Como começar</h2>
           <ol className="mt-4 grid gap-3 text-sm text-slate-700 dark:text-slate-300">
-            <li>1. Crie sua conta como corretor ou imobiliaria.</li>
-            <li>2. Publique imoveis com fotos, bairro e localizacao no mapa.</li>
+            <li>1. Crie sua conta como corretor ou imobiliária.</li>
+            <li>2. Publique imóveis com fotos, bairro e localização no mapa.</li>
             <li>3. Receba contatos diretos e ative destaques quando precisar.</li>
           </ol>
           <div className="mt-6 flex flex-wrap gap-3">

@@ -171,7 +171,7 @@ export async function POST(request: Request) {
   }
 
   if (!isMissingModernChatError(modernError)) {
-    const errorMessage = modernError instanceof Error ? modernError.message : 'Nao foi possivel enviar a mensagem.';
+    const errorMessage = modernError instanceof Error ? modernError.message : 'Não foi possível enviar a mensagem.';
     return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 

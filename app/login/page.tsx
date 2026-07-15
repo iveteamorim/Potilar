@@ -5,7 +5,7 @@ import AuthForm from '@/components/AuthForm';
 
 export const metadata: Metadata = {
   title: 'Entrar | Potilar',
-  description: 'Acesse sua conta para salvar favoritos, criar alertas e publicar anuncios na Potilar.'
+  description: 'Acesse sua conta para salvar favoritos, criar alertas e publicar anúncios na Potilar.'
 };
 
 type Props = {
@@ -20,9 +20,9 @@ function isProfessionalPlan(plan?: string) {
 
 function getTitle(plan?: string) {
   if (plan === 'corretor') return 'Assine o plano Corretor.';
-  if (plan === 'imobiliaria') return 'Assine o plano Imobiliaria.';
-  if (plan === 'plus') return 'Assine o plano Imobiliaria Plus.';
-  return 'Entre para salvar imoveis.';
+  if (plan === 'imobiliaria') return 'Assine o plano Imobiliária.';
+  if (plan === 'plus') return 'Assine o plano Imobiliária Plus.';
+  return 'Entre para salvar imóveis.';
 }
 
 export default function LoginPage({ searchParams }: Props) {
@@ -30,15 +30,15 @@ export default function LoginPage({ searchParams }: Props) {
   const professionalFlow = isProfessionalPlan(plan);
   const items = professionalFlow
     ? [
-        [Home, 'Crie sua pagina profissional'],
+        [Home, 'Crie sua página profissional'],
         [Bell, 'Ative seu plano mensal'],
-        [Home, 'Publique sua carteira de imoveis'],
+        [Home, 'Publique sua carteira de imóveis'],
         [MessageCircle, 'Fale direto com interessados']
       ]
     : [
-        [Heart, 'Guarde seus imoveis favoritos'],
-        [Bell, 'Receba alertas de novos anuncios'],
-        [Home, 'Publique imoveis gratuitamente'],
+        [Heart, 'Guarde seus imóveis favoritos'],
+        [Bell, 'Receba alertas de novos anúncios'],
+        [Home, 'Publique imóveis gratuitamente'],
         [MessageCircle, 'Fale direto com interessados']
       ];
 
@@ -56,7 +56,7 @@ export default function LoginPage({ searchParams }: Props) {
           <p className="mt-2 max-w-md text-sm leading-6 text-slate-600 dark:text-slate-300 sm:mt-3">
             {professionalFlow
               ? 'Crie sua conta profissional, preencha seus dados e siga para o pagamento do plano.'
-              : 'Favoritos, alertas, mensagens e anuncios em um so lugar.'}
+              : 'Favoritos, alertas, mensagens e anúncios em um só lugar.'}
           </p>
           <div className="mt-8 hidden gap-3 text-sm font-semibold text-slate-700 dark:text-slate-200 lg:grid">
             {items.map(([Icon, label]) => (
@@ -69,7 +69,7 @@ export default function LoginPage({ searchParams }: Props) {
             ))}
           </div>
           <div className="mt-8 hidden flex-wrap gap-3 text-xs font-semibold text-slate-500 lg:flex">
-            <span className="rounded-full border border-sand-200 bg-white px-3 py-2">+ de 20 imoveis publicados</span>
+            <span className="rounded-full border border-sand-200 bg-white px-3 py-2">+ de 20 imóveis publicados</span>
             <span className="rounded-full border border-sand-200 bg-white px-3 py-2">100% focado no Rio Grande do Norte</span>
           </div>
         </div>

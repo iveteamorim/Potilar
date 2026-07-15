@@ -1,5 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Property } from '@/data/properties';
+import { attachListingContactFields } from '@/lib/listingContactFields';
+import { createAdminClient } from '@/lib/supabase/admin';
 
 type AdvertiserProfileRow = {
   id: string;
@@ -12,28 +14,76 @@ type AdvertiserProfileRow = {
   creci_verified?: boolean | null;
 };
 
-export async function attachAdvertiserProfiles(supabase: SupabaseClient, properties: Property[]) {
-  const ownerIds = Array.from(new Set(properties.map((property) => property.ownerId).filter(Boolean))) as string[];
-  if (ownerIds.length === 0) return properties;
+const ADVERTISER_PROFILE_SELECT =
+  'id,full_name,company_name,account_type,public_slug,profile_image_url,creci,creci_verified';
 
-  let { data, error } = await supabase
-    .from('profiles')
-    .select('id,full_name,company_name,account_type,public_slug,profile_image_url,creci,creci_verified')
-    .in('id', ownerIds);
+async function attachListingOwnerIds(supabase: SupabaseClient, properties: Property[]) {
+  const missingIds = properties.filter((property) => !property.ownerId).map((property) => property.id);
+  if (missingIds.length === 0) return properties;
 
-  if (error) {
-    const fallback = await supabase
-      .from('profiles')
-      .select('id,full_name,account_type,public_slug,creci')
-      .in('id', ownerIds);
-    data = fallback.error
-      ? null
-      : fallback.data?.map((profile) => ({ ...profile, company_name: null, profile_image_url: null, creci_verified: false })) ?? null;
+  try {
+    const { data } = await supabase.rpc('get_public_listing_contacts', { listing_ids: missingIds });
+    if (!data?.length) return properties;
+
+    const ownerByListingId = new Map(
+      (data as Array<{ id: string; owner_id?: string | null }>).map((row) => [row.id, row.owner_id ?? null])
+    );
+
+    return properties.map((property) => {
+      if (property.ownerId) return property;
+      const ownerId = ownerByListingId.get(property.id);
+      return ownerId ? { ...property, ownerId } : property;
+    });
+  } catch {
+    return properties;
+  }
+}
+
+async function loadAdvertiserProfileRows(supabase: SupabaseClient, ownerIds: string[]) {
+  if (ownerIds.length === 0) return [] as AdvertiserProfileRow[];
+
+  const { data, error } = await supabase.from('profiles').select(ADVERTISER_PROFILE_SELECT).in('id', ownerIds);
+
+  if (!error && data?.length) {
+    return data as AdvertiserProfileRow[];
   }
 
-  const profileById = new Map((data ?? []).map((profile) => [profile.id, profile as AdvertiserProfileRow]));
+  const fallback = await supabase
+    .from('profiles')
+    .select('id,full_name,account_type,public_slug,creci')
+    .in('id', ownerIds);
 
-  return properties.map((property) => {
+  if (!fallback.error && fallback.data?.length) {
+    return fallback.data.map((profile) => ({
+      ...profile,
+      company_name: null,
+      profile_image_url: null,
+      creci_verified: false
+    })) as AdvertiserProfileRow[];
+  }
+
+  try {
+    const admin = createAdminClient();
+    const adminResult = await admin.from('profiles').select(ADVERTISER_PROFILE_SELECT).in('id', ownerIds);
+    if (adminResult.data?.length) {
+      return adminResult.data as AdvertiserProfileRow[];
+    }
+  } catch {
+    // Service role not configured in this environment.
+  }
+
+  return [];
+}
+
+export async function attachAdvertiserProfiles(supabase: SupabaseClient, properties: Property[]) {
+  const withOwners = await attachListingOwnerIds(supabase, properties);
+  const ownerIds = Array.from(new Set(withOwners.map((property) => property.ownerId).filter(Boolean))) as string[];
+  if (ownerIds.length === 0) return withOwners;
+
+  const profiles = await loadAdvertiserProfileRows(supabase, ownerIds);
+  const profileById = new Map(profiles.map((profile) => [profile.id, profile]));
+
+  return withOwners.map((property) => {
     if (!property.ownerId) return property;
     const profile = profileById.get(property.ownerId);
     if (!profile || !['corretor', 'imobiliaria'].includes(profile.account_type ?? '')) return property;
@@ -47,4 +97,20 @@ export async function attachAdvertiserProfiles(supabase: SupabaseClient, propert
       advertiserImageUrl: profile.profile_image_url ?? property.advertiserImageUrl
     };
   });
+}
+
+export async function enrichPublicListings(supabase: SupabaseClient, properties: Property[]) {
+  let enriched = properties;
+
+  try {
+    enriched = await attachListingContactFields(supabase, properties);
+  } catch {
+    enriched = properties;
+  }
+
+  try {
+    return await attachAdvertiserProfiles(supabase, enriched);
+  } catch {
+    return enriched;
+  }
 }

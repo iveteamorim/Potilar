@@ -4,7 +4,7 @@ import ListingEditorForm from '@/components/listing-editor/ListingEditorForm';
 import { createClient } from '@/lib/supabase/server';
 
 export const metadata: Metadata = {
-  title: 'Editar anuncio | Potilar'
+  title: 'Editar anúncio | Potilar'
 };
 
 const LISTING_SELECT =
@@ -54,7 +54,7 @@ export default async function EditOwnerListingPage({ params }: { params: { id: s
       <div className="mx-auto max-w-5xl space-y-6">
         <div>
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-ocean-600">Minha conta</p>
-          <h1 className="mt-4 text-3xl font-semibold text-slate-900 dark:text-white">Editar anuncio</h1>
+          <h1 className="mt-4 text-3xl font-semibold text-slate-900 dark:text-white">Editar anúncio</h1>
         </div>
         <ListingEditorForm listing={data} backHref="/mi-cuenta" />
       </div>

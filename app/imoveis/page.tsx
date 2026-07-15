@@ -10,7 +10,7 @@ import MapModalButton from '@/components/MapModalButton';
 import { createClient } from '@/lib/supabase/server';
 import { fetchApprovedListingRows } from '@/lib/fetchApprovedListings';
 import { listingRowToProperty } from '@/lib/listings';
-import { attachListingContactFields } from '@/lib/listingContactFields';
+import { enrichPublicListings } from '@/lib/advertiserProfiles';
 import { orderListingsForDisplay } from '@/lib/propertyOrdering';
 import type { Property } from '@/data/properties';
 
@@ -54,14 +54,14 @@ type PublicListingRow = {
 };
 
 export const metadata: Metadata = {
-  title: 'Imoveis no RN',
-  description: 'Encontre casas, apartamentos, terrenos, alugueis e imoveis de temporada no Rio Grande do Norte.',
+  title: 'Imóveis no RN',
+  description: 'Encontre casas, apartamentos, terrenos, aluguéis e imóveis de temporada no Rio Grande do Norte.',
   alternates: {
     canonical: '/imoveis'
   },
   openGraph: {
-    title: 'Imoveis no RN | Potilar',
-    description: 'Busque imoveis no Rio Grande do Norte por cidade, tipo, preco e negociacao.',
+    title: 'Imóveis no RN | Potilar',
+    description: 'Busque imóveis no Rio Grande do Norte por cidade, tipo, preço e negociação.',
     url: '/imoveis'
   }
 };
@@ -225,7 +225,7 @@ export default async function ImoveisPage({
     const data = await fetchApprovedListingRows(supabase, { withContact: false });
     const properties = orderListingsForDisplay((data as unknown as PublicListingRow[]).map(toProperty));
     try {
-      approvedListings = await attachListingContactFields(supabase, properties);
+      approvedListings = await enrichPublicListings(supabase, properties);
     } catch {
       approvedListings = properties;
     }

@@ -6,7 +6,7 @@ import type { Metadata } from 'next';
 import { createClient } from '@/lib/supabase/server';
 import { fetchApprovedListingRows } from '@/lib/fetchApprovedListings';
 import { listingRowToProperty } from '@/lib/listings';
-import { attachListingContactFields } from '@/lib/listingContactFields';
+import { enrichPublicListings } from '@/lib/advertiserProfiles';
 import { getHomeFeaturedListings } from '@/lib/homeFeaturedListings';
 import { orderListingsForDisplay } from '@/lib/propertyOrdering';
 import type { Property } from '@/data/properties';
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     absolute: 'Potilar | Imóveis no Rio Grande do Norte'
   },
   description:
-    'Encontre e anuncie casas, apartamentos, terrenos, alugueis e temporada no Rio Grande do Norte com contato direto.',
+    'Encontre e anuncie casas, apartamentos, terrenos, aluguéis e temporada no Rio Grande do Norte com contato direto.',
   alternates: {
     canonical: '/'
   }
@@ -87,7 +87,7 @@ async function getApprovedListings(): Promise<Property[]> {
     const data = await fetchApprovedListingRows(supabase, { withContact: false });
     const properties = orderListingsForDisplay((data as unknown as PublicListingRow[]).map(toProperty));
     try {
-      return await attachListingContactFields(supabase, properties);
+      return await enrichPublicListings(supabase, properties);
     } catch {
       return properties;
     }
@@ -178,7 +178,7 @@ export default async function HomePage() {
               Anunciar imóvel grátis
             </Link>
             <a
-              href="https://wa.me/5521969724141?text=Ola%2C%20vim%20pelo%20site%20Potilar%20e%20quero%20ajuda%20para%20anunciar%20meu%20imovel."
+              href={`https://wa.me/5521969724141?text=${encodeURIComponent('Olá, vim pelo site Potilar e quero ajuda para anunciar meu imóvel.')}`}
               target="_blank"
               rel="noreferrer"
               className="block text-xs font-semibold text-ocean-700 underline-offset-4 hover:underline dark:text-ocean-300"

@@ -17,7 +17,7 @@ export default function ListingMessageButton({ listingId, ownerId, title, label 
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
-  const [message, setMessage] = useState(`Ola, tenho interesse neste imovel. Ainda esta disponivel?`);
+  const [message, setMessage] = useState(`Olá, tenho interesse neste imóvel. Ainda está disponível?`);
   const [status, setStatus] = useState('');
   const [sentMessage, setSentMessage] = useState('');
   const [loading, setLoading] = useState(false);
@@ -52,14 +52,14 @@ export default function ListingMessageButton({ listingId, ownerId, title, label 
       const payload = await response.json();
 
       if (!response.ok) {
-        throw new Error(payload.error ?? 'Nao foi possivel enviar a mensagem.');
+        throw new Error(payload.error ?? 'Não foi possível enviar a mensagem.');
       }
 
       setSentMessage(message);
       setStatus('Enviado');
       setMessage('');
     } catch (error) {
-      setStatus(error instanceof Error ? error.message : 'Nao foi possivel enviar a mensagem.');
+      setStatus(error instanceof Error ? error.message : 'Não foi possível enviar a mensagem.');
     } finally {
       setLoading(false);
     }
@@ -145,7 +145,7 @@ export default function ListingMessageButton({ listingId, ownerId, title, label 
                   Criar conta para conversar
                 </Link>
                 <div className="border-t border-sand-100 pt-4 text-sm text-slate-600 dark:border-slate-800 dark:text-slate-300">
-                  <p className="font-semibold text-slate-800 dark:text-slate-100">Referencia do anuncio</p>
+                  <p className="font-semibold text-slate-800 dark:text-slate-100">Referência do anúncio</p>
                   <p className="mt-1 font-semibold text-ocean-700 dark:text-ocean-200">{listingId.slice(0, 8).toUpperCase()}</p>
                 </div>
               </div>

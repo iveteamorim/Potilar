@@ -28,7 +28,7 @@ export async function POST(request: Request) {
   const accessToken = process.env.MERCADO_PAGO_ACCESS_TOKEN;
   if (!accessToken) {
     return NextResponse.json({
-      error: 'Mercado Pago ainda nao esta configurado.',
+      error: 'Mercado Pago ainda não está configurado.',
       setupRequired: true,
       package: selectedPackage,
       packages: Object.values(AI_CREDIT_PACKAGES)
@@ -73,7 +73,7 @@ export async function POST(request: Request) {
   const data = await response.json().catch(() => ({}));
 
   if (!response.ok) {
-    return NextResponse.json({ error: data.message ?? 'Nao foi possivel criar o pagamento.' }, { status: 502 });
+    return NextResponse.json({ error: data.message ?? 'Não foi possível criar o pagamento.' }, { status: 502 });
   }
 
   return NextResponse.json({

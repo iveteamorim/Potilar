@@ -57,7 +57,7 @@ function formatDocument(value?: string | null) {
   if (digits.length === 14) {
     return digits.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
   }
-  return value || 'Nao informado';
+  return value || 'Não informado';
 }
 
 export default async function AdminPage({
@@ -79,7 +79,7 @@ export default async function AdminPage({
         <div className="mx-auto max-w-3xl glass-card p-8 text-center">
           <h1 className="text-2xl font-semibold text-slate-900 dark:text-white">Acesso restrito</h1>
           <p className="mt-3 text-sm text-slate-600 dark:text-slate-300">
-            Sua conta ainda nao tem permissao de administrador.
+            Sua conta ainda não tem permissão de administrador.
           </p>
         </div>
       </main>
@@ -189,11 +189,11 @@ export default async function AdminPage({
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-ocean-600">Admin</p>
             <h1 className="mt-4 text-3xl font-semibold text-slate-900 dark:text-white">Revisao de anuncios</h1>
             <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-              Aprove, rejeite ou pause anuncios enviados por proprietarios.
+              Aprove, rejeite ou pause anúncios enviados por proprietários.
             </p>
           </div>
           <Link href="/admin/news" className="inline-flex rounded-2xl border border-ocean-200 px-4 py-2 text-sm font-semibold text-ocean-700">
-            Gerenciar noticias
+            Gerenciar notícias
           </Link>
         </div>
 
@@ -283,7 +283,7 @@ export default async function AdminPage({
                           ? 'Pagamento pendente'
                           : listing.is_paid
                             ? 'Pago'
-                            : 'Gratis'}
+                            : 'Grátis'}
                     </span>
                     <span className="rounded-full bg-violet-50 px-2.5 py-1 text-[11px] font-semibold text-violet-800">
                       Destaque:{' '}
@@ -295,7 +295,7 @@ export default async function AdminPage({
                                 ? ' pendente'
                                 : ' ativo'
                           }`
-                        : 'Nao'}
+                        : 'Não'}
                     </span>
                   </div>
                   <p className="line-clamp-1 text-xs text-slate-500">
@@ -327,7 +327,7 @@ export default async function AdminPage({
                               ? 'Pagamento pendente'
                               : listing.is_paid
                                 ? 'Pago'
-                                : 'Gratis'}
+                                : 'Grátis'}
                         </span>
                         <span className="rounded-full bg-violet-50 px-3 py-1 text-xs font-semibold text-violet-800">
                           Destaque:{' '}
@@ -339,7 +339,7 @@ export default async function AdminPage({
                                     ? ' pendente'
                                     : ' ativo'
                               }`
-                            : 'Nao'}
+                            : 'Não'}
                         </span>
                         {listing.referral_code && (
                           <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-800">
@@ -433,7 +433,7 @@ export default async function AdminPage({
                             <input type="hidden" name="owner_id" value={listing.owner_id} />
                             <input type="hidden" name="action" value="unverify" />
                             <button className="rounded-xl border border-sand-200 px-3 py-2 text-xs font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">
-                              Remover verificacao
+                              Remover verificação
                             </button>
                           </form>
                         </div>
@@ -455,10 +455,10 @@ export default async function AdminPage({
                       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                         <div>
                           <p className="text-sm font-semibold text-violet-900 dark:text-violet-100">
-                            Dar destaque gratis (admin)
+                            Dar destaque grátis (admin)
                           </p>
                           <p className="mt-1 text-xs text-violet-800 dark:text-violet-200">
-                            Cortesia admin: entra no carrossel da home e no topo das buscas, mesmo sem Pix. Vale para anuncios novos apos o corte de destaque pago.
+                            Cortesia admin: entra no carrossel da home e no topo das buscas, mesmo sem Pix. Vale para anúncios novos após o corte de destaque pago.
                           </p>
                           {listing.featured_payment_status === 'confirmed' && listing.featured_plan && (
                             <p className="mt-2 text-xs font-semibold text-violet-700 dark:text-violet-200">
@@ -484,7 +484,7 @@ export default async function AdminPage({
                             </select>
                           </label>
                           <button className="rounded-2xl bg-violet-600 px-4 py-2 text-xs font-semibold text-white hover:bg-violet-700">
-                            Ativar destaque gratis
+                            Ativar destaque grátis
                           </button>
                         </form>
                       </div>
@@ -566,7 +566,7 @@ export default async function AdminPage({
 
                   <div className="flex flex-wrap gap-3">
                     <Link href={`/admin/editar/${listing.id}`} className="rounded-xl border border-ocean-200 px-4 py-2 text-xs font-semibold text-ocean-700">
-                      Editar anuncio
+                      Editar anúncio
                     </Link>
                     {listing.status !== 'approved' && (
                       <form action={updateListingStatus}>
@@ -601,7 +601,7 @@ export default async function AdminPage({
 
           {(!listings || listings.length === 0) && (
             <div className="glass-card p-8 text-center">
-              <p className="text-base font-semibold text-slate-900 dark:text-white">Nenhum anuncio enviado ainda</p>
+              <p className="text-base font-semibold text-slate-900 dark:text-white">Nenhum anúncio enviado ainda</p>
             </div>
           )}
         </div>

@@ -5,7 +5,7 @@ import { useState } from 'react';
 
 export default function ShareButtons({ title, url, compact = false }: { title: string; url: string; compact?: boolean }) {
   const [copied, setCopied] = useState(false);
-  const message = `Olha este imovel na Potilar: ${title} ${url}`;
+  const message = `Olha este imóvel na Potilar: ${title} ${url}`;
 
   async function copyLink() {
     await navigator.clipboard.writeText(url);
@@ -39,7 +39,7 @@ export default function ShareButtons({ title, url, compact = false }: { title: s
 
   return (
     <div className="rounded-2xl border border-green-200 bg-green-50 p-4 dark:border-green-900 dark:bg-green-950/20">
-      <p className="text-sm font-semibold text-slate-900 dark:text-white">Compartilhe este anuncio</p>
+      <p className="text-sm font-semibold text-slate-900 dark:text-white">Compartilhe este anúncio</p>
       <p className="mt-1 text-xs text-slate-600 dark:text-slate-300">
         Envie para WhatsApp ou copie o link para divulgar.
       </p>

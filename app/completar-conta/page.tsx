@@ -17,7 +17,7 @@ export default function CompletarContaPage() {
             Complete sua conta para guardar favoritos.
           </h1>
           <p className="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300">
-            Seu email foi confirmado. Agora crie uma senha para entrar de novo e acessar seus imoveis favoritos quando quiser.
+            Seu email foi confirmado. Agora crie uma senha para entrar de novo e acessar seus imóveis favoritos quando quiser.
           </p>
         </div>
         <Suspense fallback={<div className="glass-card h-80 animate-pulse p-6" />}>

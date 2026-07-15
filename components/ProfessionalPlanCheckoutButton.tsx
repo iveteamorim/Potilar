@@ -36,13 +36,13 @@ export default function ProfessionalPlanCheckoutButton({ planId, children, fallb
       }
 
       if (!response.ok || !payload.initPoint) {
-        setMessage(payload.error ?? 'Nao foi possivel iniciar a assinatura agora.');
+        setMessage(payload.error ?? 'Não foi possível iniciar a assinatura agora.');
         return;
       }
 
       window.location.href = payload.initPoint;
     } catch {
-      setMessage('Nao foi possivel iniciar a assinatura agora.');
+      setMessage('Não foi possível iniciar a assinatura agora.');
     } finally {
       setLoading(null);
     }

@@ -28,7 +28,7 @@ export const AI_CREDIT_PACKAGES: Record<AiCreditPackageId, AiCreditPackage> = {
     credits: 100,
     price: 69.9,
     label: '100 creditos',
-    description: 'Melhor custo para corretores e imobiliarias.'
+    description: 'Melhor custo para corretores e imobiliárias.'
   }
 };
 

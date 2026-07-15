@@ -167,8 +167,8 @@ export default function PixPaymentPanel({ listingId, amount, title, kind, headli
           <div className="flex items-start gap-3 rounded-2xl border border-green-200 bg-green-50 px-4 py-3 text-xs text-green-900 dark:border-green-900 dark:bg-green-950/30 dark:text-green-100">
             <ShieldCheck className="mt-0.5 h-4 w-4 flex-none" aria-hidden="true" />
             <p>
-              Pagamento direto para a Potilar. Apos confirmacao do Pix, seu anuncio e liberado em ate{' '}
-              <strong>24 horas uteis</strong>. Guarde o codigo <strong>{paymentCode}</strong> no comprovante.
+              Pagamento direto para a Potilar. Após confirmação do Pix, seu anúncio é liberado em até{' '}
+              <strong>24 horas úteis</strong>. Guarde o código <strong>{paymentCode}</strong> no comprovante.
             </p>
           </div>
         </div>

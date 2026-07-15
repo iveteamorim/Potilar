@@ -60,14 +60,14 @@ export function resolveCityPrefill(value?: string | null) {
 
 export function getCitySeoDescription(cityName: string, listingCount: number) {
   if (listingCount > 0) {
-    return `${listingCount} anuncio${listingCount === 1 ? '' : 's'} de casas, apartamentos, terrenos, aluguel e temporada em ${cityName}, Rio Grande do Norte. Contato direto com anunciantes na Potilar.`;
+    return `${listingCount} anúncio${listingCount === 1 ? '' : 's'} de casas, apartamentos, terrenos, aluguel e temporada em ${cityName}, Rio Grande do Norte. Contato direto com anunciantes na Potilar.`;
   }
 
-  return `Busque ou anuncie casas, apartamentos, terrenos, aluguel e temporada em ${cityName}, RN. Portal imobiliario regional com contato direto — ${getLaunchPromoShortLabel()} na Potilar.`;
+  return `Busque ou anuncie casas, apartamentos, terrenos, aluguel e temporada em ${cityName}, RN. Portal imobiliário regional com contato direto — ${getLaunchPromoShortLabel()} na Potilar.`;
 }
 
 export function getCitySeoTitle(cityName: string) {
-  return `Imoveis em ${cityName}, RN — aluguel, venda e temporada`;
+  return `Imóveis em ${cityName}, RN — aluguel, venda e temporada`;
 }
 
 export function groupCitiesAlphabetically() {

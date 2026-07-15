@@ -2,12 +2,13 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { AlertTriangle, BadgeCheck, BarChart3, Eye, Globe2, Home, Languages, MessageCircle, Pencil, Plus, Search, Settings, ShieldCheck, Sparkles } from 'lucide-react';
+import { AlertTriangle, BarChart3, Eye, Globe2, Home, MessageCircle, Pencil, Plus, Search, Settings, Sparkles } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { SUPABASE_URL } from '@/lib/supabase/config';
 import AccountNotice from '@/components/AccountNotice';
 import DemoProfileImageManager from '@/components/DemoProfileImageManager';
+import ProfessionalProfilePanelCard from '@/components/ProfessionalProfilePanelCard';
 import ListingMercadoPagoButton from '@/components/ListingMercadoPagoButton';
 import LogoutButton from '@/components/LogoutButton';
 import PropertyCard from '@/components/PropertyCard';
@@ -40,12 +41,12 @@ const SEASONAL_RENEWAL_OPTIONS = [
   {
     days: PLANS.listing.seasonalRenewal30DurationDays,
     amount: PLANS.listing.seasonalRenewal30Price,
-    headline: `Renovacao de temporada - ${PLANS.listing.seasonalRenewal30DurationDays} dias`
+    headline: `Renovação de temporada - ${PLANS.listing.seasonalRenewal30DurationDays} dias`
   },
   {
     days: PLANS.listing.seasonalRenewal60DurationDays,
     amount: PLANS.listing.seasonalRenewal60Price,
-    headline: `Renovacao de temporada - ${PLANS.listing.seasonalRenewal60DurationDays} dias`
+    headline: `Renovação de temporada - ${PLANS.listing.seasonalRenewal60DurationDays} dias`
   }
 ];
 const DEFAULT_PROFESSIONAL_BANNER =
@@ -72,7 +73,7 @@ function getSeasonalRenewalInfo(createdAt: string, now = new Date()) {
 
 function getStatusLabel(status: string) {
   const labels: Record<string, string> = {
-    pending: 'Em revisao',
+    pending: 'Em revisão',
     approved: 'Publicado',
     paused: 'Pausado',
     rejected: 'Rejeitado'
@@ -357,7 +358,7 @@ export default async function MinhaContaPage({
       : { data: [] };
   const statsByListingId = new Map((listingStats ?? []).map((row) => [row.listing_id, row]));
   const isProfessional = profile?.account_type === 'corretor' || profile?.account_type === 'imobiliaria';
-  const professionalLabel = profile?.account_type === 'corretor' ? 'Corretor' : 'Imobiliaria';
+  const professionalLabel = profile?.account_type === 'corretor' ? 'Corretor' : 'Imobiliária';
   const professionalPlanLabel =
     profile?.account_type === 'corretor'
       ? 'Plano Corretor'
@@ -517,81 +518,26 @@ export default async function MinhaContaPage({
               ))}
             </div>
 
-            <section className="border border-sand-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-              <div className="grid items-start gap-5 xl:grid-cols-[1fr_360px]">
-                <div>
-                <div className="flex items-center justify-between gap-4">
-                  <div>
-                    <h3 className="text-xl font-semibold text-slate-950 dark:text-white">Prévia da página pública</h3>
-                    <p className="mt-1 text-sm text-slate-500">Esses dados aparecem para visitantes.</p>
-                  </div>
-                  <BadgeCheck className="h-6 w-6 text-ocean-700" aria-hidden="true" />
-                </div>
+            <ProfessionalProfilePanelCard
+              displayName={displayName}
+              accountLabel={accountLabel}
+              roleLabel={professionalLabel}
+              profileImageUrl={profileImageUrl}
+              creci={profile.creci}
+              creciVerified={Boolean(profile.creci_verified)}
+              languages={languages}
+              bio={profile.bio || ''}
+              publicSlug={profile.public_slug ?? undefined}
+              updateAction={updateProfessionalProfile}
+            />
 
-                <div className="mt-4 border border-sand-200 p-4 dark:border-slate-800">
-                  <div className="flex flex-col gap-4 sm:flex-row">
-                    <div className="h-24 w-24 shrink-0 overflow-hidden border border-sand-200 bg-white shadow-sm dark:border-slate-700 dark:bg-white">
-                      <img src={profileImageUrl} alt={`Foto de ${displayName}`} className="h-full w-full object-contain" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap gap-2">
-                        <span className="inline-flex items-center gap-2 rounded-full bg-ocean-50 px-3 py-1 text-xs font-semibold text-ocean-800">
-                          <BadgeCheck className="h-3.5 w-3.5" aria-hidden="true" />
-                          {accountLabel} Potilar
-                        </span>
-                        {profile.creci && (
-                          <span className="inline-flex items-center gap-2 rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-700">
-                            <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
-                            {profile.creci_verified ? 'CRECI verificado' : 'CRECI pendente'}
-                          </span>
-                        )}
-                      </div>
-                      <h4 className="mt-3 text-xl font-semibold text-slate-950 dark:text-white">{displayName}</h4>
-                      <p className="mt-1 text-sm leading-6 text-slate-600 dark:text-slate-300">
-                        {profile.bio || 'Adicione uma apresentação profissional para sua página pública.'}
-                      </p>
-                      <p className="mt-2 inline-flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200">
-                        <Languages className="h-4 w-4" aria-hidden="true" />
-                        Fala {languages.join(', ')}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                </div>
-
-                <form action={updateProfessionalProfile} className="border-t border-sand-200 pt-4 dark:border-slate-800 xl:border-l xl:border-t-0 xl:pl-5 xl:pt-0">
-                <h3 className="text-xl font-semibold text-slate-950 dark:text-white">Editar perfil público</h3>
-                <div className="mt-4 space-y-3">
-                  <label className="block">
-                    <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">Nome público</span>
-                    <input name="company_name" defaultValue={displayName} className="mt-2 h-11 w-full border border-sand-200 px-3 text-sm dark:border-slate-700 dark:bg-slate-950" />
-                  </label>
-                  <label className="block">
-                    <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">CRECI</span>
-                    <input name="creci" defaultValue={profile.creci || ''} className="mt-2 h-11 w-full border border-sand-200 px-3 text-sm dark:border-slate-700 dark:bg-slate-950" />
-                  </label>
-                  <label className="block">
-                    <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">Idiomas</span>
-                    <input name="languages" defaultValue={languages.join(', ')} className="mt-2 h-11 w-full border border-sand-200 px-3 text-sm dark:border-slate-700 dark:bg-slate-950" />
-                  </label>
-                  <label className="block">
-                    <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">Sobre</span>
-                    <textarea name="bio" defaultValue={profile.bio || ''} rows={2} className="mt-2 w-full border border-sand-200 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950" />
-                  </label>
-                  <button type="submit" className="inline-flex h-11 w-full items-center justify-center rounded-xl bg-ocean-700 px-4 text-sm font-semibold text-white">
-                    Salvar alterações
-                  </button>
-                </div>
-                </form>
-              </div>
-            </section>
-
+            <div id="imagens-perfil">
             <DemoProfileImageManager
               displayName={displayName}
-              profileImageUrl={profileImageUrl}
               bannerImageUrl={bannerImageUrl}
               publicSlug={profile.public_slug ?? undefined}
             />
+            </div>
 
             <section id="anuncios" className="border border-sand-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
               <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
@@ -610,7 +556,7 @@ export default async function MinhaContaPage({
                     <input
                       name="anuncio_q"
                       defaultValue={listingSearch}
-                      placeholder="Buscar por titulo, cidade, preco ou codigo"
+                      placeholder="Buscar por título, cidade, preço ou código"
                       className="h-11 w-full border border-sand-200 bg-sand-50 pl-9 pr-3 text-sm font-semibold text-slate-800 outline-none transition focus:border-ocean-400 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
                     />
                   </div>
@@ -630,7 +576,7 @@ export default async function MinhaContaPage({
               <div className="mt-5 grid gap-5">
                 {filteredProfessionalListings.map((property) => (
                   <div key={property.id} className="relative">
-                    <PropertyCard property={property} variant="horizontal" />
+                    <PropertyCard property={property} variant="horizontal" panelPreview />
                     <div className="absolute bottom-4 right-5 z-30 flex items-center gap-3 text-xs font-semibold">
                       <Link href={getListingHref(property)} className="text-slate-950 underline-offset-4 hover:underline dark:text-white">
                         Ver anúncio
@@ -664,7 +610,7 @@ export default async function MinhaContaPage({
                     <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
                       {professionalListings.length === 0
                         ? 'Publique o primeiro imóvel da sua carteira.'
-                        : 'Tente buscar por cidade, titulo, preco ou codigo POT.'}
+                        : 'Tente buscar por cidade, título, preço ou código POT.'}
                     </p>
                   </div>
                 )}
@@ -735,13 +681,13 @@ export default async function MinhaContaPage({
             )}
             <p className="mt-3 text-sm text-slate-600 dark:text-slate-300">
               {isProfessional
-                ? 'Gerencie sua carteira, pagina profissional, contatos e anuncios publicados.'
-                : 'Salve favoritos, acompanhe alertas de busca e gerencie seus anuncios publicados.'}
+                ? 'Gerencie sua carteira, página profissional, contatos e anúncios publicados.'
+                : 'Salve favoritos, acompanhe alertas de busca e gerencie seus anúncios publicados.'}
             </p>
           </div>
           <div className="flex flex-wrap items-center justify-start gap-2 lg:justify-end">
             <Link href="/anunciar" className="inline-flex rounded-xl bg-ocean-600 px-3.5 py-2 text-sm font-semibold text-white">
-              Anunciar imovel
+              Anunciar imóvel
             </Link>
             <Link href="/mi-cuenta/favoritos" className="inline-flex rounded-xl border border-red-200 px-3.5 py-2 text-sm font-semibold text-red-600 dark:border-red-900 dark:text-red-300">
               Meus favoritos
@@ -761,11 +707,11 @@ export default async function MinhaContaPage({
               <>
                 {profile.public_slug && (
                   <Link href={getPublicProfilePath(profile.public_slug)} className="inline-flex rounded-xl border border-ocean-200 px-3.5 py-2 text-sm font-semibold text-ocean-700">
-                    Minha pagina
+                    Minha página
                   </Link>
                 )}
                 <Link href="/mi-cuenta/perfil" className="inline-flex rounded-xl border border-violet-200 px-3.5 py-2 text-sm font-semibold text-violet-700 dark:border-violet-900 dark:text-violet-300">
-                  Editar perfil publico
+                  Editar perfil público
                 </Link>
               </>
             )}
@@ -816,25 +762,25 @@ export default async function MinhaContaPage({
 
         {searchParams?.highlight_cancelled && (
           <AccountNotice>
-            Destaque cancelado. Voce pode escolher outro plano.
+            Destaque cancelado. Você pode escolher outro plano.
           </AccountNotice>
         )}
 
         {searchParams?.listing_paused && (
           <AccountNotice>
-            Anuncio pausado. Ele saiu dos resultados publicos.
+            Anúncio pausado. Ele saiu dos resultados públicos.
           </AccountNotice>
         )}
 
         {searchParams?.listing_reactivated && (
           <AccountNotice>
-            Anuncio reativado.
+            Anúncio reativado.
           </AccountNotice>
         )}
 
         {searchParams?.listing_deleted && (
           <AccountNotice>
-            Anuncio eliminado com sucesso.
+            Anúncio eliminado com sucesso.
           </AccountNotice>
         )}
 
@@ -842,25 +788,25 @@ export default async function MinhaContaPage({
           <AccountNotice tone="error">
             {searchParams.contact_error === 'phone'
               ? 'Informe um telefone ou WhatsApp valido.'
-              : 'Nao foi possivel atualizar o contato.'}
+              : 'Não foi possível atualizar o contato.'}
           </AccountNotice>
         )}
 
         {searchParams?.image_error && (
           <AccountNotice tone="error">
-            Nao foi possivel atualizar a foto principal.
+            Não foi possível atualizar a foto principal.
           </AccountNotice>
         )}
 
         {searchParams?.highlight_error && (
           <AccountNotice tone="error">
-            Nao foi possivel ativar o destaque.
+            Não foi possível ativar o destaque.
           </AccountNotice>
         )}
 
         {searchParams?.listing_error && (
           <AccountNotice tone="error">
-            Nao foi possivel atualizar o anuncio.
+            Não foi possível atualizar o anúncio.
           </AccountNotice>
         )}
 
@@ -872,16 +818,16 @@ export default async function MinhaContaPage({
                   {professionalPlanLabel} ativo
                 </p>
                 <h2 className="mt-2 text-2xl font-semibold text-slate-950 dark:text-white">
-                  Sua pagina profissional Potilar esta liberada.
+                  Sua página profissional Potilar está liberada.
                 </h2>
                 <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
-                  Edite seu perfil publico, acompanhe seus anuncios e compartilhe sua vitrine com clientes.
+                  Edite seu perfil público, acompanhe seus anúncios e compartilhe sua vitrine com clientes.
                 </p>
               </div>
               <div className="flex flex-wrap gap-2 md:justify-end">
                 {profile?.public_slug && (
                   <Link href={getPublicProfilePath(profile.public_slug)} className="inline-flex rounded-xl bg-ocean-700 px-4 py-2 text-sm font-semibold text-white">
-                    Ver minha pagina
+                    Ver minha página
                   </Link>
                 )}
                 <Link href="/mi-cuenta/perfil" className="inline-flex rounded-xl border border-ocean-200 bg-white px-4 py-2 text-sm font-semibold text-ocean-700">
@@ -918,7 +864,7 @@ export default async function MinhaContaPage({
                 </div>
                 <div className="flex flex-wrap items-center gap-3 text-sm lg:justify-end">
                   <Link href={listingPublicHref} className="rounded-full border border-sand-200 px-3 py-1 font-semibold text-slate-700">
-                    Ver anuncio
+                    Ver anúncio
                   </Link>
                   {advertiserPublicHref && (
                     <Link href={advertiserPublicHref} className="rounded-full border border-ocean-200 px-3 py-1 font-semibold text-ocean-700">
@@ -961,12 +907,12 @@ export default async function MinhaContaPage({
                   )}
                   {listing.payment_status === 'confirmed' && listing.listing_expires_at && (
                     <span className="rounded-full bg-green-100 px-3 py-1 font-semibold text-green-800">
-                      Ativo ate {formatDate(listing.listing_expires_at)}
+                      Ativo até {formatDate(listing.listing_expires_at)}
                     </span>
                   )}
                   {listing.featured_payment_status === 'confirmed' && listing.featured_expires_at && (
                     <span className="rounded-full bg-violet-100 px-3 py-1 font-semibold text-violet-800">
-                      Destaque ate {formatDate(listing.featured_expires_at)}
+                      Destaque até {formatDate(listing.featured_expires_at)}
                     </span>
                   )}
                 </div>
@@ -1002,16 +948,16 @@ export default async function MinhaContaPage({
 
               {listing.payment_status === 'pix_pending' && listing.payment_proof_sent_at ? (
                 <div className="rounded-2xl border border-sun-200 bg-sun-50 p-4 text-sm text-slate-800 dark:border-sun-900 dark:bg-sun-950/20 dark:text-slate-100">
-                  <p className="font-semibold">Comprovante enviado. Aguardando revisao da Potilar.</p>
+                  <p className="font-semibold">Comprovante enviado. Aguardando revisão da Potilar.</p>
                   <p className="mt-1 text-xs text-slate-600 dark:text-slate-300">
-                    Recebemos sua confirmacao em {formatDate(listing.payment_proof_sent_at)}. O admin ainda precisa confirmar o pagamento para liberar o anuncio.
+                    Recebemos sua confirmação em {formatDate(listing.payment_proof_sent_at)}. O admin ainda precisa confirmar o pagamento para liberar o anúncio.
                   </p>
                 </div>
               ) : listing.payment_status === 'pix_pending' ? (
                 <div className="space-y-3">
                   <div className="rounded-3xl border border-ocean-100 bg-ocean-50 p-4 dark:border-ocean-900 dark:bg-ocean-950/30">
                     <p className="text-sm font-semibold text-slate-950 dark:text-white">
-                      {listing.transaction === 'Temporada' ? 'Anuncio de temporada pendente' : 'Publicacao pendente'}
+                      {listing.transaction === 'Temporada' ? 'Anúncio de temporada pendente' : 'Publicação pendente'}
                     </p>
                     <p className="mt-1 text-2xl font-semibold text-ocean-800">
                       {formatPlanPrice(Number(listing.payment_amount ?? 0))}
@@ -1060,7 +1006,7 @@ export default async function MinhaContaPage({
                 <input type="hidden" name="id" value={listing.id} />
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                   <div>
-                    <p className="text-sm font-semibold text-slate-900 dark:text-white">Destacar anuncio</p>
+                    <p className="text-sm font-semibold text-slate-900 dark:text-white">Destacar anúncio</p>
                     {listing.featured_plan && (
                       <p className="mt-1 text-xs text-slate-500">
                         Atual: {getHighlightLabel(listing.featured_plan)} - {formatPlanPrice(Number(listing.featured_payment_amount ?? 0))} - {listing.featured_payment_status}
@@ -1088,9 +1034,9 @@ export default async function MinhaContaPage({
 
               {listing.featured_plan && listing.featured_payment_status === 'pix_pending' && listing.featured_payment_proof_sent_at ? (
                 <div className="rounded-2xl border border-violet-200 bg-violet-50 p-4 text-sm text-slate-800 dark:border-violet-900 dark:bg-violet-950/20 dark:text-slate-100">
-                  <p className="font-semibold">Comprovante do destaque enviado. Aguardando revisao da Potilar.</p>
+                  <p className="font-semibold">Comprovante do destaque enviado. Aguardando revisão da Potilar.</p>
                   <p className="mt-1 text-xs text-slate-600 dark:text-slate-300">
-                    Recebemos sua confirmacao em {formatDate(listing.featured_payment_proof_sent_at)}. O destaque entra no ar depois da confirmacao do pagamento.
+                    Recebemos sua confirmação em {formatDate(listing.featured_payment_proof_sent_at)}. O destaque entra no ar depois da confirmação do pagamento.
                   </p>
                 </div>
               ) : listing.featured_plan && listing.featured_payment_status === 'pix_pending' ? (
@@ -1172,21 +1118,21 @@ export default async function MinhaContaPage({
           })}
           {(!listings || listings.length === 0) && (
             <div className="glass-card p-8 text-center">
-              <p className="text-base font-semibold text-slate-900 dark:text-white">Nenhum anuncio ainda</p>
+              <p className="text-base font-semibold text-slate-900 dark:text-white">Nenhum anúncio ainda</p>
               <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
                 {isLaunchPromoActive()
-                  ? `Publique seus ${getFreeListingLimit()} primeiros anuncios gratis.`
-                  : 'Publique seu primeiro anuncio gratuito.'}
+                  ? `Publique seus ${getFreeListingLimit()} primeiros anúncios grátis.`
+                  : 'Publique seu primeiro anúncio gratuito.'}
               </p>
               <Link href="/anunciar" className="mt-5 inline-flex rounded-2xl bg-ocean-600 px-5 py-3 text-sm font-semibold text-white">
-                Anunciar imovel
+                Anunciar imóvel
               </Link>
             </div>
           )}
         </div>
 
         <p className="border-t border-sand-200 pt-5 text-xs leading-5 text-slate-500 dark:border-slate-800 dark:text-slate-400">
-          Anuncios enviados normalmente sao analisados em ate 24 horas.
+          Anúncios enviados normalmente são analisados em até 24 horas.
         </p>
       </div>
     </main>

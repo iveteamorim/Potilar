@@ -165,7 +165,7 @@ export async function getMarketBenchmark(input: {
     pricePerSqm = isCoastalCity(input.location, input.neighborhood) ? LAND_SALE_SQM_COAST : LAND_SALE_SQM;
     scope = neighborhoodMultiplier ? 'neighborhood' : 'city';
     scopeLabel = neighborhoodMultiplier?.neighborhood ?? cityLabel;
-    source = 'Estimativa Potilar para terrenos urbanos (nao e indice oficial)';
+    source = 'Estimativa Potilar para terrenos urbanos (não é índice oficial)';
     referencePeriod = cityRef.referencePeriod;
     dataTier = 'land_estimate';
   } else if (neighborhoodMultiplier) {

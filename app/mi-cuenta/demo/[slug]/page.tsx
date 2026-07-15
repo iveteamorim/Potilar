@@ -177,7 +177,6 @@ export default function DemoInternalPage({ params }: Props) {
 
           <DemoProfileImageManager
             displayName={displayName}
-            profileImageUrl={profile.profile_image_url}
             bannerImageUrl={profile.banner_image_url}
           />
 
@@ -193,7 +192,7 @@ export default function DemoInternalPage({ params }: Props) {
             </div>
             <div className="mt-5 grid gap-5">
               {listings.map((property) => (
-                <PropertyCard key={property.id} property={property} variant="horizontal" />
+                <PropertyCard key={property.id} property={property} variant="horizontal" panelPreview />
               ))}
             </div>
           </section>

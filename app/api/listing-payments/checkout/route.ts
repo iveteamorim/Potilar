@@ -19,16 +19,16 @@ function resolvePayment(listing: any, kind: PaymentKind) {
       product: 'listing_highlight',
       title: `Potilar - ${getHighlightLabel(planId)}`,
       amount: Number(listing.featured_payment_amount ?? getHighlightPrice(planId)),
-      description: `Destaque do anuncio por ${getHighlightDurationDays(planId)} dias.`
+      description: `Destaque do anúncio por ${getHighlightDurationDays(planId)} dias.`
     };
   }
 
   if (kind === 'renewal30') {
     return {
       product: 'listing_renewal',
-      title: `Potilar - Renovacao temporada ${PLANS.listing.seasonalRenewal30DurationDays} dias`,
+      title: `Potilar - Renovação temporada ${PLANS.listing.seasonalRenewal30DurationDays} dias`,
       amount: PLANS.listing.seasonalRenewal30Price,
-      description: 'Renovacao de anuncio de temporada.',
+      description: 'Renovação de anúncio de temporada.',
       renewal_days: PLANS.listing.seasonalRenewal30DurationDays
     };
   }
@@ -36,9 +36,9 @@ function resolvePayment(listing: any, kind: PaymentKind) {
   if (kind === 'renewal60') {
     return {
       product: 'listing_renewal',
-      title: `Potilar - Renovacao temporada ${PLANS.listing.seasonalRenewal60DurationDays} dias`,
+      title: `Potilar - Renovação temporada ${PLANS.listing.seasonalRenewal60DurationDays} dias`,
       amount: PLANS.listing.seasonalRenewal60Price,
-      description: 'Renovacao de anuncio de temporada.',
+      description: 'Renovação de anúncio de temporada.',
       renewal_days: PLANS.listing.seasonalRenewal60DurationDays
     };
   }
@@ -47,9 +47,9 @@ function resolvePayment(listing: any, kind: PaymentKind) {
 
   return {
     product: kind === 'seasonal' ? 'seasonal_listing' : 'listing_publication',
-    title: kind === 'seasonal' ? 'Potilar - Anuncio de temporada' : 'Potilar - Publicacao de anuncio',
+    title: kind === 'seasonal' ? 'Potilar - Anúncio de temporada' : 'Potilar - Publicação de anúncio',
     amount: Number(listing.payment_amount ?? 0),
-    description: kind === 'seasonal' ? 'Anuncio para temporada por 60 dias.' : 'Publicacao de anuncio adicional.'
+    description: kind === 'seasonal' ? 'Anúncio para temporada por 60 dias.' : 'Publicação de anúncio adicional.'
   };
 }
 
@@ -79,18 +79,18 @@ export async function POST(request: Request) {
     .maybeSingle();
 
   if (listingError || !listing) {
-    return NextResponse.json({ error: listingError?.message ?? 'Anuncio nao encontrado.' }, { status: 404 });
+    return NextResponse.json({ error: listingError?.message ?? 'Anúncio não encontrado.' }, { status: 404 });
   }
 
   const payment = resolvePayment(listing, kind);
 
   if (!payment || payment.amount <= 0) {
-    return NextResponse.json({ error: 'Este pagamento nao esta pendente.' }, { status: 400 });
+    return NextResponse.json({ error: 'Este pagamento não está pendente.' }, { status: 400 });
   }
 
   const accessToken = process.env.MERCADO_PAGO_ACCESS_TOKEN;
   if (!accessToken) {
-    return NextResponse.json({ error: 'Mercado Pago ainda nao esta configurado.' }, { status: 501 });
+    return NextResponse.json({ error: 'Mercado Pago ainda não está configurado.' }, { status: 501 });
   }
 
   const baseUrl = getBaseUrl(request);
@@ -132,7 +132,7 @@ export async function POST(request: Request) {
   const data = await response.json().catch(() => ({}));
 
   if (!response.ok) {
-    return NextResponse.json({ error: data.message ?? 'Nao foi possivel criar o pagamento.' }, { status: 502 });
+    return NextResponse.json({ error: data.message ?? 'Não foi possível criar o pagamento.' }, { status: 502 });
   }
 
   return NextResponse.json({

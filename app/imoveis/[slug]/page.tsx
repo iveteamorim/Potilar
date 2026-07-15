@@ -135,7 +135,7 @@ async function getAdvertiserListings(property: Property): Promise<Property[]> {
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const property = await getProperty(params.slug);
 
-  if (!property) return { title: 'Imovel nao encontrado' };
+  if (!property) return { title: 'Imóvel não encontrado' };
   const displayTitle = getCleanPropertyTitle(property);
 
   return {
@@ -191,9 +191,9 @@ export default async function PropertyDetailPage({ params }: { params: { slug: s
   const detailUrl = `${BASE_URL}/imoveis/${property.slug}`;
   const whatsappHref =
     property.contactWhatsapp && whatsappNumber
-      ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(`Ola, tenho interesse no anuncio ${getListingCode(property.id)}: ${displayTitle}`)}`
-      : `https://wa.me/5521969724141?text=${encodeURIComponent(`Ola, vim pelo site Potilar e tenho interesse no anuncio ${getListingCode(property.id)}: ${displayTitle}`)}`;
-  const reportHref = `https://wa.me/5521969724141?text=${encodeURIComponent(`Ola, quero denunciar ou revisar o anuncio ${getListingCode(property.id)}: ${detailUrl}`)}`;
+      ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(`Olá, tenho interesse no anúncio ${getListingCode(property.id)}: ${displayTitle}`)}`
+      : `https://wa.me/5521969724141?text=${encodeURIComponent(`Olá, vim pelo site Potilar e tenho interesse no anúncio ${getListingCode(property.id)}: ${displayTitle}`)}`;
+  const reportHref = `https://wa.me/5521969724141?text=${encodeURIComponent(`Olá, quero denunciar ou revisar o anúncio ${getListingCode(property.id)}: ${detailUrl}`)}`;
   const locationDetails = [property.neighborhood, property.community].filter(Boolean).join(' · ');
 
   const jsonLd = {
@@ -220,7 +220,7 @@ export default async function PropertyDetailPage({ params }: { params: { slug: s
     property.parking > 0 && `${property.parking} vaga${property.parking > 1 ? 's' : ''}`,
     property.areaSqm && `${property.areaSqm} m2`,
     property.condoFee &&
-      `Condominio ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(property.condoFee)}`,
+      `Condomínio ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(property.condoFee)}`,
     property.condoIncluded && 'Condomínio incluso',
     property.isPetFriendly && 'Aceita pet',
     property.isFurnished && 'Mobiliado'
@@ -236,7 +236,7 @@ export default async function PropertyDetailPage({ params }: { params: { slug: s
             <Link
               href={getPublicProfilePath(advertiserProfile.public_slug)}
               className="flex h-14 w-14 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl bg-slate-950 text-sm font-semibold text-white"
-              aria-label={`Ver pagina de ${advertiserDisplayName}`}
+              aria-label={`Ver página de ${advertiserDisplayName}`}
             >
               {advertiserProfile.profile_image_url ? (
                 <img
@@ -291,7 +291,7 @@ export default async function PropertyDetailPage({ params }: { params: { slug: s
         )}
         {property.contactEmail && (
           <a
-            href={`mailto:${property.contactEmail}?subject=${encodeURIComponent(`Interesse no anuncio ${property.title}`)}`}
+            href={`mailto:${property.contactEmail}?subject=${encodeURIComponent(`Interesse no anúncio ${property.title}`)}`}
             className="inline-flex items-center justify-center gap-2 rounded-2xl border border-ocean-200 px-4 py-3 text-sm font-semibold text-ocean-700 dark:border-slate-700 dark:text-slate-200"
           >
             <Mail className="h-4 w-4" aria-hidden="true" />
@@ -322,7 +322,7 @@ export default async function PropertyDetailPage({ params }: { params: { slug: s
           className="inline-flex items-center justify-center gap-2 rounded-full border border-red-200 px-3 py-2 text-center font-semibold text-red-700 transition hover:bg-red-50 dark:border-red-900/60 dark:text-red-300 dark:hover:bg-red-950/30"
         >
           <Flag className="h-4 w-4" aria-hidden="true" />
-          Denunciar anuncio
+          Denunciar anúncio
         </a>
         <a
           href="/seguranca"
@@ -418,7 +418,7 @@ export default async function PropertyDetailPage({ params }: { params: { slug: s
             </ul>
           )}
           <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
-            Codigo do anuncio: {getListingCode(property.id)}
+            Código do anúncio: {getListingCode(property.id)}
           </p>
           <div className="lg:hidden">
             {contactCard}
@@ -431,14 +431,14 @@ export default async function PropertyDetailPage({ params }: { params: { slug: s
               className="inline-flex items-center gap-2 rounded-2xl border border-ocean-200 bg-ocean-50 px-5 py-3 text-sm font-semibold text-ocean-800 transition hover:border-ocean-400 hover:bg-ocean-100 dark:border-ocean-900 dark:bg-ocean-950/40 dark:text-ocean-100"
             >
               <PlayCircle className="h-4 w-4" aria-hidden="true" />
-              Ver video do imovel
+              Ver vídeo do imóvel
             </a>
           )}
           <div className="flex gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-100">
             <AlertTriangle className="mt-0.5 h-5 w-5 flex-shrink-0" aria-hidden="true" />
             <p>
-              Evite pagamentos antecipados sem visitar o imovel e confirmar os dados do anunciante.
-              A Potilar revisa anuncios, mas a negociacao deve ser feita com cuidado.
+              Evite pagamentos antecipados sem visitar o imóvel e confirmar os dados do anunciante.
+              A Potilar revisa anúncios, mas a negociação deve ser feita com cuidado.
             </p>
           </div>
         </section>
@@ -454,7 +454,7 @@ export default async function PropertyDetailPage({ params }: { params: { slug: s
           </div>
           <PropertyMap items={[property]} height="320px" center={[property.lat, property.lng]} zoom={13} />
           <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-            A localizacao exata deve ser confirmada diretamente com o anunciante antes de visitar ou negociar.
+            A localização exata deve ser confirmada diretamente com o anunciante antes de visitar ou negociar.
           </p>
         </section>
         {property.tourUrl && (
@@ -462,7 +462,7 @@ export default async function PropertyDetailPage({ params }: { params: { slug: s
             <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">Tour 360</h2>
             <div className="aspect-video w-full overflow-hidden rounded-3xl border border-sand-200 bg-sand-50 dark:border-slate-800 dark:bg-slate-900">
               <iframe
-                title="Tour 360 do imovel"
+                title="Tour 360 do imóvel"
                 src={property.tourUrl}
                 className="h-full w-full"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -474,7 +474,7 @@ export default async function PropertyDetailPage({ params }: { params: { slug: s
         )}
         <section>
           <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">
-            {advertiserListings.length > 0 ? 'Outros anuncios deste anunciante' : 'Imoveis similares'}
+            {advertiserListings.length > 0 ? 'Outros anúncios deste anunciante' : 'Imóveis similares'}
           </h2>
           <div className="mt-6 grid gap-6 md:grid-cols-3">
             {similar.map((item) => (

@@ -65,10 +65,10 @@ export async function generateMetadata({
 }: {
   params: { city: string; intent: string };
 }): Promise<Metadata> {
-  if (!isKnownCitySlug(params.city)) return { title: 'Cidade nao encontrada' };
+  if (!isKnownCitySlug(params.city)) return { title: 'Cidade não encontrada' };
   const cityName = resolveCityNameFromSlug(params.city)!;
   const intent = getSeoIntentPage(params.intent);
-  if (!intent) return { title: 'Busca nao encontrada' };
+  if (!intent) return { title: 'Busca não encontrada' };
 
   const listings = await getListings(params.city, params.intent);
   const title = getCityIntentSeoTitle(cityName, intent);
@@ -116,7 +116,7 @@ export default async function CityIntentPage({ params }: { params: { city: strin
         '@type': 'BreadcrumbList',
         itemListElement: [
           { '@type': 'ListItem', position: 1, name: 'Inicio', item: BASE_URL },
-          { '@type': 'ListItem', position: 2, name: 'Imoveis', item: `${BASE_URL}/imoveis` },
+          { '@type': 'ListItem', position: 2, name: 'Imóveis', item: `${BASE_URL}/imoveis` },
           { '@type': 'ListItem', position: 3, name: cityName, item: `${BASE_URL}${getCityPagePath(cityName)}` },
           { '@type': 'ListItem', position: 4, name: title, item: pageUrl }
         ]
@@ -165,7 +165,7 @@ export default async function CityIntentPage({ params }: { params: { city: strin
         {listings.length > 0 ? (
           <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
             <section className="space-y-4">
-              <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Anuncios em {cityName}</h2>
+              <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Anúncios em {cityName}</h2>
               <FavoriteAwarePropertyList items={listings} />
             </section>
             <aside className="glass-card h-fit p-4 sm:p-6 lg:sticky lg:top-24">
@@ -178,11 +178,11 @@ export default async function CityIntentPage({ params }: { params: { city: strin
         ) : (
           <section className="glass-card space-y-4 p-8 text-center">
             <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
-              Ainda nao ha anuncios nesta busca em {cityName}
+              Ainda não há anúncios nesta busca em {cityName}
             </h2>
             <p className="mx-auto max-w-2xl text-sm leading-7 text-slate-600 dark:text-slate-300">
-              A Potilar esta ampliando o inventario no interior do RN. Publique o primeiro anuncio nesta cidade ou veja
-              todos os imoveis disponiveis em {cityName}.
+              A Potilar está ampliando o inventário no interior do RN. Publique o primeiro anúncio nesta cidade ou veja
+              todos os imóveis disponíveis em {cityName}.
             </p>
             <Link
               href={`/anunciar?cidade=${encodeURIComponent(cityName)}`}

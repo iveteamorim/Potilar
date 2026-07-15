@@ -53,11 +53,11 @@ export default function MobileListingsControls({ items }: Props) {
             value={sort}
             onChange={(event) => updateSort(event.target.value)}
             className="h-11 w-full appearance-none rounded-2xl border border-sand-200 bg-white pl-9 pr-3 text-xs font-bold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
-            aria-label="Ordenar anuncios"
+            aria-label="Ordenar anúncios"
           >
             <option value="">Ordenar</option>
-            <option value="price-asc">Menor preco</option>
-            <option value="price-desc">Maior preco</option>
+            <option value="price-asc">Menor preço</option>
+            <option value="price-desc">Maior preço</option>
           </select>
         </label>
         <button

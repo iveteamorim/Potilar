@@ -3,6 +3,7 @@ import FavoriteAwarePropertyList from '@/components/FavoriteAwarePropertyList';
 import PropertyMap from '@/components/PropertyMapLoader';
 import { BASE_URL } from '@/lib/config';
 import { fetchApprovedListingRows } from '@/lib/fetchApprovedListings';
+import { enrichPublicListings } from '@/lib/advertiserProfiles';
 import { listingRowToProperty, type ListingRow } from '@/lib/listings';
 import { orderListingsForDisplay } from '@/lib/propertyOrdering';
 import type { SeoIntentPage } from '@/lib/seoIntentPages';
@@ -13,8 +14,9 @@ async function getListings(page: SeoIntentPage) {
     const supabase = createClient();
     const rows = (await fetchApprovedListingRows(supabase, { withContact: false })) as ListingRow[];
     const listings = rows.map((row) => listingRowToProperty(row));
+    const enriched = await enrichPublicListings(supabase, listings);
     return orderListingsForDisplay(
-      listings.filter((listing) => {
+      enriched.filter((listing) => {
         if (page.propertyType && listing.propertyType !== page.propertyType) return false;
         if (page.transaction && listing.transaction !== page.transaction) return false;
         return true;
@@ -35,7 +37,7 @@ export default async function SeoIntentListingPage({ page, pagePath }: { page: S
         '@type': 'BreadcrumbList',
         itemListElement: [
           { '@type': 'ListItem', position: 1, name: 'Inicio', item: BASE_URL },
-          { '@type': 'ListItem', position: 2, name: 'Imoveis', item: `${BASE_URL}/imoveis` },
+          { '@type': 'ListItem', position: 2, name: 'Imóveis', item: `${BASE_URL}/imoveis` },
           { '@type': 'ListItem', position: 3, name: page.h1, item: pageUrl }
         ]
       },
@@ -58,12 +60,12 @@ export default async function SeoIntentListingPage({ page, pagePath }: { page: S
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <div className="mx-auto max-w-6xl space-y-8">
         <section className="max-w-3xl">
-          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-ocean-600">Imoveis no RN</p>
+          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-ocean-600">Imóveis no RN</p>
           <h1 className="mt-4 text-3xl font-semibold text-slate-900 dark:text-white">{page.h1}</h1>
           <p className="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300">{page.intro}</p>
           <div className="mt-5 flex flex-wrap gap-3">
             <Link href={page.searchHref} className="rounded-2xl bg-ocean-600 px-5 py-3 text-sm font-semibold text-white">
-              Ver anuncios
+              Ver anúncios
             </Link>
             <Link
               href="/imoveis/cidades"
@@ -75,7 +77,7 @@ export default async function SeoIntentListingPage({ page, pagePath }: { page: S
               href="/anunciar"
               className="rounded-2xl border border-sand-200 px-5 py-3 text-sm font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200"
             >
-              Anunciar imovel
+              Anunciar imóvel
             </Link>
           </div>
         </section>
@@ -84,16 +86,16 @@ export default async function SeoIntentListingPage({ page, pagePath }: { page: S
           <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
             <section className="space-y-4">
               <div>
-                <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Anuncios encontrados</h2>
+                <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Anúncios encontrados</h2>
                 <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-                  {listings.length} anuncio{listings.length === 1 ? '' : 's'} nesta busca.
+                  {listings.length} anúncio{listings.length === 1 ? '' : 's'} nesta busca.
                 </p>
               </div>
               <FavoriteAwarePropertyList items={listings} />
             </section>
             <aside className="glass-card h-fit p-4 sm:p-6 lg:sticky lg:top-24">
-              <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Mapa dos anuncios</h2>
-              <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">Veja onde estao as opcoes publicadas.</p>
+              <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Mapa dos anúncios</h2>
+              <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">Veja onde estão as opções publicadas.</p>
               <div className="mt-4">
                 <PropertyMap items={listings} height="420px" />
               </div>
@@ -101,13 +103,13 @@ export default async function SeoIntentListingPage({ page, pagePath }: { page: S
           </div>
         ) : (
           <section className="glass-card space-y-4 p-8 text-center">
-            <h2 className="text-xl font-semibold text-slate-900 dark:text-white">Ainda nao ha anuncios nesta busca</h2>
+            <h2 className="text-xl font-semibold text-slate-900 dark:text-white">Ainda não há anúncios nesta busca</h2>
             <p className="mx-auto max-w-2xl text-sm leading-7 text-slate-600 dark:text-slate-300">
-              A Potilar esta crescendo no Rio Grande do Norte. Voce pode buscar por cidade ou publicar o primeiro anuncio
+              A Potilar está crescendo no Rio Grande do Norte. Você pode buscar por cidade ou publicar o primeiro anúncio
               para esta categoria.
             </p>
             <Link href="/anunciar" className="inline-flex rounded-2xl bg-ocean-600 px-6 py-3 text-sm font-semibold text-white">
-              Anunciar gratis
+              Anunciar grátis
             </Link>
           </section>
         )}

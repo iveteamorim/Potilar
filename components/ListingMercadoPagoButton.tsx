@@ -33,13 +33,13 @@ export default function ListingMercadoPagoButton({ listingId, kind, label = 'Pag
       }
 
       if (!response.ok || !payload.initPoint) {
-        setMessage(payload.error ?? 'Nao foi possivel abrir o pagamento agora.');
+        setMessage(payload.error ?? 'Não foi possível abrir o pagamento agora.');
         return;
       }
 
       window.location.href = payload.initPoint;
     } catch {
-      setMessage('Nao foi possivel abrir o pagamento agora.');
+      setMessage('Não foi possível abrir o pagamento agora.');
     } finally {
       setLoading(false);
     }

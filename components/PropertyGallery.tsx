@@ -27,7 +27,7 @@ export default function PropertyGallery({ images }: { images: string[] }) {
           animate={{ opacity: 1 }}
           className="relative h-[240px] w-full overflow-hidden rounded-2xl bg-sand-100 sm:h-[300px] lg:h-[360px]"
         >
-          <Image src={safeImages[active]} alt="Foto do imovel" fill className="object-cover transition duration-500 group-hover:scale-105" />
+          <Image src={safeImages[active]} alt="Foto do imóvel" fill className="object-cover transition duration-500 group-hover:scale-105" />
           <span className="absolute bottom-3 right-3 rounded-full bg-slate-950/75 px-3 py-1 text-xs font-semibold text-white">
             {active + 1}/{safeImages.length} fotos
           </span>
@@ -45,7 +45,7 @@ export default function PropertyGallery({ images }: { images: string[] }) {
             }`}
             aria-label={`Ver foto ${index + 1}`}
           >
-            <Image src={image} alt="Miniatura do imovel" fill className="object-cover" />
+            <Image src={image} alt="Miniatura do imóvel" fill className="object-cover" />
           </button>
         ))}
       </div>
@@ -78,7 +78,7 @@ export default function PropertyGallery({ images }: { images: string[] }) {
           </button>
           <div className="mx-auto flex h-full max-w-6xl items-center justify-center">
             <div className="relative h-[82vh] w-full">
-              <Image src={safeImages[active]} alt="Foto ampliada do imovel" fill className="object-contain" />
+              <Image src={safeImages[active]} alt="Foto ampliada do imóvel" fill className="object-contain" />
             </div>
           </div>
           <p className="absolute bottom-5 left-1/2 -translate-x-1/2 rounded-full bg-white/10 px-4 py-2 text-sm font-semibold text-white">
