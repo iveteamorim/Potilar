@@ -8,9 +8,9 @@
 [![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-3ecf8e?style=flat-square&logo=supabase&logoColor=white)](https://supabase.com)
 [![Vercel](https://img.shields.io/badge/Deployed-Vercel-000?style=flat-square&logo=vercel&logoColor=white)](https://vercel.com)
 
-Potilar is a **full-stack product in production** — not a UI mockup. It covers the complete lifecycle of a local property portal: advertiser onboarding, listing moderation, Pix payments, map search, market intelligence, SEO content, and admin operations.
+Potilar is a **full-stack product in production** - not a UI mockup. It covers the complete lifecycle of a local property portal: advertiser onboarding, listing moderation, Pix payments, map search, market intelligence, SEO content, and admin operations.
 
-**Author:** [Ivete Amorim](https://github.com/iveteamorim) · Full-stack product engineering (solo build)
+**Author:** [Ivete Amorim](https://github.com/iveteamorim) - Full-stack product engineering (solo build)
 
 ---
 
@@ -28,13 +28,14 @@ Potilar is a **full-stack product in production** — not a UI mockup. It covers
 
 ## Highlights for technical review
 
-- **Auth & roles** — individual owners, agents, agencies; profile and document flows
-- **Payments** — Pix QR / copy-paste, admin confirmation before paid listing approval
-- **Public access layer** — explicit RPCs + RLS fixes for anonymous listing discovery
-- **Map & geo** — Leaflet, city/neighborhood resolution, Nominatim fallback, wrong-pin correction
-- **Preço Justo RN** — pricing intelligence with FipeZAP sync and approximate-market UX
-- **Automation** — cron: expire listings, sync market benchmarks monthly
-- **Admin** — moderation, Pix confirmation, highlights, AI-assisted news generation
+- **Auth & roles** - individual owners, agents, agencies; profile and document flows
+- **Payments** - Pix QR / copy-paste, admin confirmation before paid listing approval
+- **Public access layer** - explicit RPCs + RLS fixes for anonymous listing discovery
+- **Map & geo** - Leaflet, city/neighborhood resolution, Nominatim fallback, wrong-pin correction
+- **Preco Justo RN** - pricing intelligence with FipeZAP sync, AVM-style scoring and approximate-market UX
+- **Broker profiles** - public professional pages, brand/logo exposure and Potilar score signals
+- **Automation** - cron: expire listings, sync market benchmarks monthly
+- **Admin** - moderation, Pix confirmation, highlights, AI-assisted news generation
 
 ---
 
@@ -58,7 +59,7 @@ Potilar was built as a focused marketplace for a regional market rather than a g
 
 - Home page with hero search, featured listings, map section and latest news
 - Listing search with filters, pagination and stable ordering
-- Property detail pages with gallery, contact actions and share tools
+- Property detail pages with gallery, contact actions, tours, price guidance and share tools
 - City-level listing pages
 - Public advertiser profiles for agents and agencies
 - Mobile-friendly listing and map experience
@@ -89,6 +90,7 @@ Potilar was built as a focused marketplace for a regional market rather than a g
 - "Preco Justo RN" pricing guidance for listing creation
 - FipeZAP sync endpoint for Natal benchmarks
 - Calibrated regional estimates for interior cities
+- Listing-level presentation signals and broker scoring
 - Softer confidence messaging for approximate markets
 
 ---
@@ -197,6 +199,8 @@ SQL files live in [`supabase/`](supabase). For a fresh project, start with:
 8. `supabase/green_block_migrations.sql`
 9. `supabase/market_benchmarks.sql`
 10. `supabase/owner_listing_controls.sql`
+11. `supabase/tour_url_migration.sql`
+12. `supabase/advertiser_brand_public_rpc.sql`
 
 Some SQL files are incremental migrations created while the product evolved. They are kept explicit so production changes are auditable.
 
@@ -290,4 +294,4 @@ Production deployment on **Vercel** with **Supabase** backend. Actively maintain
 
 This repository is intentionally **product-heavy**: business flows, moderation, payment lifecycle, and regional market behavior take priority over being a small UI-only demo.
 
-**Recruiters / hiring managers:** live demo at [potilar.com.br](https://potilar.com.br) · profile & other work at [github.com/iveteamorim](https://github.com/iveteamorim)
+**Recruiters / hiring managers:** live demo at [potilar.com.br](https://potilar.com.br) - profile & other work at [github.com/iveteamorim](https://github.com/iveteamorim)
