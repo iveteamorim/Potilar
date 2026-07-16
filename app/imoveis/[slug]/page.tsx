@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { AlertTriangle, CheckCircle2, Flag, Mail, MessageCircle, Phone, PlayCircle, ShieldCheck } from 'lucide-react';
+import { AlertTriangle, Box, CheckCircle2, Flag, Mail, MessageCircle, Phone, PlayCircle, ShieldCheck } from 'lucide-react';
 import { BASE_URL } from '@/lib/config';
 import { notFound } from 'next/navigation';
 import PropertyMap from '@/components/PropertyMapLoader';
@@ -9,6 +9,7 @@ import PropertyCard from '@/components/PropertyCard';
 import ShareButtons from '@/components/ShareButtons';
 import FavoriteButton from '@/components/FavoriteButton';
 import ListingViewTracker from '@/components/ListingViewTracker';
+import ListingPrecoJustoSection from '@/components/ListingPrecoJustoSection';
 import WhatsAppStatLink from '@/components/WhatsAppStatLink';
 import ListingMessageButton from '@/components/ListingMessageButton';
 import { getPublicProfilePath } from '@/lib/publicProfile';
@@ -16,6 +17,7 @@ import { properties, type Property } from '@/data/properties';
 import { createClient } from '@/lib/supabase/server';
 import { fetchPublicListingDetail } from '@/lib/fetchApprovedListings';
 import { listingRowToProperty, PUBLIC_LISTING_SELECT_WITH_CONTACT } from '@/lib/listings';
+import { enrichPublicListings } from '@/lib/advertiserProfiles';
 import { formatListingDateLabel } from '@/lib/dateLabels';
 import { getCleanPropertyTitle } from '@/lib/displayTitle';
 
@@ -44,17 +46,20 @@ async function getProperty(slug: string): Promise<Property | null> {
 
     if (!data) return null;
     let videoUrl = data.video_url ?? null;
+    let tourUrl = data.tour_url ?? null;
 
-    if (!videoUrl && data.id) {
-      const videoResult = await supabase.from('listings').select('video_url').eq('id', data.id).maybeSingle();
-      if (!videoResult.error) {
-        videoUrl = videoResult.data?.video_url ?? null;
+    if ((!videoUrl || !tourUrl) && data.id) {
+      const mediaResult = await supabase.from('listings').select('video_url,tour_url').eq('id', data.id).maybeSingle();
+      if (!mediaResult.error && mediaResult.data) {
+        videoUrl = videoUrl ?? mediaResult.data.video_url ?? null;
+        tourUrl = tourUrl ?? mediaResult.data.tour_url ?? null;
       }
     }
 
     return listingRowToProperty({
       ...data,
       video_url: videoUrl,
+      tour_url: tourUrl,
       owner_id: data.owner_id ?? null,
       area_sqm: data.area_sqm ?? null,
       condo_fee: data.condo_fee ?? null,
@@ -126,7 +131,8 @@ async function getAdvertiserListings(property: Property): Promise<Property[]> {
       .limit(3);
 
     if (error) return [];
-    return ((data ?? []) as any[]).map((listing) => listingRowToProperty(listing));
+    const listings = ((data ?? []) as any[]).map((listing) => listingRowToProperty(listing));
+    return enrichPublicListings(supabase, listings);
   } catch {
     return [];
   }
@@ -405,6 +411,7 @@ export default async function PropertyDetailPage({ params }: { params: { slug: s
               </div>
             )}
           </div>
+        <ListingPrecoJustoSection property={property} />
         <section className="space-y-4">
           <p className="text-sm leading-6 text-slate-600 dark:text-slate-300">{property.description}</p>
           {property.features.length > 0 && (
@@ -423,17 +430,28 @@ export default async function PropertyDetailPage({ params }: { params: { slug: s
           <div className="lg:hidden">
             {contactCard}
           </div>
-          {property.videoUrl && (
-            <a
-              href={property.videoUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-2 rounded-2xl border border-ocean-200 bg-ocean-50 px-5 py-3 text-sm font-semibold text-ocean-800 transition hover:border-ocean-400 hover:bg-ocean-100 dark:border-ocean-900 dark:bg-ocean-950/40 dark:text-ocean-100"
-            >
-              <PlayCircle className="h-4 w-4" aria-hidden="true" />
-              Ver vídeo do imóvel
-            </a>
-          )}
+          <div className="flex flex-wrap gap-3">
+            {property.videoUrl && (
+              <a
+                href={property.videoUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-2 rounded-2xl border border-ocean-200 bg-ocean-50 px-5 py-3 text-sm font-semibold text-ocean-800 transition hover:border-ocean-400 hover:bg-ocean-100 dark:border-ocean-900 dark:bg-ocean-950/40 dark:text-ocean-100"
+              >
+                <PlayCircle className="h-4 w-4" aria-hidden="true" />
+                Ver vídeo do imóvel
+              </a>
+            )}
+            {property.tourUrl && (
+              <a
+                href="#tour-virtual"
+                className="inline-flex items-center gap-2 rounded-2xl border border-violet-200 bg-violet-50 px-5 py-3 text-sm font-semibold text-violet-800 transition hover:border-violet-400 hover:bg-violet-100 dark:border-violet-900 dark:bg-violet-950/40 dark:text-violet-100"
+              >
+                <Box className="h-4 w-4" aria-hidden="true" />
+                Ver tour virtual 3D
+              </a>
+            )}
+          </div>
           <div className="flex gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-100">
             <AlertTriangle className="mt-0.5 h-5 w-5 flex-shrink-0" aria-hidden="true" />
             <p>
@@ -458,11 +476,14 @@ export default async function PropertyDetailPage({ params }: { params: { slug: s
           </p>
         </section>
         {property.tourUrl && (
-          <section className="space-y-4">
-            <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">Tour 360</h2>
+          <section id="tour-virtual" className="scroll-mt-24 space-y-4">
+            <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">Tour virtual 3D</h2>
+            <p className="text-sm text-slate-600 dark:text-slate-300">
+              Explore o imóvel em 360° antes de agendar uma visita presencial.
+            </p>
             <div className="aspect-video w-full overflow-hidden rounded-3xl border border-sand-200 bg-sand-50 dark:border-slate-800 dark:bg-slate-900">
               <iframe
-                title="Tour 360 do imóvel"
+                title="Tour virtual 3D do imóvel"
                 src={property.tourUrl}
                 className="h-full w-full"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"

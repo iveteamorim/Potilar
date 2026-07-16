@@ -9,6 +9,7 @@ import { createClient } from '@/lib/supabase/client';
 import { geocodeListingAddress } from '@/lib/geocodeListing';
 import { KNOWN_CITY_NAMES, normalizeKnownCityName, resolveListingCoordinates } from '@/lib/locationCoordinates';
 import { formatPlaceName as formatDisplayPlaceName } from '@/lib/textFormat';
+import { normalizeTourUrl } from '@/lib/tourUrl';
 
 type ListingEditorData = {
   id: string;
@@ -28,6 +29,7 @@ type ListingEditorData = {
   features: string[];
   images: string[];
   video_url?: string | null;
+  tour_url?: string | null;
   contact_name?: string | null;
   contact_phone?: string | null;
   contact_whatsapp?: string | null;
@@ -98,6 +100,7 @@ export default function ListingEditorForm({
   const [description, setDescription] = useState(listing.description);
   const [features, setFeatures] = useState((listing.features ?? []).join(', '));
   const [videoUrl, setVideoUrl] = useState(listing.video_url ?? '');
+  const [tourUrl, setTourUrl] = useState(listing.tour_url ?? '');
   const [condoIncluded, setCondoIncluded] = useState(Boolean(listing.condo_included));
   const [isPetFriendly, setIsPetFriendly] = useState(Boolean(listing.is_pet_friendly));
   const [isFurnished, setIsFurnished] = useState(Boolean(listing.is_furnished));
@@ -252,6 +255,12 @@ export default function ListingEditorForm({
       return;
     }
 
+    const normalizedTourUrl = normalizeTourUrl(tourUrl);
+    if (tourUrl.trim() && !normalizedTourUrl) {
+      setStatus('Informe um link de tour virtual 3D válido, com http:// ou https://.');
+      return;
+    }
+
     if (contactMethods.length === 0) {
       setStatus('Escolha pelo menos um meio de contato.');
       return;
@@ -335,6 +344,7 @@ export default function ListingEditorForm({
         .from('listings')
         .update({
           video_url: normalizedVideoUrl,
+          tour_url: normalizedTourUrl,
           condo_included: transaction === 'Aluguel' && condoIncluded,
           is_pet_friendly: isPetFriendly,
           is_furnished: isFurnished
@@ -472,6 +482,21 @@ export default function ListingEditorForm({
           type="url"
           value={videoUrl}
           onChange={(event) => setVideoUrl(event.target.value)}
+          placeholder="https://..."
+          className="mt-3 w-full rounded-2xl border border-sand-200 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-900"
+        />
+      </div>
+
+      <div className="rounded-2xl border border-violet-100 bg-violet-50/40 p-4 dark:border-slate-700 dark:bg-slate-900">
+        <label className="block text-sm font-semibold text-slate-900 dark:text-white" htmlFor="listing-tour-url">
+          Tour virtual 3D
+        </label>
+        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Cole o link do Matterport, Kuula, CloudPano ou outro tour em 360°.</p>
+        <input
+          id="listing-tour-url"
+          type="url"
+          value={tourUrl}
+          onChange={(event) => setTourUrl(event.target.value)}
           placeholder="https://..."
           className="mt-3 w-full rounded-2xl border border-sand-200 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-900"
         />

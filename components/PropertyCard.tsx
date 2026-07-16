@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
-import { Bath, BedDouble, Camera, Car, ChevronLeft, ChevronRight, CheckCircle2, Mail, MapPin, MessageCircle, Phone, PlayCircle, Ruler } from 'lucide-react';
+import { Bath, BedDouble, Box, Camera, Car, ChevronLeft, ChevronRight, CheckCircle2, Mail, MapPin, MessageCircle, Phone, PlayCircle, Ruler } from 'lucide-react';
 import type { Property } from '@/data/properties';
 import { formatListingDateLabel } from '@/lib/dateLabels';
 import { getCleanPropertyTitle } from '@/lib/displayTitle';
@@ -128,6 +128,7 @@ export default function PropertyCard({
   const featuredLabel = isSuperFeatured ? 'Super destaque' : 'Destaque';
   const dateLabel = formatListingDateLabel(property.createdAt, property.updatedAt);
   const hasVideo = Boolean(property.videoUrl);
+  const hasTour = Boolean(property.tourUrl);
   const contactMethods =
     property.contactMethods && property.contactMethods.length > 0
       ? property.contactMethods
@@ -177,20 +178,52 @@ export default function PropertyCard({
   const isDenseContactRow = contactActionCount >= 3;
   const isHorizontal = variant === 'horizontal';
   const isCompact = variant === 'compact';
-  const horizontalImageRowStart = 'md:row-start-1';
-  const horizontalTextRowStart = 'md:row-start-1';
-  const horizontalContactRowStart = 'md:row-start-2';
   const cardShellClassName = isHorizontal
-    ? `${cardClassName} md:grid md:grid-cols-[minmax(240px,34%)_1fr] md:items-stretch`
+    ? `${cardClassName} md:grid md:grid-cols-[minmax(200px,32%)_1fr] md:items-stretch`
     : cardClassName;
   const imageClassName = isHorizontal
-    ? `relative h-56 w-full overflow-hidden md:col-start-1 ${horizontalImageRowStart} md:row-span-2 md:h-full md:min-h-[220px]`
+    ? 'relative h-44 w-full overflow-hidden md:col-start-1 md:h-full md:min-h-[10.75rem]'
     : isCompact
       ? 'relative aspect-[8/5] w-full shrink-0 overflow-hidden'
       : 'relative h-60 w-full overflow-hidden lg:h-64';
-  const favoriteButtonClassName = isCompact ? 'relative z-20 h-8 w-8 shadow-md' : 'relative z-20 h-10 w-10 shadow-md';
+  const favoriteButtonClassName = isCompact
+    ? 'relative z-20 h-8 w-8 shadow-md'
+    : isHorizontal
+      ? 'relative z-20 h-9 w-9 shadow-md'
+      : 'relative z-20 h-10 w-10 shadow-md';
   const listingIdForChat = property.id.startsWith('user-') ? property.id.replace(/^user-/, '') : property.id;
-  const advertiserBrandSize = isHorizontal ? 'large' : isCompact ? 'compact' : 'default';
+  const advertiserBrandSize = isCompact ? 'compact' : 'default';
+  const bodyPaddingClassName = isHorizontal
+    ? hasContactActions
+      ? 'gap-2 px-3 pt-3 md:px-4 md:pt-4'
+      : 'gap-2 p-3 md:p-4'
+    : isCompact
+      ? 'gap-1.5 p-3'
+      : 'gap-3 p-5';
+  const titleClassName = isHorizontal
+    ? 'text-lg md:text-xl'
+    : isCompact
+      ? 'text-base'
+      : 'text-xl';
+  const priceClassName = isHorizontal ? 'text-xl md:text-[1.35rem]' : isCompact ? 'text-[1.15rem]' : 'text-[1.7rem]';
+  const specsClassName = isHorizontal
+    ? 'mt-1.5 gap-x-4 gap-y-1 text-xs'
+    : isCompact
+      ? 'mt-1.5 gap-x-3 gap-y-1 text-xs'
+      : 'mt-3 gap-x-5 gap-y-2 text-sm';
+  const tagsClassName = isHorizontal ? 'mt-1.5' : isCompact ? 'mt-2' : 'mt-3';
+  const priceSectionClassName = isHorizontal
+    ? 'mt-0 border-t border-sand-100 pt-2.5 dark:border-slate-800'
+    : isCompact
+      ? 'mt-auto min-h-[72px] border-t border-sand-100 pt-2 dark:border-slate-800'
+      : 'mt-auto min-h-[142px] border-t border-sand-100 pt-4 dark:border-slate-800';
+  const contactButtonClassName = isHorizontal
+    ? isDenseContactRow
+      ? 'gap-1 px-1.5 py-1.5 text-[11px]'
+      : 'gap-1.5 px-2 py-1.5 text-xs'
+    : isDenseContactRow
+      ? 'gap-1 px-1.5 py-2 text-[11px]'
+      : 'gap-1.5 px-2.5 py-2 text-xs';
 
   function showPreviousImage(event: React.MouseEvent<HTMLButtonElement>) {
     event.preventDefault();
@@ -204,9 +237,72 @@ export default function PropertyCard({
     setImageIndex((current) => (current + 1) % images.length);
   }
 
-  const content = (
-    <>
-      <div className={imageClassName}>
+  const contactButtonGrid = (
+    <div className={isDenseContactRow ? 'grid grid-cols-3 gap-1.5' : 'grid grid-cols-2 gap-1.5'}>
+      {hasPotilarChat && (
+        <ListingMessageButton
+          listingId={listingIdForChat}
+          ownerId={property.ownerId!}
+          title={displayTitle}
+          label="Chat"
+          buttonClassName={`inline-flex w-full items-center justify-center rounded-lg border border-ocean-200 font-semibold text-ocean-700 transition hover:bg-ocean-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800 ${contactButtonClassName}`}
+        />
+      )}
+      {contactButtons.map((button) => {
+        if (!button) return null;
+        const Icon = button.icon;
+        const denseLabel =
+          button.key === 'whatsapp' ? 'Zap' : button.key === 'phone' ? 'Tel' : button.key === 'email' ? 'Email' : button.label;
+        return (
+          <a
+            key={button.key}
+            href={button.href}
+            target={button.external ? '_blank' : undefined}
+            rel={button.external ? 'noreferrer' : undefined}
+            className={`inline-flex w-full items-center justify-center rounded-lg font-semibold ${button.className} ${contactButtonClassName}`}
+          >
+            <Icon className={`${isHorizontal ? 'h-3.5 w-3.5' : 'h-4 w-4'}`} aria-hidden="true" />
+            {isDenseContactRow ? denseLabel : button.label}
+          </a>
+        );
+      })}
+    </div>
+  );
+
+  const contactActions = hasContactActions ? (
+    isHorizontal ? (
+      <div className="mt-2 border-t border-sand-100 pt-2.5 pb-0 dark:border-slate-800">
+        <div className="flex items-center gap-2">
+          <div className="min-w-0 flex-1">{contactButtonGrid}</div>
+          <FavoriteButton
+            propertyId={property.id}
+            title={displayTitle}
+            variant="floating"
+            floatingClassName={favoriteButtonClassName}
+          />
+        </div>
+      </div>
+    ) : (
+      <div
+        className={
+          isCompact ? 'border-t border-sand-100 p-2.5 dark:border-slate-800' : 'border-t border-sand-100 p-4 dark:border-slate-800'
+        }
+      >
+        <div className={`${isCompact ? 'mb-2' : 'mb-2.5'} flex justify-end`}>
+          <FavoriteButton
+            propertyId={property.id}
+            title={displayTitle}
+            variant="floating"
+            floatingClassName={favoriteButtonClassName}
+          />
+        </div>
+        {contactButtonGrid}
+      </div>
+    )
+  ) : null;
+
+  const imageBlock = (
+    <div className={imageClassName}>
         {image.startsWith('data:') || image.startsWith('blob:') ? (
           <img src={image} alt={imageAlt} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
         ) : (
@@ -241,6 +337,12 @@ export default function PropertyCard({
               Com video
             </span>
           )}
+          {hasTour && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-violet-600/95 px-3 py-1 text-xs font-semibold text-white">
+              <Box className="h-3.5 w-3.5" aria-hidden="true" />
+              Tour 3D
+            </span>
+          )}
         </div>
         <span className="absolute bottom-3 right-3 inline-flex items-center gap-1 rounded-full bg-slate-950/80 px-3 py-1 text-xs font-semibold text-white">
           <Camera className="h-3.5 w-3.5" aria-hidden="true" />
@@ -267,29 +369,36 @@ export default function PropertyCard({
           </>
         )}
       </div>
-      <div className={`flex flex-1 flex-col ${isCompact ? 'gap-1.5 p-3' : 'gap-3 p-5'} ${isHorizontal ? `md:col-start-2 ${horizontalTextRowStart} md:self-start` : ''}`}>
+  );
+
+  const detailsBlock = (
+    <>
         <div className={isCompact ? 'min-h-[62px]' : isHorizontal ? '' : 'min-h-[116px]'}>
-          <div className="flex items-start justify-between gap-3">
+          <div className="flex items-start justify-between gap-2.5">
             <div className="min-w-0 flex-1">
-              <h3 className={`${isHorizontal ? 'text-xl md:text-2xl' : isCompact ? 'text-base' : 'text-xl'} line-clamp-2 font-semibold leading-snug text-ocean-700 dark:text-ocean-200`}>{displayTitle}</h3>
-              <p className={`${isCompact ? 'mt-1.5 text-xs' : 'mt-2 text-sm'} flex items-center gap-2 text-slate-500 dark:text-slate-400`}>
-                <MapPin className="h-4 w-4 shrink-0" />
+              <h3 className={`${titleClassName} line-clamp-2 font-semibold leading-snug text-ocean-700 dark:text-ocean-200`}>
+                {displayTitle}
+              </h3>
+              <p
+                className={`${isHorizontal ? 'mt-1 text-xs' : isCompact ? 'mt-1.5 text-xs' : 'mt-2 text-sm'} flex items-center gap-1.5 text-slate-500 dark:text-slate-400`}
+              >
+                <MapPin className={`${isHorizontal ? 'h-3.5 w-3.5' : 'h-4 w-4'} shrink-0`} />
                 {property.location}, RN
               </p>
               {dateLabel && (
-                <div className={isCompact ? 'mt-1.5 flex flex-wrap items-center gap-2' : 'mt-2 flex flex-wrap items-center gap-2'}>
-                  <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">{dateLabel}</span>
+                <div className={`${isHorizontal ? 'mt-1' : isCompact ? 'mt-1.5' : 'mt-2'} flex flex-wrap items-center gap-2`}>
+                  <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">{dateLabel}</span>
                 </div>
               )}
             </div>
             <AdvertiserBrandMark property={property} size={advertiserBrandSize} />
           </div>
         </div>
-        <div className={`${isHorizontal ? 'mt-1' : isCompact ? 'mt-auto min-h-[72px]' : 'mt-auto min-h-[142px]'} border-t border-sand-100 ${isCompact ? 'pt-2' : 'pt-4'} dark:border-slate-800`}>
-          <span className={`block ${isCompact ? 'text-[1.15rem]' : 'text-[1.7rem]'} font-bold leading-tight text-ocean-800 dark:text-sand-50`}>
+        <div className={priceSectionClassName}>
+          <span className={`block ${priceClassName} font-bold leading-tight text-ocean-800 dark:text-sand-50`}>
             {formatPropertyPrice(property)}
           </span>
-          <div className={`${isCompact ? 'mt-1.5 gap-x-3 gap-y-1 text-xs' : 'mt-3 gap-x-5 gap-y-2 text-sm'} flex flex-wrap items-center font-semibold text-slate-500 dark:text-slate-400`}>
+          <div className={`${specsClassName} flex flex-wrap items-center font-semibold text-slate-500 dark:text-slate-400`}>
             <span className="inline-flex items-center gap-1">
               <BedDouble className="h-4 w-4" />
               {property.bedrooms}
@@ -310,7 +419,7 @@ export default function PropertyCard({
             )}
           </div>
           {(property.condoIncluded || property.isFurnished || property.isPetFriendly) && (
-            <div className={`${isCompact ? 'mt-2' : 'mt-3'} flex flex-wrap gap-2`}>
+            <div className={`${tagsClassName} flex flex-wrap gap-1.5`}>
               {property.condoIncluded && (
                 <span className="rounded-full bg-ocean-50 px-2.5 py-1 text-[11px] font-semibold text-ocean-700 dark:bg-ocean-950/40 dark:text-ocean-200">
                   Condomínio incluso
@@ -329,63 +438,52 @@ export default function PropertyCard({
             </div>
           )}
         </div>
-      </div>
     </>
   );
 
-  const contactActions = hasContactActions ? (
-    <div className={isHorizontal ? `border-t border-sand-100 p-3 dark:border-slate-800 md:col-start-2 ${horizontalContactRowStart} md:border-t-0 md:p-5 md:pt-0` : isCompact ? 'border-t border-sand-100 p-2.5 dark:border-slate-800' : 'border-t border-sand-100 p-4 dark:border-slate-800'}>
-      <div className={`${isCompact ? 'mb-2' : 'mb-2.5'} flex justify-end`}>
-        <FavoriteButton
-          propertyId={property.id}
-          title={displayTitle}
-          variant="floating"
-          floatingClassName={favoriteButtonClassName}
-        />
-      </div>
-      <div className={isDenseContactRow ? 'grid grid-cols-3 gap-1.5' : 'grid grid-cols-2 gap-2'}>
-        {hasPotilarChat && (
-          <ListingMessageButton
-            listingId={listingIdForChat}
-            ownerId={property.ownerId!}
-            title={displayTitle}
-            label="Chat"
-            buttonClassName={`inline-flex w-full items-center justify-center rounded-lg border border-ocean-200 font-semibold text-ocean-700 transition hover:bg-ocean-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800 ${isDenseContactRow ? 'gap-1 px-1.5 py-2 text-[11px]' : 'gap-1.5 px-2.5 py-2 text-xs'}`}
-          />
-        )}
-        {contactButtons.map((button) => {
-          if (!button) return null;
-          const Icon = button.icon;
-          const denseLabel =
-            button.key === 'whatsapp' ? 'Zap' : button.key === 'phone' ? 'Tel' : button.key === 'email' ? 'Email' : button.label;
-          return (
-            <a
-              key={button.key}
-              href={button.href}
-              target={button.external ? '_blank' : undefined}
-              rel={button.external ? 'noreferrer' : undefined}
-              className={`inline-flex w-full items-center justify-center rounded-lg font-semibold ${button.className} ${isDenseContactRow ? 'gap-1 px-1.5 py-2 text-[11px]' : 'gap-1.5 px-2.5 py-2 text-xs'}`}
-            >
-              <Icon className="h-4 w-4" aria-hidden="true" />
-              {isDenseContactRow ? denseLabel : button.label}
-            </a>
-          );
-        })}
-      </div>
-    </div>
+  const content = (
+    <>
+      {imageBlock}
+      <div className={`flex flex-1 flex-col ${bodyPaddingClassName}`}>{detailsBlock}</div>
+    </>
+  );
+
+  const floatingFavorite = !hasContactActions && !panelPreview ? (
+    <FavoriteButton
+      propertyId={property.id}
+      title={displayTitle}
+      variant="floating"
+      floatingClassName="absolute bottom-3 right-3 z-20 h-10 w-10"
+    />
   ) : null;
+
+  if (isHorizontal) {
+    const detailsColumn = (
+      <div className={`flex flex-col ${bodyPaddingClassName} md:col-start-2`}>
+        {isUserListing ? (
+          detailsBlock
+        ) : (
+          <Link href={getListingHref(property)} className="block">
+            {detailsBlock}
+          </Link>
+        )}
+        {contactActions}
+      </div>
+    );
+
+    return (
+      <article className={cardShellClassName}>
+        {floatingFavorite}
+        {imageBlock}
+        {detailsColumn}
+      </article>
+    );
+  }
 
   if (isUserListing) {
     return (
       <article className={cardShellClassName}>
-        {!hasContactActions && (
-          <FavoriteButton
-            propertyId={property.id}
-            title={displayTitle}
-            variant="floating"
-            floatingClassName="absolute bottom-3 right-3 z-20 h-10 w-10"
-          />
-        )}
+        {floatingFavorite}
         {content}
         {contactActions}
       </article>
@@ -394,15 +492,8 @@ export default function PropertyCard({
 
   return (
     <article className={cardShellClassName}>
-      {!hasContactActions && (
-        <FavoriteButton
-          propertyId={property.id}
-          title={displayTitle}
-          variant="floating"
-          floatingClassName="absolute bottom-3 right-3 z-20 h-10 w-10"
-        />
-      )}
-      <Link href={getListingHref(property)} className={isHorizontal ? 'contents' : 'flex h-full flex-col'}>
+      {floatingFavorite}
+      <Link href={getListingHref(property)} className="flex h-full flex-col">
         {content}
       </Link>
       {contactActions}

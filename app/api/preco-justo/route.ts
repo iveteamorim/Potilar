@@ -1,16 +1,13 @@
 import { NextResponse } from 'next/server';
-import { buildPriceInsight } from '@/lib/priceIntelligence';
+import { buildPriceInsight, type PriceInsightInput } from '@/lib/priceIntelligence';
 
 export async function POST(request: Request) {
   try {
-    const body = (await request.json()) as {
+    const body = (await request.json()) as PriceInsightInput & {
       price?: number;
       transaction?: string;
       propertyType?: string;
       location?: string;
-      neighborhood?: string | null;
-      bedrooms?: number;
-      areaSqm?: number;
     };
 
     const price = Number(body.price ?? 0);
@@ -29,7 +26,18 @@ export async function POST(request: Request) {
       location,
       neighborhood: body.neighborhood ?? null,
       bedrooms: Number(body.bedrooms ?? 0) || undefined,
-      areaSqm: Number(body.areaSqm ?? 0) || undefined
+      bathrooms: Number(body.bathrooms ?? 0) || undefined,
+      parking: Number(body.parking ?? 0) || undefined,
+      areaSqm: Number(body.areaSqm ?? 0) || undefined,
+      lat: Number(body.lat ?? 0) || undefined,
+      lng: Number(body.lng ?? 0) || undefined,
+      isFurnished: Boolean(body.isFurnished),
+      isPetFriendly: Boolean(body.isPetFriendly),
+      imageCount: Number(body.imageCount ?? 0) || undefined,
+      videoUrl: body.videoUrl ?? null,
+      tourUrl: body.tourUrl ?? null,
+      featureCount: Number(body.featureCount ?? 0) || undefined,
+      descriptionLength: Number(body.descriptionLength ?? 0) || undefined
     });
 
     return NextResponse.json({ insight });

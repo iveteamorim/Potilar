@@ -9,6 +9,7 @@ import { SUPABASE_URL } from '@/lib/supabase/config';
 import AccountNotice from '@/components/AccountNotice';
 import DemoProfileImageManager from '@/components/DemoProfileImageManager';
 import ProfessionalProfilePanelCard from '@/components/ProfessionalProfilePanelCard';
+import BrokerPotilarScoreCard from '@/components/BrokerPotilarScoreCard';
 import ListingMercadoPagoButton from '@/components/ListingMercadoPagoButton';
 import LogoutButton from '@/components/LogoutButton';
 import PropertyCard from '@/components/PropertyCard';
@@ -19,6 +20,7 @@ import { getListingHref } from '@/lib/listingUrls';
 import { getPaymentCode } from '@/lib/pix';
 import { buildProfessionalProfileSlug, getAccountTypeLabel, getPublicProfilePath, isProfessionalAccountType } from '@/lib/publicProfile';
 import { slugify } from '@/lib/slugify';
+import { computeBrokerGamification } from '@/lib/brokerGamification';
 import {
   cancelListingHighlight,
   cancelProfessionalSubscription,
@@ -138,6 +140,7 @@ function toPropertyCardListing(listing: any, profile: any): Property {
     condoFee: listing.condo_fee ?? undefined,
     images: Array.isArray(listing.images) ? listing.images : [],
     videoUrl: listing.video_url ?? undefined,
+    tourUrl: listing.tour_url ?? undefined,
     isFeatured: Boolean(listing.featured_plan && listing.featured_payment_status === 'confirmed'),
     featuredPlan: listing.featured_plan ?? undefined,
     contactName: listing.contact_name ?? profile?.company_name ?? profile?.full_name ?? undefined,
@@ -298,7 +301,7 @@ export default async function MinhaContaPage({
 
   const listingsResult = await supabase
     .from('listings')
-    .select('id,title,property_type,location,neighborhood,transaction,price,price_period,bedrooms,bathrooms,parking,area_sqm,lat,lng,is_pet_friendly,is_furnished,condo_fee,description,features,video_url,status,images,is_paid,payment_status,payment_amount,payment_confirmed_at,payment_proof_sent_at,listing_expires_at,featured_plan,featured_payment_status,featured_payment_amount,featured_payment_proof_sent_at,featured_starts_at,featured_expires_at,contact_name,contact_phone,contact_whatsapp,contact_email,contact_methods,created_at,updated_at')
+    .select('id,title,property_type,location,neighborhood,transaction,price,price_period,bedrooms,bathrooms,parking,area_sqm,lat,lng,is_pet_friendly,is_furnished,condo_fee,description,features,video_url,tour_url,status,images,is_paid,payment_status,payment_amount,payment_confirmed_at,payment_proof_sent_at,listing_expires_at,featured_plan,featured_payment_status,featured_payment_amount,featured_payment_proof_sent_at,featured_starts_at,featured_expires_at,contact_name,contact_phone,contact_whatsapp,contact_email,contact_methods,created_at,updated_at')
     .eq('owner_id', user.id)
     .order('created_at', { ascending: false });
   let listings: any[] | null = listingsResult.data;
@@ -375,6 +378,7 @@ export default async function MinhaContaPage({
     const profileImageUrl = profile.profile_image_url || DEFAULT_PROFESSIONAL_PHOTO;
     const bannerImageUrl = profile.banner_image_url || DEFAULT_PROFESSIONAL_BANNER;
     const professionalListings = (listings ?? []).map((listing) => toPropertyCardListing(listing, profile));
+    const brokerGamification = computeBrokerGamification(listings ?? [], profile);
     const listingSearch = (searchParams?.anuncio_q ?? '').trim();
     const normalizedListingSearch = normalizeForSearch(listingSearch);
     const filteredProfessionalListings = normalizedListingSearch
@@ -517,6 +521,8 @@ export default async function MinhaContaPage({
                 </div>
               ))}
             </div>
+
+            <BrokerPotilarScoreCard gamification={brokerGamification} />
 
             <ProfessionalProfilePanelCard
               displayName={displayName}

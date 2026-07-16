@@ -1,11 +1,17 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { BadgeCheck, ExternalLink, MapPin, MessageCircle, Phone, Search, ShieldCheck } from 'lucide-react';
+import { BadgeCheck, ExternalLink, MapPin, MessageCircle, Search, ShieldCheck } from 'lucide-react';
 import PropertyCard from '@/components/PropertyCard';
-import { getDemoProfessionalListings, getDemoProfessionalProfile } from '@/data/demoProfessionalProfiles';
+import PropertyMap from '@/components/PropertyMapLoader';
+import MapModalButton from '@/components/MapModalButton';
+import RevealPhoneButton from '@/components/RevealPhoneButton';
+import { fetchPublicAdvertiserProfile, type PublicAdvertiserProfileRow } from '@/lib/fetchPublicAdvertiserProfile';
+import { getDemoProfessionalListings } from '@/data/demoProfessionalProfiles';
 import { createClient } from '@/lib/supabase/server';
-import { fetchApprovedListingRows } from '@/lib/fetchApprovedListings';
+import { enrichPublicListings } from '@/lib/advertiserProfiles';
+import { createAdminClient } from '@/lib/supabase/admin';
+import { fetchOwnerPublicListings } from '@/lib/fetchApprovedListings';
 import { listingRowToProperty, type ListingRow } from '@/lib/listings';
 import { orderListingsForDisplay } from '@/lib/propertyOrdering';
 import { getAccountTypeLabel } from '@/lib/publicProfile';
@@ -21,11 +27,11 @@ type Props = {
   };
 };
 
-type Profile = NonNullable<Awaited<ReturnType<typeof getPublicProfile>>>;
+type Profile = PublicAdvertiserProfileRow;
 type ProfileListings = Awaited<ReturnType<typeof getProfileListings>>;
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const profile = await getPublicProfile(params.slug);
+  const profile = await fetchPublicAdvertiserProfile(params.slug);
   if (!profile) {
     return { title: 'Anunciante não encontrado | Potilar' };
   }
@@ -37,28 +43,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-async function getPublicProfile(slug: string) {
-  const supabase = createClient();
-  let { data, error } = await supabase
-    .from('profiles')
-    .select('id,full_name,company_name,bio,phone,account_type,professional_plan,public_slug,creci,creci_verified,profile_image_url,banner_image_url,languages')
-    .ilike('public_slug', slug)
-    .in('account_type', ['corretor', 'imobiliaria'])
-    .maybeSingle();
-
-  if (error) {
-    const fallback = await supabase
-      .from('profiles')
-      .select('id,full_name,company_name,bio,phone,account_type,public_slug,creci,profile_image_url,banner_image_url')
-      .ilike('public_slug', slug)
-      .in('account_type', ['corretor', 'imobiliaria'])
-      .maybeSingle();
-    data = fallback.data ? { ...fallback.data, professional_plan: null, creci_verified: false, languages: ['Português'] } : null;
-  }
-
-  return data ?? getDemoProfessionalProfile(slug);
-}
-
 async function getProfileListings(ownerId: string) {
   const demoListings = getDemoProfessionalListings(ownerId);
   if (demoListings.length > 0) {
@@ -66,10 +50,26 @@ async function getProfileListings(ownerId: string) {
   }
 
   const supabase = createClient();
-  const data = await fetchApprovedListingRows(supabase, { ownerId });
-  return orderListingsForDisplay(
-    (data as unknown as ListingRow[]).map((row) => listingRowToProperty({ ...row, owner_id: ownerId }))
+  let rows = await fetchOwnerPublicListings(supabase, ownerId);
+
+  if (rows.length === 0) {
+    try {
+      const admin = createAdminClient();
+      rows = await fetchOwnerPublicListings(admin, ownerId);
+    } catch {
+      // Service role not configured in this environment.
+    }
+  }
+
+  const properties = orderListingsForDisplay(
+    (rows as unknown as ListingRow[]).map((row) => listingRowToProperty({ ...row, owner_id: ownerId }))
   );
+
+  try {
+    return await enrichPublicListings(supabase, properties);
+  } catch {
+    return properties;
+  }
 }
 
 function normalizeSearchValue(value?: string) {
@@ -148,17 +148,19 @@ function buildTabHref(slug: string, tipo: string) {
 }
 
 export default async function AnunciantePage({ params, searchParams }: Props) {
-  const profile = await getPublicProfile(params.slug);
+  const profile = await fetchPublicAdvertiserProfile(params.slug);
   if (!profile?.public_slug) notFound();
+  const publicSlug = profile.public_slug;
 
   const listings = await getProfileListings(profile.id);
   const visibleListings = filterListings(listings, searchParams);
+  const mapListings = visibleListings.length > 0 ? visibleListings : listings;
   const displayName = getProfileDisplayName(profile);
   const verifiedListings = visibleListings.map((property) => ({
     ...property,
     advertiserAccountType: profile.account_type ?? undefined,
     advertiserCreciVerified: Boolean(profile.creci && profile.creci_verified),
-    advertiserPublicSlug: profile.public_slug,
+    advertiserPublicSlug: publicSlug,
     advertiserDisplayName: displayName,
     advertiserImageUrl:
       'profile_image_url' in profile && typeof profile.profile_image_url === 'string'
@@ -174,6 +176,18 @@ export default async function AnunciantePage({ params, searchParams }: Props) {
   const profileImage = getProfileImage(profile);
   const selectedType = normalizeSearchValue(searchParams?.tipo) || 'todos';
   const languages = getLanguages(profile);
+
+  const mapListingsWithBrand = mapListings.map((property) => ({
+    ...property,
+    advertiserAccountType: profile.account_type ?? property.advertiserAccountType,
+    advertiserCreciVerified: Boolean(profile.creci && profile.creci_verified),
+    advertiserPublicSlug: publicSlug,
+    advertiserDisplayName: displayName,
+    advertiserImageUrl:
+      typeof profile.profile_image_url === 'string' && profile.profile_image_url
+        ? profile.profile_image_url
+        : property.advertiserImageUrl
+  }));
 
   const tabs = [
     ['todos', `Todos (${listings.length})`],
@@ -235,19 +249,14 @@ export default async function AnunciantePage({ params, searchParams }: Props) {
             </div>
 
             <aside className="space-y-4 md:border-l md:border-sand-200 md:pl-8 dark:md:border-slate-800">
-              <a href={`/anunciante/${profile.public_slug}`} className="inline-flex items-center gap-2 text-sm font-semibold text-ocean-700">
+              <a href={`/anunciante/${publicSlug}`} className="inline-flex items-center gap-2 text-sm font-semibold text-ocean-700">
                 <ExternalLink className="h-4 w-4" aria-hidden="true" />
                 Página Potilar
               </a>
               <div className="text-base font-semibold leading-7 text-slate-800 dark:text-slate-100">
                 Fala {languages.join(', ')}
               </div>
-              {phone && (
-                <a href={`tel:+55${phone}`} className="flex items-center gap-3 text-lg font-semibold text-ocean-800">
-                  <Phone className="h-5 w-5" aria-hidden="true" />
-                  Ver telefone
-                </a>
-              )}
+              {phone && <RevealPhoneButton phone={phone} />}
               {whatsappHref && (
                 <a
                   href={whatsappHref}
@@ -283,7 +292,7 @@ export default async function AnunciantePage({ params, searchParams }: Props) {
               return (
                 <Link
                   key={value}
-                  href={buildTabHref(profile.public_slug, value)}
+                  href={buildTabHref(publicSlug, value)}
                   className={`border-b-3 px-1 pb-3 text-base font-semibold transition ${
                     active ? 'border-ocean-700 text-ocean-800' : 'border-transparent text-slate-500 hover:text-ocean-700'
                   }`}
@@ -297,15 +306,31 @@ export default async function AnunciantePage({ params, searchParams }: Props) {
 
         <div className="mt-8 grid gap-8 lg:grid-cols-[300px_1fr]">
           <aside className="h-fit border border-sand-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-            <a
-              href="#imoveis"
-              className="inline-flex h-14 w-full items-center justify-center gap-2 border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
-            >
-              <MapPin className="h-4 w-4" aria-hidden="true" />
-              Ver no mapa
-            </a>
+            {mapListingsWithBrand.length > 0 ? (
+              <>
+                <a
+                  href="#mapa"
+                  className="inline-flex h-14 w-full items-center justify-center gap-2 border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+                >
+                  <MapPin className="h-4 w-4" aria-hidden="true" />
+                  Ver no mapa
+                </a>
+                <div
+                  id="mapa"
+                  className="relative mt-4 scroll-mt-28 overflow-hidden border border-sand-200 bg-white dark:border-slate-800"
+                >
+                  <PropertyMap items={mapListingsWithBrand} height="220px" />
+                  <MapModalButton items={mapListingsWithBrand} floating />
+                </div>
+              </>
+            ) : (
+              <div className="inline-flex h-14 w-full cursor-not-allowed items-center justify-center gap-2 border border-sand-200 bg-sand-50 px-4 text-sm font-semibold text-slate-400 dark:border-slate-800 dark:bg-slate-900">
+                <MapPin className="h-4 w-4" aria-hidden="true" />
+                Ver no mapa
+              </div>
+            )}
 
-            <form action={`/anunciante/${profile.public_slug}`} className="mt-6 space-y-5">
+            <form action={`/anunciante/${publicSlug}`} className="mt-6 space-y-5">
               <label className="block">
                 <span className="text-sm font-semibold text-slate-950 dark:text-white">Buscar</span>
                 <span className="relative mt-2 block">

@@ -12,6 +12,7 @@ import {
 } from '@/lib/cityPages';
 import { fetchApprovedListingRows } from '@/lib/fetchApprovedListings';
 import { listingRowToProperty, type ListingRow } from '@/lib/listings';
+import { enrichPublicListings } from '@/lib/advertiserProfiles';
 import { orderListingsForDisplay } from '@/lib/propertyOrdering';
 import {
   SEO_INTENT_PAGES,
@@ -37,9 +38,10 @@ async function getListings(citySlug: string, intentSlug: string) {
     const supabase = createClient();
     const rows = (await fetchApprovedListingRows(supabase, { withContact: false })) as ListingRow[];
     const listings = rows.map((row) => listingRowToProperty(row));
+    const enriched = await enrichPublicListings(supabase, listings);
 
     return orderListingsForDisplay(
-      listings.filter((listing) => {
+      enriched.filter((listing) => {
         if (slugify(cityFromLocation(listing.location)) !== citySlug) return false;
         if (intent.propertyType && listing.propertyType !== intent.propertyType) return false;
         if (intent.transaction && listing.transaction !== intent.transaction) return false;

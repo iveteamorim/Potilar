@@ -1,8 +1,12 @@
-import { cityFromLocation, getMarketBenchmark } from '@/lib/marketReference';
+import { blendAvmEstimate, type AvmPillar } from '@/lib/avmEngine';
+import { cityFromLocation, getMacroBenchmark } from '@/lib/marketReference';
+import { getPotilarListingBenchmark } from '@/lib/marketListingBenchmark';
+import { presentationFromProperty, scoreListingPresentation } from '@/lib/listingPresentationSignals';
 import { resolveCityReference } from '@/lib/marketCityCache';
 import {
   canShowPriceComparison,
   getDataTierLabel,
+  hasDefensiblePriceData,
   type PriceDataTier
 } from '@/lib/priceDataTier';
 
@@ -28,6 +32,9 @@ export type PriceInsight = {
   title: string;
   summary: string;
   tip?: string;
+  estimatedValue?: number;
+  confidenceScore?: number;
+  pillars?: AvmPillar[];
 };
 
 export type PriceInsightInput = {
@@ -37,7 +44,19 @@ export type PriceInsightInput = {
   location: string;
   neighborhood?: string | null;
   bedrooms?: number;
+  bathrooms?: number;
+  parking?: number;
   areaSqm?: number;
+  lat?: number;
+  lng?: number;
+  excludeListingId?: string;
+  isFurnished?: boolean;
+  isPetFriendly?: boolean;
+  imageCount?: number;
+  videoUrl?: string | null;
+  tourUrl?: string | null;
+  featureCount?: number;
+  descriptionLength?: number;
 };
 
 function formatMoney(value: number) {
@@ -199,7 +218,11 @@ export async function buildPriceInsight(input: PriceInsightInput): Promise<Price
   }
 
   const cityRef = await resolveCityReference(input.location);
-  const benchmark = await getMarketBenchmark(input);
+  const potilarBenchmark = await getPotilarListingBenchmark(input);
+  const macroBenchmark = await getMacroBenchmark(input);
+  const defensibleMacro =
+    macroBenchmark && hasDefensiblePriceData(macroBenchmark.dataTier) ? macroBenchmark : null;
+  const benchmark = potilarBenchmark ?? defensibleMacro;
 
   if (!benchmark) {
     if (input.propertyType === 'Terreno' && input.transaction === 'Aluguel') {
@@ -300,13 +323,68 @@ export async function buildPriceInsight(input: PriceInsightInput): Promise<Price
   const verdict = getVerdict(percentVsMedian, benchmark.dataTier);
   const copy = buildInsightCopy(verdict, input, benchmark);
 
+  const presentation = scoreListingPresentation({
+    imageCount: input.imageCount,
+    videoUrl: input.videoUrl,
+    tourUrl: input.tourUrl,
+    areaSqm: input.areaSqm,
+    bedrooms: input.bedrooms,
+    bathrooms: input.bathrooms,
+    parking: input.parking,
+    isFurnished: input.isFurnished,
+    isPetFriendly: input.isPetFriendly,
+    featureCount: input.featureCount,
+    descriptionLength: input.descriptionLength
+  });
+
+  const avm = blendAvmEstimate({
+    transaction: input.transaction,
+    location: input.location,
+    neighborhood: input.neighborhood,
+    lat: input.lat,
+    lng: input.lng,
+    listingPrice: input.price,
+    primary: benchmark,
+    macro: defensibleMacro,
+    presentation
+  });
+
+  const referencePrice = benchmark.benchmarkPrice;
+  const percentVsEstimate =
+    referencePrice > 0 ? Math.round(((input.price - referencePrice) / referencePrice) * 100) : percentVsMedian;
+
+  if (avm.confidenceScore < 50) {
+    return {
+      verdict: 'insufficient_data',
+      listingPrice: input.price,
+      medianPrice: 0,
+      minPrice: 0,
+      maxPrice: 0,
+      percentVsMedian: 0,
+      scope: benchmark.scope,
+      scopeLabel: benchmark.scopeLabel,
+      pricePerSqm: benchmark.pricePerSqm,
+      estimatedAreaSqm: benchmark.estimatedAreaSqm,
+      source: benchmark.source,
+      referencePeriod: benchmark.referencePeriod,
+      isApproximate: false,
+      priceUnit: benchmark.priceUnit,
+      dataTier: benchmark.dataTier,
+      sampleCount: benchmark.sampleCount,
+      title: 'Dados insuficientes para comparar',
+      summary:
+        'Não há anúncios comparáveis suficientes na Potilar nem índice FipeZAP confiável para esta região. A Potilar não estima um preço automático sem base real.',
+      tip: 'Compare manualmente com portais locais (OLX, Zap, imobiliárias) antes de definir o valor.'
+    };
+  }
+
   return {
     verdict,
     listingPrice: input.price,
-    medianPrice: benchmark.benchmarkPrice,
+    medianPrice: referencePrice,
     minPrice: benchmark.minPrice,
     maxPrice: benchmark.maxPrice,
-    percentVsMedian,
+    percentVsMedian: percentVsEstimate,
     scope: benchmark.scope,
     scopeLabel: benchmark.scopeLabel,
     pricePerSqm: benchmark.pricePerSqm,
@@ -317,7 +395,35 @@ export async function buildPriceInsight(input: PriceInsightInput): Promise<Price
     priceUnit: benchmark.priceUnit,
     dataTier: benchmark.dataTier,
     sampleCount: benchmark.sampleCount,
+    estimatedValue: referencePrice,
+    confidenceScore: avm.confidenceScore,
+    pillars: avm.pillars,
     ...copy
+  };
+}
+
+export function priceInsightInputFromProperty(property: import('@/data/properties').Property): PriceInsightInput {
+  const presentation = presentationFromProperty(property);
+  return {
+    price: property.price,
+    transaction: property.transaction,
+    propertyType: property.propertyType,
+    location: property.location,
+    neighborhood: property.neighborhood,
+    bedrooms: property.bedrooms,
+    bathrooms: property.bathrooms,
+    parking: property.parking,
+    areaSqm: property.areaSqm,
+    lat: property.lat,
+    lng: property.lng,
+    excludeListingId: property.id,
+    isFurnished: property.isFurnished,
+    isPetFriendly: property.isPetFriendly,
+    imageCount: presentation.imageCount,
+    videoUrl: property.videoUrl,
+    tourUrl: property.tourUrl,
+    featureCount: presentation.featureCount,
+    descriptionLength: presentation.descriptionLength
   };
 }
 

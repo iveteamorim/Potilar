@@ -106,6 +106,10 @@ export default function PrecoJustoRNCard({ insight, compact = false }: Props) {
             ? 'text-sky-700 dark:text-sky-200'
             : 'text-green-700 dark:text-green-200';
 
+  const pillars = insight.pillars ?? [];
+  const confidenceScore = insight.confidenceScore;
+  const referenceLabel = insight.estimatedValue && insight.estimatedValue !== insight.medianPrice ? 'Estimativa AVM' : referenceStatLabel;
+
   return (
     <section
       className={`rounded-2xl border bg-white p-4 shadow-sm dark:bg-slate-900 sm:p-5 ${rangeBorder}`}
@@ -138,8 +142,39 @@ export default function PrecoJustoRNCard({ insight, compact = false }: Props) {
       {hasComparison && (
         <div className="mt-4 grid gap-3 sm:grid-cols-3">
           <Stat label="Seu preço" value={formatMoney(insight.listingPrice)} featured />
-          <Stat label={referenceStatLabel} value={formatMoney(insight.medianPrice)} featured />
+          <Stat label={referenceLabel} value={formatMoney(insight.medianPrice)} featured />
           <Stat label="Diferença" value={diffAmountLabel} featured />
+        </div>
+      )}
+
+      {hasComparison && typeof confidenceScore === 'number' && (
+        <div className="mt-4 flex items-center gap-3 rounded-xl border border-sand-200 bg-sand-50 px-3 py-2.5 dark:border-slate-800 dark:bg-slate-950/40">
+          <p className="text-xs font-semibold text-slate-600 dark:text-slate-300">Confiança da estimativa</p>
+          <div className="flex-1 h-2 overflow-hidden rounded-full bg-white dark:bg-slate-800">
+            <div className="h-full rounded-full bg-ocean-600" style={{ width: `${confidenceScore}%` }} />
+          </div>
+          <p className="text-sm font-extrabold text-ocean-800 dark:text-ocean-200">{confidenceScore}%</p>
+        </div>
+      )}
+
+      {hasComparison && pillars.length > 0 && (
+        <div className="mt-4 grid gap-2 sm:grid-cols-2">
+          {pillars.map((pillar) => (
+            <div
+              key={pillar.key}
+              className="rounded-xl border border-sand-200 bg-white px-3 py-3 dark:border-slate-800 dark:bg-slate-950/30"
+            >
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-xs font-extrabold uppercase tracking-[0.12em] text-slate-500">{pillar.label}</p>
+                {pillar.signal && (
+                  <span className="rounded-full bg-ocean-50 px-2 py-0.5 text-[10px] font-bold uppercase text-ocean-800 dark:bg-ocean-950/40 dark:text-ocean-100">
+                    {pillar.signal}
+                  </span>
+                )}
+              </div>
+              <p className="mt-1.5 text-xs leading-5 text-slate-600 dark:text-slate-300">{pillar.summary}</p>
+            </div>
+          ))}
         </div>
       )}
 
@@ -185,9 +220,8 @@ export default function PrecoJustoRNCard({ insight, compact = false }: Props) {
       <details className="mt-4 rounded-xl border border-sand-200 bg-sand-50 px-3 py-2.5 text-xs leading-6 text-slate-600 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-300">
         <summary className="cursor-pointer font-extrabold text-slate-950 dark:text-white">Como calculamos?</summary>
         <p className="mt-2">
-          Só mostramos comparação quando há base defensável: anúncios reais na Potilar (mínimo 3), índice FipeZAP em
-          Natal, ou estimativa Potilar calibrada para cidades do interior. Cidades sem dados não recebem número
-          automático.
+          Só mostramos comparação com base real: anúncios semelhantes na Potilar (mínimo 3) ou índice FipeZAP
+          oficial. Sem esses dados, não exibimos número automático.
         </p>
         {insight.referencePeriod && (
           <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">Período de referência: {insight.referencePeriod}</p>

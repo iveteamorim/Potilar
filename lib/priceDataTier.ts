@@ -46,8 +46,12 @@ export function getConfidenceLabel(tier: PriceDataTier) {
 }
 
 /** So exibimos comparacao quando ha base minimamente defensavel. */
+export function hasDefensiblePriceData(tier: PriceDataTier) {
+  return tier === 'potilar_listings' || tier === 'fipezap_city' || tier === 'fipezap_neighborhood';
+}
+
 export function canShowPriceComparison(tier: PriceDataTier) {
-  return tier !== 'generic_estimate' && tier !== 'none';
+  return hasDefensiblePriceData(tier);
 }
 
 export function isOfficialMarketData(tier: PriceDataTier) {

@@ -67,7 +67,7 @@ export default function FavoriteAwarePropertyList({ items, variant = 'grid' }: P
       </div>
 
       {visibleItems.length > 0 ? (
-        <div className={variant === 'horizontal' ? 'space-y-5' : 'grid gap-6 sm:grid-cols-2 xl:grid-cols-3'}>
+        <div className={variant === 'horizontal' ? 'space-y-3' : 'grid gap-6 sm:grid-cols-2 xl:grid-cols-3'}>
           {visibleItems.map((property) => (
             <PropertyCard key={property.id} property={property} variant={variant} />
           ))}

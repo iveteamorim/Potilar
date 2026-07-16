@@ -107,6 +107,18 @@ function isCoastalCity(location: string, neighborhood?: string | null) {
   );
 }
 
+export type MarketBenchmarkInput = {
+  transaction: string;
+  propertyType: string;
+  location: string;
+  neighborhood?: string | null;
+  bedrooms?: number;
+  areaSqm?: number;
+  lat?: number;
+  lng?: number;
+  excludeListingId?: string;
+};
+
 export type MarketBenchmark = {
   scope: 'neighborhood' | 'city' | 'state';
   scopeLabel: string;
@@ -123,19 +135,7 @@ export type MarketBenchmark = {
   sampleCount?: number;
 };
 
-export async function getMarketBenchmark(input: {
-  transaction: string;
-  propertyType: string;
-  location: string;
-  neighborhood?: string | null;
-  bedrooms?: number;
-  areaSqm?: number;
-}): Promise<MarketBenchmark | null> {
-  const potilarBenchmark = await getPotilarListingBenchmark(input);
-  if (potilarBenchmark) {
-    return potilarBenchmark;
-  }
-
+export async function getMacroBenchmark(input: MarketBenchmarkInput): Promise<MarketBenchmark | null> {
   const cityRef = await resolveCityReference(input.location);
 
   if (cityRef.cityDataTier === 'generic') {
@@ -229,6 +229,15 @@ export async function getMarketBenchmark(input: {
     priceUnit,
     dataTier
   };
+}
+
+export async function getMarketBenchmark(input: MarketBenchmarkInput): Promise<MarketBenchmark | null> {
+  const potilarBenchmark = await getPotilarListingBenchmark(input);
+  if (potilarBenchmark) {
+    return potilarBenchmark;
+  }
+
+  return getMacroBenchmark(input);
 }
 
 function isFipeZapNeighborhood(source: string) {

@@ -11,7 +11,18 @@ type Props = {
   location: string;
   neighborhood: string;
   bedrooms: string;
+  bathrooms?: string;
+  parking?: string;
   areaSqm?: string;
+  lat?: number;
+  lng?: number;
+  isFurnished?: boolean;
+  isPetFriendly?: boolean;
+  imageCount?: number;
+  videoUrl?: string;
+  tourUrl?: string;
+  featureCount?: number;
+  descriptionLength?: number;
 };
 
 export default function PrecoJustoRNAdvisor({
@@ -21,7 +32,18 @@ export default function PrecoJustoRNAdvisor({
   location,
   neighborhood,
   bedrooms,
-  areaSqm
+  bathrooms,
+  parking,
+  areaSqm,
+  lat,
+  lng,
+  isFurnished,
+  isPetFriendly,
+  imageCount,
+  videoUrl,
+  tourUrl,
+  featureCount,
+  descriptionLength
 }: Props) {
   const [insight, setInsight] = useState<PriceInsight | null>(null);
   const [loading, setLoading] = useState(false);
@@ -50,7 +72,18 @@ export default function PrecoJustoRNAdvisor({
             location,
             neighborhood: neighborhood.trim() || null,
             bedrooms: Number(bedrooms) || undefined,
-            areaSqm: numericAreaSqm
+            bathrooms: Number(bathrooms) || undefined,
+            parking: Number(parking) || undefined,
+            areaSqm: numericAreaSqm,
+            lat: lat || undefined,
+            lng: lng || undefined,
+            isFurnished: Boolean(isFurnished),
+            isPetFriendly: Boolean(isPetFriendly),
+            imageCount: imageCount || undefined,
+            videoUrl: videoUrl?.trim() || null,
+            tourUrl: tourUrl?.trim() || null,
+            featureCount: featureCount || undefined,
+            descriptionLength: descriptionLength || undefined
           })
         });
 
@@ -71,7 +104,26 @@ export default function PrecoJustoRNAdvisor({
       controller.abort();
       window.clearTimeout(timeout);
     };
-  }, [numericPrice, numericAreaSqm, transaction, propertyType, location, neighborhood, bedrooms]);
+  }, [
+    numericPrice,
+    numericAreaSqm,
+    transaction,
+    propertyType,
+    location,
+    neighborhood,
+    bedrooms,
+    bathrooms,
+    parking,
+    lat,
+    lng,
+    isFurnished,
+    isPetFriendly,
+    imageCount,
+    videoUrl,
+    tourUrl,
+    featureCount,
+    descriptionLength
+  ]);
 
   if (!numericPrice || !numericAreaSqm || numericAreaSqm <= 0 || !transaction || !propertyType || !location.trim()) {
     return null;
@@ -83,7 +135,7 @@ export default function PrecoJustoRNAdvisor({
 
   if (!insight) return null;
 
-  if (insight.verdict === 'insufficient_data' && insight.dataTier !== 'generic_estimate') {
+  if (insight.verdict === 'insufficient_data' || insight.medianPrice <= 0) {
     return null;
   }
 

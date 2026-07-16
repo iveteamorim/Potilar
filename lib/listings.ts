@@ -4,7 +4,7 @@ import { isDefaultListingCoordinate, isKnownCityCenterCoordinate, resolveListing
 import { formatPlaceName } from './textFormat';
 
 export const PUBLIC_LISTING_SELECT =
-  'id,owner_id,slug,title,property_type,transaction,price,price_period,bedrooms,bathrooms,parking,area_sqm,condo_fee,condo_included,is_pet_friendly,is_furnished,location,neighborhood,community,address_extra,lat,lng,images,video_url,featured_plan,featured_payment_status,featured_starts_at,featured_expires_at,description,features,created_at,updated_at';
+  'id,owner_id,slug,title,property_type,transaction,price,price_period,bedrooms,bathrooms,parking,area_sqm,condo_fee,condo_included,is_pet_friendly,is_furnished,location,neighborhood,community,address_extra,lat,lng,images,video_url,tour_url,featured_plan,featured_payment_status,featured_starts_at,featured_expires_at,description,features,created_at,updated_at';
 
 export const PUBLIC_LISTING_SELECT_WITH_CONTACT =
   `${PUBLIC_LISTING_SELECT},contact_name,contact_phone,contact_whatsapp,contact_email,contact_methods`;
@@ -34,6 +34,7 @@ export type ListingRow = {
   lng: number;
   images: string[];
   video_url?: string | null;
+  tour_url?: string | null;
   featured_plan?: '7_days' | '15_days' | '30_days' | 'super_30_days' | null;
   featured_payment_status?: 'not_requested' | 'pix_pending' | 'confirmed' | null;
   featured_starts_at?: string | null;
@@ -47,7 +48,28 @@ export type ListingRow = {
   features: string[];
   created_at?: string | null;
   updated_at?: string | null;
+  advertiser_account_type?: string | null;
+  advertiser_public_slug?: string | null;
+  advertiser_display_name?: string | null;
+  advertiser_profile_image_url?: string | null;
+  advertiser_creci_verified?: boolean | null;
 };
+
+export function applyAdvertiserFieldsFromListingRow(property: Property, row: ListingRow): Property {
+  const accountType = row.advertiser_account_type?.trim();
+  if (!accountType || !['corretor', 'imobiliaria'].includes(accountType)) {
+    return property;
+  }
+
+  return {
+    ...property,
+    advertiserAccountType: accountType,
+    advertiserPublicSlug: row.advertiser_public_slug ?? property.advertiserPublicSlug,
+    advertiserDisplayName: row.advertiser_display_name ?? property.advertiserDisplayName,
+    advertiserImageUrl: row.advertiser_profile_image_url ?? property.advertiserImageUrl,
+    advertiserCreciVerified: Boolean(row.advertiser_creci_verified ?? property.advertiserCreciVerified)
+  };
+}
 
 export function listingRowToProperty(row: ListingRow): Property {
   const baseLocation = row.location.split(',')[0] || row.location;
@@ -74,7 +96,8 @@ export function listingRowToProperty(row: ListingRow): Property {
     !(storedIsDefaultNatal && !resolvedIsDefaultNatal);
   const [resolvedLat, resolvedLng] = hasPreciseStoredCoordinates ? [row.lat, row.lng] : resolvedFromAddress;
 
-  return {
+  return applyAdvertiserFieldsFromListingRow(
+    {
     id: row.id,
     ownerId: row.owner_id ?? undefined,
     slug: row.slug,
@@ -101,6 +124,7 @@ export function listingRowToProperty(row: ListingRow): Property {
     featuredPlan: row.featured_plan ?? undefined,
     images: row.images,
     videoUrl: row.video_url ?? undefined,
+    tourUrl: row.tour_url ?? undefined,
     contactName: row.contact_name ?? undefined,
     contactPhone: row.contact_phone ?? undefined,
     contactWhatsapp: row.contact_whatsapp ?? undefined,
@@ -110,5 +134,7 @@ export function listingRowToProperty(row: ListingRow): Property {
     features: row.features,
     createdAt: row.created_at ?? undefined,
     updatedAt: row.updated_at ?? undefined
-  };
+    },
+    row
+  );
 }

@@ -37,6 +37,7 @@ type PublicListingRow = {
   lng: number;
   images: string[];
   video_url?: string | null;
+  tour_url?: string | null;
   featured_plan?: '7_days' | '15_days' | '30_days' | 'super_30_days' | null;
   featured_payment_status?: 'not_requested' | 'pix_pending' | 'confirmed' | null;
   featured_starts_at?: string | null;
@@ -86,6 +87,7 @@ function applyFilters(items: Property[], searchParams: { [key: string]: string |
     const petFriendly = searchParams.petFriendly === '1';
     const furnished = searchParams.furnished === '1';
     const condoIncluded = searchParams.condoIncluded === '1';
+    const virtualTour = searchParams.virtualTour === '1';
     const propertyType = typeof searchParams.propertyType === 'string' ? searchParams.propertyType : '';
     const transaction = typeof searchParams.transaction === 'string' ? searchParams.transaction : '';
     const city = typeof searchParams.city === 'string' ? searchParams.city : '';
@@ -113,6 +115,7 @@ function applyFilters(items: Property[], searchParams: { [key: string]: string |
     if (petFriendly && !property.isPetFriendly) return false;
     if (furnished && !property.isFurnished) return false;
     if (condoIncluded && !property.condoIncluded) return false;
+    if (virtualTour && !property.tourUrl) return false;
     if (propertyType && property.propertyType !== propertyType) return false;
     if (transaction && property.transaction !== transaction) return false;
     if (city && !normalizeFilterText(property.location).includes(normalizeFilterText(city))) return false;
@@ -209,6 +212,7 @@ function toProperty(listing: PublicListingRow) {
     contact_email: listing.contact_email ?? null,
     contact_methods: listing.contact_methods ?? [],
     video_url: listing.video_url ?? null,
+    tour_url: listing.tour_url ?? null,
     condo_included: listing.condo_included ?? false
   });
 }

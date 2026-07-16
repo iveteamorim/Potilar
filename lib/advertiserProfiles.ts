@@ -42,6 +42,21 @@ async function attachListingOwnerIds(supabase: SupabaseClient, properties: Prope
 async function loadAdvertiserProfileRows(supabase: SupabaseClient, ownerIds: string[]) {
   if (ownerIds.length === 0) return [] as AdvertiserProfileRow[];
 
+  const rpcResult = await supabase.rpc('get_public_advertiser_profiles', { profile_ids: ownerIds });
+  if (!rpcResult.error && rpcResult.data?.length) {
+    return rpcResult.data as AdvertiserProfileRow[];
+  }
+
+  try {
+    const admin = createAdminClient();
+    const adminResult = await admin.from('profiles').select(ADVERTISER_PROFILE_SELECT).in('id', ownerIds);
+    if (adminResult.data?.length) {
+      return adminResult.data as AdvertiserProfileRow[];
+    }
+  } catch {
+    // Service role not configured in this environment.
+  }
+
   const { data, error } = await supabase.from('profiles').select(ADVERTISER_PROFILE_SELECT).in('id', ownerIds);
 
   if (!error && data?.length) {
@@ -60,16 +75,6 @@ async function loadAdvertiserProfileRows(supabase: SupabaseClient, ownerIds: str
       profile_image_url: null,
       creci_verified: false
     })) as AdvertiserProfileRow[];
-  }
-
-  try {
-    const admin = createAdminClient();
-    const adminResult = await admin.from('profiles').select(ADVERTISER_PROFILE_SELECT).in('id', ownerIds);
-    if (adminResult.data?.length) {
-      return adminResult.data as AdvertiserProfileRow[];
-    }
-  } catch {
-    // Service role not configured in this environment.
   }
 
   return [];
@@ -91,10 +96,14 @@ export async function attachAdvertiserProfiles(supabase: SupabaseClient, propert
     return {
       ...property,
       advertiserAccountType: profile.account_type ?? property.advertiserAccountType,
-      advertiserCreciVerified: Boolean(profile.creci && profile.creci_verified),
+      advertiserCreciVerified:
+        profile.creci && profile.creci_verified
+          ? true
+          : property.advertiserCreciVerified,
       advertiserPublicSlug: profile.public_slug ?? property.advertiserPublicSlug,
-      advertiserDisplayName: profile.company_name || profile.full_name || property.advertiserDisplayName,
-      advertiserImageUrl: profile.profile_image_url ?? property.advertiserImageUrl
+      advertiserDisplayName:
+        profile.company_name || profile.full_name || property.advertiserDisplayName,
+      advertiserImageUrl: profile.profile_image_url?.trim() || property.advertiserImageUrl
     };
   });
 }

@@ -88,23 +88,9 @@ export async function fetchApprovedListingRows(supabase: SupabaseClient, options
     const rpcResult = await supabase.rpc('get_public_approved_listings');
 
     if (!rpcResult.error && (rpcResult.data?.length ?? 0) > 0) {
-      const mapped = (rpcResult.data ?? []).map((listing: Record<string, unknown>) => ({
-        ...listing,
-        owner_id: listing.owner_id ?? null,
-        area_sqm: listing.area_sqm ?? null,
-        condo_fee: listing.condo_fee ?? null,
-        condo_included: listing.condo_included ?? false,
-        is_pet_friendly: listing.is_pet_friendly ?? false,
-        is_furnished: listing.is_furnished ?? false,
-        video_url: listing.video_url ?? null,
-        featured_starts_at: listing.featured_starts_at ?? null,
-        featured_expires_at: listing.featured_expires_at ?? null,
-        contact_name: listing.contact_name ?? null,
-        contact_phone: listing.contact_phone ?? null,
-        contact_whatsapp: listing.contact_whatsapp ?? null,
-        contact_email: listing.contact_email ?? null,
-        contact_methods: listing.contact_methods ?? null
-      }));
+      const mapped = (rpcResult.data ?? []).map((listing: Record<string, unknown>) =>
+        mapPublicRpcListingRow(listing)
+      );
 
       return enrichFeaturedListingRows(supabase, mapped);
     }
@@ -147,6 +133,53 @@ export async function fetchApprovedListingRows(supabase: SupabaseClient, options
   }
 
   return rows;
+}
+
+function mapPublicRpcListingRow(listing: Record<string, unknown>) {
+  return {
+    ...listing,
+    owner_id: listing.owner_id ?? null,
+    area_sqm: listing.area_sqm ?? null,
+    condo_fee: listing.condo_fee ?? null,
+    condo_included: listing.condo_included ?? false,
+    is_pet_friendly: listing.is_pet_friendly ?? false,
+    is_furnished: listing.is_furnished ?? false,
+    video_url: listing.video_url ?? null,
+    tour_url: listing.tour_url ?? null,
+    featured_starts_at: listing.featured_starts_at ?? null,
+    featured_expires_at: listing.featured_expires_at ?? null,
+    contact_name: listing.contact_name ?? null,
+    contact_phone: listing.contact_phone ?? null,
+    contact_whatsapp: listing.contact_whatsapp ?? null,
+    contact_email: listing.contact_email ?? null,
+    contact_methods: listing.contact_methods ?? null,
+    advertiser_account_type: listing.advertiser_account_type ?? null,
+    advertiser_public_slug: listing.advertiser_public_slug ?? null,
+    advertiser_display_name: listing.advertiser_display_name ?? null,
+    advertiser_profile_image_url: listing.advertiser_profile_image_url ?? null,
+    advertiser_creci_verified: listing.advertiser_creci_verified ?? false
+  };
+}
+
+export async function fetchOwnerPublicListings(supabase: SupabaseClient, ownerId: string) {
+  const rpcResult = await supabase.rpc('get_public_listings_by_owner', { p_owner_id: ownerId });
+
+  if (!rpcResult.error && (rpcResult.data?.length ?? 0) > 0) {
+    const mapped = (rpcResult.data ?? []).map((listing: Record<string, unknown>) =>
+      mapPublicRpcListingRow(listing)
+    );
+    return enrichFeaturedListingRows(supabase, mapped as EnrichableListingRow[]);
+  }
+
+  if (rpcResult.error) {
+    console.error('[Potilar] RPC de anuncios por corretor falhou:', rpcResult.error.message);
+  }
+
+  return fetchApprovedListingRows(supabase, {
+    ownerId,
+    withContact: true,
+    hideExpired: true
+  });
 }
 
 type PublicListingDetailRow = Record<string, unknown>;

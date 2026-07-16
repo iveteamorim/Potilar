@@ -20,6 +20,7 @@ export type Filters = {
   petFriendly: string;
   furnished: string;
   condoIncluded: string;
+  virtualTour: string;
 };
 
 const defaultFilters: Filters = {
@@ -36,7 +37,8 @@ const defaultFilters: Filters = {
   minArea: '',
   petFriendly: '',
   furnished: '',
-  condoIncluded: ''
+  condoIncluded: '',
+  virtualTour: ''
 };
 
 export default function PropertyFilters() {
@@ -59,7 +61,8 @@ export default function PropertyFilters() {
       minArea: searchParams.get('minArea') ?? '',
       petFriendly: searchParams.get('petFriendly') ?? '',
       furnished: searchParams.get('furnished') ?? '',
-      condoIncluded: searchParams.get('condoIncluded') ?? ''
+      condoIncluded: searchParams.get('condoIncluded') ?? '',
+      virtualTour: searchParams.get('virtualTour') ?? ''
     } satisfies Filters;
   }, [searchParams]);
 
@@ -132,7 +135,8 @@ export default function PropertyFilters() {
     filters.minArea && `Area: ${filters.minArea}+ m2`,
     filters.petFriendly === '1' && 'Aceita pet',
     filters.furnished === '1' && 'Mobiliado',
-    filters.condoIncluded === '1' && 'Condomínio incluso'
+    filters.condoIncluded === '1' && 'Condomínio incluso',
+    filters.virtualTour === '1' && 'Com tour virtual'
   ].filter(Boolean) as string[];
 
   return (
@@ -286,6 +290,14 @@ export default function PropertyFilters() {
             Condomínio incluso
           </label>
         )}
+        <label className="inline-flex items-center gap-2">
+          <input
+            type="checkbox"
+            checked={filters.virtualTour === '1'}
+            onChange={(event) => updateParam('virtualTour', event.target.checked ? '1' : '')}
+          />
+          Com tour virtual 3D
+        </label>
       </div>
 
       {activeChips.length > 0 && (

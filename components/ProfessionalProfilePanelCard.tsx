@@ -55,11 +55,14 @@ export default function ProfessionalProfilePanelCard({
             {creci && (
               <span
                 className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${
-                  creciVerified ? 'bg-green-50 text-green-700' : 'bg-sand-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'
+                  creciVerified
+                    ? 'bg-green-50 text-green-700 dark:bg-green-950/40 dark:text-green-200'
+                    : 'bg-ocean-50 text-ocean-800 dark:bg-ocean-950/40 dark:text-ocean-100'
                 }`}
+                title={creciVerified ? creci : `${creci} — aguardando verificação pela Potilar`}
               >
                 <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
-                {creciVerified ? 'CRECI verificado' : 'CRECI pendente'}
+                {creciVerified ? 'CRECI verificado' : 'CRECI informado'}
               </span>
             )}
           </div>

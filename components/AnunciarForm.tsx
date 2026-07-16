@@ -13,6 +13,7 @@ import { KNOWN_CITY_NAMES, normalizeKnownCityName, resolveListingCoordinates } f
 import { formatPlaceName as formatDisplayPlaceName } from '@/lib/textFormat';
 import { getActiveListingStatuses, getListingLimitForAccount, getListingLimitLabel } from '@/lib/listingLimits';
 import { PLANS, formatPlanPrice, getFreeListingLimit, getLaunchPromoDeadlineLabel, isLaunchPromoActive } from '@/lib/plans';
+import { normalizeTourUrl } from '@/lib/tourUrl';
 
 const PAID_LISTING_PRICE = PLANS.listing.additionalPrice;
 const SEASONAL_LISTING_PRICE = PLANS.listing.seasonalPrice;
@@ -181,6 +182,7 @@ export default function AnunciarForm({
   const [details, setDetails] = useState('');
   const [features, setFeatures] = useState('');
   const [videoUrl, setVideoUrl] = useState('');
+  const [tourUrl, setTourUrl] = useState('');
   const [photos, setPhotos] = useState<PhotoPreview[]>([]);
   const [status, setStatus] = useState('');
   const [listingId] = useState(() => crypto.randomUUID());
@@ -431,6 +433,12 @@ export default function AnunciarForm({
       return;
     }
 
+    const normalizedTourUrl = normalizeTourUrl(tourUrl);
+    if (tourUrl.trim() && !normalizedTourUrl) {
+      setStatus('Informe um link de tour virtual 3D válido, com http:// ou https://.');
+      return;
+    }
+
     if (contactMethods.length === 0) {
       setStatus('Escolha pelo menos um meio de contato para os interessados.');
       return;
@@ -609,6 +617,7 @@ export default function AnunciarForm({
         lng,
         images: imageUrls,
         video_url: normalizedVideoUrl,
+        tour_url: normalizedTourUrl,
         contact_name: ownerName || null,
         contact_phone: contactMethods.includes('phone') ? ownerPhone : null,
         contact_whatsapp: contactMethods.includes('whatsapp') ? ownerPhone : null,
@@ -639,6 +648,7 @@ export default function AnunciarForm({
           is_pet_friendly: _pet,
           is_furnished: _furnished,
           video_url: _videoUrl,
+          tour_url: _tourUrl,
           ...legacyPayload
         } = listingPayload;
         insertPayload = referralCode ? { ...legacyPayload, referral_code: referralCode } : legacyPayload;
@@ -874,7 +884,24 @@ export default function AnunciarForm({
               {!isLand && <input type="text" placeholder="Condomínio (R$)" value={condoFee} onChange={(event) => setCondoFee(event.target.value)} className={inputClass} />}
             </div>
 
-            <PrecoJustoRNAdvisor price={price} transaction={transaction} propertyType={propertyType} location={location} neighborhood={neighborhood} bedrooms={bedrooms} areaSqm={areaSqm} />
+            <PrecoJustoRNAdvisor
+              price={price}
+              transaction={transaction}
+              propertyType={propertyType}
+              location={location}
+              neighborhood={neighborhood}
+              bedrooms={bedrooms}
+              bathrooms={bathrooms}
+              parking={parking}
+              areaSqm={areaSqm}
+              isFurnished={isFurnished}
+              isPetFriendly={isPetFriendly}
+              imageCount={photos.length}
+              videoUrl={videoUrl}
+              tourUrl={tourUrl}
+              featureCount={features.split(',').map((item) => item.trim()).filter(Boolean).length}
+              descriptionLength={details.length}
+            />
 
             {!isLand && (
               <div className="grid gap-3 text-sm font-semibold text-slate-700 dark:text-slate-200 sm:grid-cols-3">
@@ -924,6 +951,12 @@ export default function AnunciarForm({
               <label className="block text-sm font-semibold text-slate-900 dark:text-white" htmlFor="listing-video-url">Adicionar vídeo (opcional)</label>
               <p className="mt-1 text-xs text-slate-500">Cole um link do YouTube, Instagram, TikTok ou Drive.</p>
               <input id="listing-video-url" type="url" placeholder="https://..." value={videoUrl} onChange={(event) => setVideoUrl(event.target.value)} className={`${inputClass} mt-3`} />
+            </div>
+
+            <div className="rounded-2xl border border-violet-100 bg-violet-50/40 p-4 dark:border-slate-800 dark:bg-slate-900">
+              <label className="block text-sm font-semibold text-slate-900 dark:text-white" htmlFor="listing-tour-url">Tour virtual 3D (opcional)</label>
+              <p className="mt-1 text-xs text-slate-500">Cole o link do Matterport, Kuula, CloudPano ou outro tour em 360°.</p>
+              <input id="listing-tour-url" type="url" placeholder="https://..." value={tourUrl} onChange={(event) => setTourUrl(event.target.value)} className={`${inputClass} mt-3`} />
             </div>
           </section>
         )}

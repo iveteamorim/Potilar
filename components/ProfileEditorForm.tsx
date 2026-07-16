@@ -105,7 +105,11 @@ export default function ProfileEditorForm({ fullName, companyName, bio, publicSl
           className="mt-2 w-full rounded-2xl border border-sand-200 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-900"
         />
         <p className={`mt-2 text-xs font-semibold ${creciVerified ? 'text-green-700' : 'text-slate-500'}`}>
-          {creciVerified ? 'CRECI verificado pela Potilar.' : 'CRECI pendente de verificação pela Potilar.'}
+          {creciVerified
+            ? 'CRECI verificado pela Potilar.'
+            : creci
+              ? 'CRECI informado. A verificação oficial pela equipe Potilar ainda está em andamento.'
+              : 'Informe seu CRECI para liberar o selo de profissional.'}
         </p>
       </div>
       <div>
