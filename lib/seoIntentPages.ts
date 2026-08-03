@@ -86,6 +86,30 @@ export const SEO_INTENT_PAGES: SeoIntentPage[] = [
     searchHref: '/imoveis?propertyType=Kitnet%2FConjugado&transaction=Aluguel'
   },
   {
+    slug: 'pontos-comerciais-para-alugar',
+    title: 'Pontos comerciais para alugar no RN',
+    h1: 'Pontos comerciais para alugar no Rio Grande do Norte',
+    description:
+      'Pontos comerciais para alugar no RN. Encontre lojas, salas comerciais, galpões e pontos de rua com contato direto na Potilar.',
+    intro:
+      'Busque ponto comercial para aluguel no Rio Grande do Norte, com opções para loja, sala, serviços, comércio de rua e empresas locais.',
+    propertyType: 'Ponto comercial',
+    transaction: 'Aluguel',
+    searchHref: '/imoveis?propertyType=Ponto%20comercial&transaction=Aluguel'
+  },
+  {
+    slug: 'pontos-comerciais-a-venda',
+    title: 'Pontos comerciais a venda no RN',
+    h1: 'Pontos comerciais a venda no Rio Grande do Norte',
+    description:
+      'Pontos comerciais a venda no RN. Veja imóveis comerciais, lojas, salas, galpões e oportunidades para negócio no Rio Grande do Norte.',
+    intro:
+      'Compare pontos comerciais a venda no RN e encontre imóveis para comércio, serviços, investimento ou expansão de empresa.',
+    propertyType: 'Ponto comercial',
+    transaction: 'Compra',
+    searchHref: '/imoveis?propertyType=Ponto%20comercial&transaction=Compra'
+  },
+  {
     slug: 'imoveis-para-temporada',
     title: 'Imóveis para temporada no RN',
     h1: 'Imóveis para temporada no Rio Grande do Norte',

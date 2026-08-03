@@ -1,5 +1,4 @@
 export const PIX_KEY = process.env.NEXT_PUBLIC_PIX_KEY ?? 'f208fc34-8166-49e7-bc9e-d3faa4921b1e';
-export const PIX_WHATSAPP_NUMBER = process.env.NEXT_PUBLIC_PIX_WHATSAPP ?? '5521969724141';
 export const PIX_MERCHANT_NAME = 'POTILAR';
 export const PIX_MERCHANT_CITY = 'NATAL';
 
@@ -94,21 +93,4 @@ export function buildPixCopiaECola(options: {
 
   payload += crc16ccitt(payload);
   return payload;
-}
-
-export function getPixWhatsappLink(options: {
-  paymentCode: string;
-  title: string;
-  kind: PixPaymentKind;
-  amount: number;
-}) {
-  const message = [
-    'Ola, vim pelo site Potilar e quero enviar o comprovante Pix.',
-    `Codigo: ${options.paymentCode}`,
-    `Tipo: ${getPixPaymentKindLabel(options.kind)}`,
-    `Valor: ${formatPixMoney(options.amount)}`,
-    `Anuncio: ${options.title}`
-  ].join('\n');
-
-  return `https://wa.me/${PIX_WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
 }

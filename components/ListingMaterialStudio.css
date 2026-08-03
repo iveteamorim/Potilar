@@ -1,0 +1,886 @@
+.poster-tool,
+.poster-tool * {
+  box-sizing: border-box;
+}
+
+.poster-tool {
+  --navy: #07194a;
+  --green: #44b536;
+  --green-dark: #2f9629;
+  --orange: #ffa800;
+  --paper: #ffffff;
+  --background: #f4f7fb;
+  --text: #09142f;
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: minmax(300px, 390px) minmax(0, 1fr);
+  gap: 28px;
+  color: var(--navy);
+}
+
+.poster-options {
+  align-self: start;
+  border: 1px solid #e9d2a5;
+  border-radius: 24px;
+  padding: 22px;
+  background: #fff;
+}
+
+.poster-eyebrow {
+  margin: 0 0 10px;
+  color: #075985;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.poster-options h2 {
+  margin: 0 0 18px;
+  font-size: 28px;
+  font-weight: 950;
+  line-height: 1;
+}
+
+.poster-placement-list {
+  display: grid;
+  gap: 10px;
+}
+
+.placement-button {
+  width: 100%;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 14px;
+  text-align: left;
+  color: var(--navy);
+  background: #fff;
+  border: 1px solid #e9d2a5;
+  border-radius: 16px;
+  cursor: pointer;
+}
+
+.placement-button.active {
+  background: #effcf3;
+  border-color: #24934d;
+  box-shadow: 0 10px 30px rgba(21, 128, 61, 0.08);
+}
+
+.placement-icon {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 auto;
+  margin-top: 3px;
+  color: var(--green-dark);
+}
+
+.placement-button strong,
+.placement-button span,
+.placement-button small {
+  display: block;
+}
+
+.placement-button strong {
+  font-size: 17px;
+  font-weight: 950;
+}
+
+.placement-button span span {
+  margin-top: 3px;
+  color: #58657a;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.placement-button small {
+  margin-top: 7px;
+  color: var(--green-dark);
+  font-size: 11px;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.poster-models,
+.photo-card,
+.size-card,
+.contact-channel {
+  margin-top: 14px;
+  padding: 14px;
+  border: 1px solid #e9d2a5;
+  border-radius: 16px;
+  background: #fff;
+}
+
+.poster-models p,
+.photo-card > p,
+.photo-position,
+.contact-channel > p {
+  margin: 0 0 10px;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.contact-channel-note {
+  margin: 0 !important;
+  color: var(--navy) !important;
+  font-size: 13px !important;
+  font-weight: 750 !important;
+  text-transform: none !important;
+  line-height: 1.35;
+}
+
+.contact-channel-note strong {
+  font-weight: 950;
+}
+
+.poster-models button {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 8px;
+  padding: 10px 12px;
+  color: var(--text);
+  background: #fff;
+  border: 1px solid #e9d2a5;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 950;
+  cursor: pointer;
+}
+
+.poster-models button.active {
+  border-color: var(--green);
+  background: #effcf3;
+}
+
+.poster-models button span {
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.photo-options {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.photo-options button {
+  aspect-ratio: 1;
+  overflow: hidden;
+  padding: 0;
+  background: #f8fafc;
+  border: 2px solid transparent;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.photo-options button.active {
+  border-color: var(--green);
+}
+
+.photo-options img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.upload-photo-button {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-top: 10px;
+  padding: 10px 12px;
+  color: var(--navy);
+  background: #f8fafc;
+  border: 1px dashed #94a3b8;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.upload-photo-button input {
+  display: none;
+}
+
+.photo-position {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+  margin-bottom: 0;
+}
+
+.photo-position input {
+  width: 100%;
+  accent-color: var(--green);
+}
+
+.size-card > span,
+.size-card strong,
+.size-card small {
+  display: block;
+}
+
+.size-card > span {
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.size-card strong {
+  margin-top: 4px;
+  color: var(--green-dark);
+  font-size: 20px;
+  font-weight: 950;
+}
+
+.size-card div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.size-card small {
+  border: 1px solid #e9d2a5;
+  border-radius: 999px;
+  padding: 4px 8px;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 750;
+}
+
+.download-card {
+  margin-top: 14px;
+  padding: 14px;
+  border: 1px solid #e9d2a5;
+  border-radius: 16px;
+  background: #fff;
+}
+
+.download-card > span {
+  display: block;
+  margin-bottom: 8px;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.download-card p {
+  margin: 10px 0 0;
+  color: #58657a;
+  font-size: 12px;
+  font-weight: 750;
+  line-height: 1.35;
+}
+
+.download-button,
+.copy-button {
+  width: 100%;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  padding: 13px 16px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 950;
+  cursor: pointer;
+}
+
+.download-button {
+  color: #fff;
+  background: var(--navy);
+  border: 0;
+}
+
+.download-button--print {
+  background: var(--green-dark);
+}
+
+.download-button:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.download-spin {
+  animation: poster-spin 0.8s linear infinite;
+}
+
+@keyframes poster-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.copy-button {
+  color: #075985;
+  background: #fff;
+  border: 1px solid #bae6fd;
+}
+
+.download-button svg,
+.copy-button svg {
+  width: 16px;
+  height: 16px;
+}
+
+.preview-panel {
+  min-width: 0;
+  overflow: hidden;
+  background: var(--background);
+  border: 1px solid #e9d2a5;
+  border-radius: 24px;
+}
+
+.preview-header {
+  padding: 20px 24px 0;
+}
+
+.preview-header strong,
+.preview-header span {
+  display: block;
+}
+
+.preview-header strong {
+  font-size: 18px;
+  font-weight: 950;
+}
+
+.preview-header span {
+  margin-top: 3px;
+  color: #526078;
+  font-size: 13px;
+}
+
+.preview-stage {
+  min-height: 720px;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  overflow: auto;
+}
+
+.poster-preview {
+  width: min(100%, 430px);
+  aspect-ratio: var(--poster-ratio);
+  flex: 0 0 auto;
+}
+
+.poster-preview--banner,
+.poster-preview--facade {
+  width: min(100%, 400px);
+}
+
+.poster-preview--social {
+  width: min(100%, 520px);
+}
+
+.property-poster {
+  container-type: inline-size;
+  width: 100%;
+  height: 100%;
+  display: grid;
+  overflow: hidden;
+  color: var(--navy);
+  background: var(--paper);
+  border: 1px solid rgba(8, 17, 40, 0.08);
+  box-shadow: 0 28px 70px rgba(8, 17, 40, 0.18);
+}
+
+.property-poster--classic {
+  grid-template-rows: 14% 11% 47% 12% 16%;
+}
+
+.property-poster--premium {
+  grid-template-rows: 12% 8% 27% 29% 10% 14%;
+}
+
+.property-poster--agency {
+  grid-template-rows: 11% 25% 9% 30% 10% 15%;
+}
+
+.property-poster--banner.property-poster--premium,
+.property-poster--facade.property-poster--premium {
+  grid-template-rows: 11% 8% 25% 33% 10% 13%;
+}
+
+.property-poster--banner.property-poster--agency,
+.property-poster--facade.property-poster--agency {
+  grid-template-rows: 10% 24% 8% 35% 10% 13%;
+}
+
+.property-poster--window.property-poster--agency {
+  grid-template-rows: 13% 24% 9% 27% 11% 16%;
+}
+
+.property-poster--window.property-poster--premium {
+  grid-template-rows: 13% 7% 26% 28% 11% 15%;
+}
+
+.property-poster--window.property-poster--classic {
+  grid-template-rows: 15% 12% 45% 12% 16%;
+}
+
+.property-poster--social.property-poster--classic {
+  grid-template-rows: 14% 10% 48% 12% 16%;
+}
+
+.property-poster--social.property-poster--premium {
+  /* head / precio / foto / info+ (QR+iconos) / wa baja / brand- */
+  grid-template-rows: 11% 6% 28% 34% 8% 13%;
+}
+
+.property-poster--social.property-poster--agency {
+  /* head / foto / precio / info+ (QR+iconos) / wa baja / brand- */
+  grid-template-rows: 11% 27% 7% 34% 8% 13%;
+}
+
+/* Redes: QR e iconos con más aire; WhatsApp más abajo */
+.property-poster--social .qr-wrap {
+  width: min(96cqw, 78cqh, 260px);
+  height: min(96cqw, 78cqh, 260px);
+}
+
+.property-poster--social .premium-info,
+.property-poster--social .agency-info {
+  grid-template-columns: 1.1fr 0.9fr;
+  align-items: center;
+  gap: 2.5%;
+  padding: 2% 4% 2.5%;
+  overflow: hidden;
+}
+
+.property-poster--social .qr-block {
+  justify-content: center;
+  gap: 5px;
+  padding-right: 3%;
+  min-height: 0;
+}
+
+.property-poster--social .agency-price {
+  z-index: 2;
+  overflow: visible;
+}
+
+.property-poster--social .agency-price strong {
+  font-size: clamp(20px, 6.2cqw, 40px);
+  letter-spacing: -0.03em;
+}
+
+.property-poster--social .model-price,
+.property-poster--social .model-price--compact {
+  font-size: clamp(22px, 7cqw, 44px);
+  letter-spacing: -0.03em;
+}
+
+.property-poster--social .premium-info ul,
+.property-poster--social .agency-info ul {
+  height: auto;
+  min-height: 0;
+  align-self: center;
+  gap: clamp(10px, 2.6cqi, 16px);
+  justify-content: center;
+  padding-left: 0;
+  font-size: clamp(13px, 3.8cqi, 21px);
+}
+
+.property-poster--social .premium-info li,
+.property-poster--social .agency-info li {
+  white-space: nowrap;
+}
+
+.property-poster--social .premium-info li span,
+.property-poster--social .agency-info li span {
+  white-space: nowrap;
+}
+
+.model-head,
+.model-price,
+.model-photo,
+.classic-main,
+.premium-info,
+.agency-price,
+.agency-info,
+.model-whatsapp,
+.model-brand {
+  min-width: 0;
+  min-height: 0;
+}
+
+.model-head {
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  padding: 0 4%;
+  color: white;
+  background: var(--navy);
+  border-bottom: clamp(5px, 1.2cqw, 9px) solid var(--green);
+  font-size: clamp(28px, 9.4cqw, 66px);
+  font-weight: 1000;
+  line-height: 0.95;
+  letter-spacing: -0.045em;
+  white-space: nowrap;
+}
+
+.property-poster--social .model-head,
+.property-poster--window .model-head {
+  align-content: center;
+  padding-top: 0;
+  padding-bottom: 0;
+  font-size: clamp(24px, 8.4cqw, 56px);
+}
+
+.model-price {
+  display: grid;
+  place-items: center;
+  padding: 0 4%;
+  color: var(--navy);
+  background: var(--orange);
+  font-size: clamp(34px, 12cqw, 82px);
+  font-weight: 1000;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  white-space: nowrap;
+}
+
+.model-price--compact {
+  font-size: clamp(28px, 9.5cqw, 64px);
+}
+
+.model-photo {
+  position: relative;
+  overflow: hidden;
+  background: #dce3ea;
+}
+
+.model-photo img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.model-photo span {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  color: #64748b;
+  font-weight: 800;
+}
+
+.classic-main {
+  container-type: size;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(10px, 2.5cqw, 18px);
+  padding: 4% 8%;
+  background: white;
+  overflow: hidden;
+}
+
+.classic-main p {
+  margin: 0;
+  flex: 0 0 auto;
+  text-align: center;
+  color: var(--green-dark);
+  font-size: clamp(14px, 3.8cqw, 28px);
+  font-weight: 1000;
+  line-height: 1.05;
+  text-transform: uppercase;
+}
+
+.premium-info,
+.agency-info {
+  display: grid;
+  grid-template-columns: 0.9fr 1.1fr;
+  align-items: center;
+  gap: 2.5%;
+  padding: 2% 4.5%;
+  background: white;
+  overflow: hidden;
+}
+
+.qr-block {
+  container-type: size;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  padding-right: 3.5%;
+  border-right: 2px solid #e6ebf2;
+}
+
+.qr-wrap {
+  position: relative;
+  width: min(100cqw, 88cqh, 280px);
+  height: min(100cqw, 88cqh, 280px);
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  flex: 0 0 auto;
+  border: 3px solid var(--navy);
+  border-radius: 8px;
+  background: white;
+}
+
+.classic-main .qr-wrap,
+.property-poster--classic .qr-wrap {
+  width: min(72cqw, 78cqh, 280px);
+  height: min(72cqw, 78cqh, 280px);
+}
+
+.property-poster--banner .qr-wrap,
+.property-poster--facade .qr-wrap {
+  width: min(100cqw, 82cqh, 360px);
+  height: min(100cqw, 82cqh, 360px);
+}
+
+.qr-wrap > img,
+.qr-wrap > div {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+}
+
+.qr-wrap > img,
+.qr-wrap > div > img:first-of-type {
+  display: block;
+  object-fit: contain;
+}
+
+.qr-block p {
+  margin: 0;
+  flex: 0 0 auto;
+  text-align: center;
+  color: var(--green-dark);
+  font-size: clamp(8px, 2.2cqw, 13px);
+  font-weight: 1000;
+  line-height: 1.15;
+  text-transform: uppercase;
+  max-width: 100%;
+}
+
+.premium-info ul,
+.agency-info ul {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  gap: 0;
+  /* Misma altura visual que el QR, sin aire muerto entre filas */
+  height: min(34cqi, 280px);
+  margin: 0;
+  padding: 0 0 0 2%;
+  color: var(--navy);
+  font-size: clamp(13px, 3.3cqi, 22px);
+  font-weight: 1000;
+  list-style: none;
+  text-transform: uppercase;
+}
+
+.premium-info li,
+.agency-info li {
+  display: flex;
+  align-items: center;
+  gap: clamp(10px, 2cqi, 16px);
+  line-height: 1.05;
+}
+
+.premium-info li::before,
+.agency-info li::before {
+  display: none;
+}
+
+.feature-icon {
+  width: 1.35em;
+  height: 1.35em;
+  flex: 0 0 auto;
+  color: var(--green-dark);
+  stroke-width: 2.25;
+}
+
+.poster-qr-logo {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  width: 22%;
+  height: 22%;
+  transform: translate(-50%, -50%);
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  background: #fff;
+  padding: 4%;
+  box-shadow: 0 0 0 2px #fff;
+}
+
+.poster-qr-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border: 0 !important;
+  border-radius: 0;
+}
+
+.wa-icon {
+  width: clamp(14px, 3.2cqw, 22px);
+  height: clamp(14px, 3.2cqw, 22px);
+  flex: 0 0 auto;
+}
+
+.model-whatsapp span {
+  display: none;
+}
+
+.agency-price {
+  display: grid;
+  grid-template-columns: 1fr;
+  align-items: center;
+  gap: 4%;
+  padding: 0 6%;
+  color: var(--navy);
+  background: var(--orange);
+}
+
+.agency-price strong {
+  font-size: clamp(28px, 8.5cqw, 60px);
+  font-weight: 1000;
+  white-space: nowrap;
+  line-height: 1;
+}
+
+.agency-price span {
+  padding-left: 14px;
+  border-left: 2px solid rgba(7, 25, 74, 0.18);
+  font-size: clamp(11px, 2.6cqw, 18px);
+  font-weight: 1000;
+  line-height: 1.05;
+  text-transform: uppercase;
+  text-align: left;
+}
+
+.model-whatsapp {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(8px, 1.8cqw, 14px);
+  padding: 0.8% 4% 0;
+  color: white;
+  background: var(--green-dark);
+  font-weight: 1000;
+  text-align: center;
+}
+
+.model-whatsapp span {
+  text-transform: uppercase;
+  font-size: clamp(11px, 2.5cqw, 18px);
+}
+
+.model-whatsapp strong {
+  font-size: clamp(16px, 4.2cqw, 30px);
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.model-brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  padding: 8px 7%;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.model-brand img {
+  display: block;
+  width: auto;
+  height: calc(100% - 4px);
+  max-width: 82%;
+  object-fit: contain;
+  object-position: center bottom;
+}
+
+@media (max-width: 1050px) {
+  .poster-tool {
+    grid-template-columns: 1fr;
+  }
+
+  .preview-stage {
+    min-height: 650px;
+  }
+}
+
+@media print {
+  @page {
+    size: var(--print-width) var(--print-height);
+    margin: 0;
+  }
+
+  html,
+  body {
+    width: var(--print-width);
+    height: var(--print-height);
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white !important;
+  }
+
+  body * {
+    visibility: hidden !important;
+  }
+
+  #printable-poster,
+  #printable-poster * {
+    visibility: visible !important;
+  }
+
+  .poster-tool,
+  .preview-panel,
+  .preview-stage,
+  .poster-preview {
+    width: var(--print-width) !important;
+    height: var(--print-height) !important;
+    min-height: 0 !important;
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    background: white !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+  }
+
+  .no-print,
+  .poster-options,
+  .preview-header {
+    display: none !important;
+  }
+
+  #printable-poster {
+    position: absolute !important;
+    inset: 0 !important;
+    width: var(--print-width) !important;
+    height: var(--print-height) !important;
+    margin: 0 !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+}

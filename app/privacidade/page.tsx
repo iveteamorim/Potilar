@@ -70,7 +70,7 @@ export default function PrivacidadePage() {
           <section>
             <h2 className="text-lg font-semibold text-slate-900 dark:text-white">7. Contato</h2>
             <p className="mt-2">
-              Para falar sobre privacidade, envie mensagem pelo WhatsApp +55 21 96972-4141.
+              Para falar sobre privacidade, use o formulario de contato da Potilar.
             </p>
           </section>
         </div>

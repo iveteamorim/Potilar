@@ -2,6 +2,7 @@ import type { Property } from '@/data/properties';
 import { isActiveFeaturedListing } from './listingLifecycle';
 import { isDefaultListingCoordinate, isKnownCityCenterCoordinate, resolveListingCoordinates } from './locationCoordinates';
 import { formatPlaceName } from './textFormat';
+import { normalizeListingImageUrls } from './imageUrls';
 
 export const PUBLIC_LISTING_SELECT =
   'id,owner_id,slug,title,property_type,transaction,price,price_period,bedrooms,bathrooms,parking,area_sqm,condo_fee,condo_included,is_pet_friendly,is_furnished,location,neighborhood,community,address_extra,lat,lng,images,video_url,tour_url,featured_plan,featured_payment_status,featured_starts_at,featured_expires_at,description,features,created_at,updated_at';
@@ -122,7 +123,7 @@ export function listingRowToProperty(row: ListingRow): Property {
     isFurnished: Boolean(row.is_furnished),
     isFeatured,
     featuredPlan: row.featured_plan ?? undefined,
-    images: row.images,
+    images: normalizeListingImageUrls(row.images),
     videoUrl: row.video_url ?? undefined,
     tourUrl: row.tour_url ?? undefined,
     contactName: row.contact_name ?? undefined,

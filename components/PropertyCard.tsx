@@ -10,6 +10,7 @@ import { getCleanPropertyTitle } from '@/lib/displayTitle';
 import { getListingHref } from '@/lib/listingUrls';
 import { getPublicProfilePath } from '@/lib/publicProfile';
 import { showsDestaquePresentation } from '@/lib/legacyHomeFeatured';
+import { usesResidentialLayoutFields } from '@/lib/propertyTypes';
 import FavoriteButton from './FavoriteButton';
 import ListingMessageButton from './ListingMessageButton';
 
@@ -399,18 +400,24 @@ export default function PropertyCard({
             {formatPropertyPrice(property)}
           </span>
           <div className={`${specsClassName} flex flex-wrap items-center font-semibold text-slate-500 dark:text-slate-400`}>
-            <span className="inline-flex items-center gap-1">
-              <BedDouble className="h-4 w-4" />
-              {property.bedrooms}
-            </span>
-            <span className="inline-flex items-center gap-1">
-              <Bath className="h-4 w-4" />
-              {property.bathrooms}
-            </span>
-            <span className="inline-flex items-center gap-1">
-              <Car className="h-4 w-4" />
-              {property.parking}
-            </span>
+            {usesResidentialLayoutFields(property.propertyType) && (
+              <>
+                <span className="inline-flex items-center gap-1">
+                  <BedDouble className="h-4 w-4" />
+                  {property.bedrooms}
+                </span>
+                <span className="inline-flex items-center gap-1">
+                  <Bath className="h-4 w-4" />
+                  {property.bathrooms}
+                </span>
+              </>
+            )}
+            {(usesResidentialLayoutFields(property.propertyType) || property.parking > 0) && (
+              <span className="inline-flex items-center gap-1">
+                <Car className="h-4 w-4" />
+                {property.parking}
+              </span>
+            )}
             {property.areaSqm && (
               <span className="inline-flex items-center gap-1">
                 <Ruler className="h-4 w-4" />
@@ -418,7 +425,8 @@ export default function PropertyCard({
               </span>
             )}
           </div>
-          {(property.condoIncluded || property.isFurnished || property.isPetFriendly) && (
+          {(usesResidentialLayoutFields(property.propertyType) &&
+            (property.condoIncluded || property.isFurnished || property.isPetFriendly)) && (
             <div className={`${tagsClassName} flex flex-wrap gap-1.5`}>
               {property.condoIncluded && (
                 <span className="rounded-full bg-ocean-50 px-2.5 py-1 text-[11px] font-semibold text-ocean-700 dark:bg-ocean-950/40 dark:text-ocean-200">

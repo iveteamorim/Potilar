@@ -9,6 +9,7 @@ import {
   hasDefensiblePriceData,
   type PriceDataTier
 } from '@/lib/priceDataTier';
+import { isCommercialPropertyType } from '@/lib/propertyTypes';
 
 export type PriceVerdict = 'much_below' | 'below' | 'fair' | 'above' | 'much_above' | 'insufficient_data';
 
@@ -214,6 +215,29 @@ export async function buildPriceInsight(input: PriceInsightInput): Promise<Price
       title: 'Informe preço, cidade, tipo e negociação',
       summary: 'Preencha os dados do anúncio para comparar com referências de mercado online no RN.',
       tip: 'Quanto mais completo o cadastro (bairro, metragem, quartos), melhor a leitura de preço.'
+    };
+  }
+
+  if (isCommercialPropertyType(input.propertyType)) {
+    return {
+      verdict: 'insufficient_data',
+      listingPrice: input.price,
+      medianPrice: 0,
+      minPrice: 0,
+      maxPrice: 0,
+      percentVsMedian: 0,
+      scope: 'city',
+      scopeLabel: cityLabel,
+      pricePerSqm: 0,
+      estimatedAreaSqm: 0,
+      source: '',
+      referencePeriod: '',
+      isApproximate: false,
+      priceUnit: input.transaction === 'Compra' ? 'sale' : 'monthly',
+      dataTier: 'none',
+      title: 'Preço Justo indisponível para comercial',
+      summary: 'Ainda não há referência consolidada para pontos comerciais nesta região.',
+      tip: 'Compare com lojas e salas semelhantes no mesmo bairro ou eixo comercial.'
     };
   }
 

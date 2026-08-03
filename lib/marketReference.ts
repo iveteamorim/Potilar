@@ -19,14 +19,16 @@ const PROPERTY_TYPE_SALE_MULTIPLIER: Record<string, number> = {
   Apartamento: 1,
   Casa: 0.9,
   'Kitnet/Conjugado': 1.22,
-  Terreno: 1
+  Terreno: 1,
+  'Ponto comercial': 1.35
 };
 
 const PROPERTY_TYPE_RENT_MULTIPLIER: Record<string, number> = {
   Apartamento: 1,
   Casa: 0.92,
   'Kitnet/Conjugado': 1.18,
-  Terreno: 1
+  Terreno: 1,
+  'Ponto comercial': 1.4
 };
 
 const BEDROOM_AREA_ESTIMATE: Record<number, number> = {
@@ -90,6 +92,7 @@ function estimateAreaSqm(bedrooms?: number, propertyType?: string, areaSqm?: num
   const bucket = beds >= 4 ? 4 : beds;
   if (propertyType === 'Terreno') return 300;
   if (propertyType === 'Kitnet/Conjugado') return 32;
+  if (propertyType === 'Ponto comercial') return 80;
   return BEDROOM_AREA_ESTIMATE[bucket] ?? 65;
 }
 

@@ -36,6 +36,20 @@ export async function GET(request: NextRequest) {
         type: type === 'signup' ? 'signup' : 'magiclink'
       });
     }
+
+    const {
+      data: { user }
+    } = await supabase.auth.getUser();
+
+    if (user?.user_metadata?.potilar_email_pending === true) {
+      await supabase.auth.updateUser({
+        data: {
+          ...user.user_metadata,
+          potilar_email_pending: false,
+          potilar_email_confirmed_at: new Date().toISOString()
+        }
+      });
+    }
   }
 
   return response;

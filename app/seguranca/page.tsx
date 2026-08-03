@@ -90,18 +90,16 @@ export default function SegurancaPage() {
             <div>
               <h2 className="text-xl font-semibold">Viu algo suspeito?</h2>
               <p className="mt-2 text-sm text-ocean-50">
-                Envie o código do anúncio para nossa equipe revisar.
+                Envie o código do anúncio pelo formulario para nossa equipe revisar.
               </p>
             </div>
-            <a
-              href={`https://wa.me/5521969724141?text=${encodeURIComponent('Olá, quero denunciar um anúncio suspeito na Potilar.')}`}
-              target="_blank"
-              rel="noreferrer"
+            <Link
+              href="/contato"
               className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-ocean-700"
             >
               <Flag className="h-4 w-4" aria-hidden="true" />
-              Denunciar pelo WhatsApp
-            </a>
+              Enviar pelo formulario
+            </Link>
           </div>
         </section>
 

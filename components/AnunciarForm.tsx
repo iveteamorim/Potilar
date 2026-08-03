@@ -13,7 +13,6 @@ import { KNOWN_CITY_NAMES, normalizeKnownCityName, resolveListingCoordinates } f
 import { formatPlaceName as formatDisplayPlaceName } from '@/lib/textFormat';
 import { getActiveListingStatuses, getListingLimitForAccount, getListingLimitLabel } from '@/lib/listingLimits';
 import { PLANS, formatPlanPrice, getFreeListingLimit, getLaunchPromoDeadlineLabel, isLaunchPromoActive } from '@/lib/plans';
-import { normalizeTourUrl } from '@/lib/tourUrl';
 
 const PAID_LISTING_PRICE = PLANS.listing.additionalPrice;
 const SEASONAL_LISTING_PRICE = PLANS.listing.seasonalPrice;
@@ -182,7 +181,6 @@ export default function AnunciarForm({
   const [details, setDetails] = useState('');
   const [features, setFeatures] = useState('');
   const [videoUrl, setVideoUrl] = useState('');
-  const [tourUrl, setTourUrl] = useState('');
   const [photos, setPhotos] = useState<PhotoPreview[]>([]);
   const [status, setStatus] = useState('');
   const [listingId] = useState(() => crypto.randomUUID());
@@ -255,7 +253,7 @@ export default function AnunciarForm({
     cityInputRef.current?.focus();
   }
 
-  async function generateSuggestion() {
+  async function generateSuggestion(useAiCredit = false) {
     setStatus('');
 
     if (!location || !propertyType || !transaction) {
@@ -263,21 +261,51 @@ export default function AnunciarForm({
       return;
     }
 
-    setIsSuggesting(true);
+    if (useAiCredit) {
+      setIsSuggesting(true);
+      try {
+        const response = await fetch('/api/ai/listing', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title,
+            location,
+            neighborhood,
+            community,
+            addressExtra,
+            propertyType,
+            transaction,
+            price,
+            pricePeriod,
+            bedrooms,
+            bathrooms,
+            parking,
+            areaSqm,
+            condoIncluded,
+            isPetFriendly,
+            isFurnished,
+            details,
+            features
+          })
+        });
+        const data = await response.json().catch(() => ({}));
 
-    try {
-      const response = await fetch('/api/ai/credits/use', { method: 'POST' });
-      const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          setStatus(data.error ?? 'Nao foi possivel gerar o anúncio com IA.');
+          return;
+        }
 
-      if (!response.ok) {
-        setStatus(data.error ?? 'Não foi possível usar créditos de IA. Compre créditos em Minha conta.');
+        setTitle(data.generated.title);
+        setDetails(data.generated.description);
+        setFeatures((data.generated.features ?? []).join(', '));
+        setStatus(data.free ? 'Anúncio gerado com IA grátis para admin. Revise antes de publicar.' : 'Anúncio gerado com IA. Foi usado 1 credito. Revise antes de publicar.');
         return;
+      } catch {
+        setStatus('Nao foi possivel gerar o anúncio com IA.');
+        return;
+      } finally {
+        setIsSuggesting(false);
       }
-    } catch {
-      setStatus('Não foi possível verificar seus créditos de IA.');
-      return;
-    } finally {
-      setIsSuggesting(false);
     }
 
     setIsSuggesting(true);
@@ -308,56 +336,56 @@ export default function AnunciarForm({
         ? typedFeatures
         : [
             formattedNeighborhood || formattedCommunity ? 'Boa localização' : '',
-            isSeasonal ? 'Ideal para temporada' : transaction === 'Compra' ? 'Boa oportunidade de compra' : 'Pronto para morar',
+            isSeasonal ? 'Ideal para temporada' : transaction === 'Aluguel' ? 'Pronto para morar' : '',
             isFurnished ? 'Mobiliado' : '',
             isPetFriendly ? 'Aceita pet' : '',
             condoIncluded ? 'Condomínio incluso' : '',
-            areaText ? 'Espaço bem distribuído' : ''
+            areaText ? `${areaText}` : ''
           ].filter(Boolean);
 
     const openingByTransaction =
       transaction === 'Temporada'
-        ? `${propertyType} para temporada em ${locationHint}${formattedPrice ? `, com diária de ${formattedPrice}` : ''}. Uma opção interessante para quem quer aproveitar a região com praticidade, conforto e fácil contato com o anunciante.`
+        ? `${propertyType} para temporada em ${locationHint}${formattedPrice ? `, com diária de ${formattedPrice}` : ''}.`
         : transaction === 'Aluguel'
-          ? `${propertyType} para aluguel em ${locationHint}${formattedPrice ? ` por ${formattedPrice}` : ''}. Um imóvel indicado para quem busca uma rotina prática, boa localização e um espaço pronto para receber novos moradores.`
-          : `${propertyType} à venda em ${locationHint}${formattedPrice ? ` por ${formattedPrice}` : ''}. Uma oportunidade para quem procura um imóvel no Rio Grande do Norte com boa apresentação e potencial para moradia, investimento ou uso familiar.`;
+          ? `${propertyType} para aluguel em ${locationHint}${formattedPrice ? ` por ${formattedPrice}` : ''}.`
+          : `${propertyType} à venda em ${locationHint}${formattedPrice ? ` por ${formattedPrice}` : ''}.`;
 
     const layoutSentence = isLand
-      ? `${areaText ? `O terreno possui ${areaText}` : 'O terreno oferece uma área versátil'}, com perfil adequado para quem deseja construir, investir ou planejar um projeto próprio.`
+      ? areaText ? `Terreno com ${areaText}.` : ''
       : highlights.length
-        ? `A configuração reúne ${highlights.join(', ')}, criando um conjunto funcional para o dia a dia e fácil de entender na visita.`
-        : `O imóvel tem uma proposta simples e funcional, com características que podem atender diferentes perfis de comprador ou inquilino.`;
+        ? `O imóvel conta com ${highlights.join(', ')}.`
+        : '';
 
     const comfortItems = [
       isFurnished ? 'mobiliado' : '',
       isPetFriendly ? 'aceita pet' : '',
       condoIncluded ? 'condomínio incluso' : '',
-      formattedCommunity ? `referência em ${formattedCommunity}` : '',
-      addressExtra ? `referência: ${addressExtra}` : ''
+      formattedCommunity ? `em ${formattedCommunity}` : '',
+      addressExtra ? addressExtra : ''
     ].filter(Boolean);
 
     const comfortSentence = comfortItems.length
-      ? `Entre os pontos que ajudam na decisão estão: ${comfortItems.join(', ')}.`
+      ? `Características: ${comfortItems.join(', ')}.`
       : formattedNeighborhood || formattedCommunity
-        ? `A localização facilita a comparação com outros imóveis da região e ajuda quem já procura por esse entorno.`
-        : `A localização no RN permite avaliar o imóvel com calma e comparar com outras oportunidades da Potilar.`;
+        ? ''
+        : '';
 
     const ownerNotes = details.trim()
-      ? `Observações do anunciante: ${details.trim()}`
-      : 'Entre em contato para confirmar disponibilidade, combinar uma visita e tirar dúvidas diretamente com o responsável pelo anúncio.';
+      ? details.trim()
+      : '';
 
     const generatedDetails = [
       openingByTransaction,
       layoutSentence,
       comfortSentence,
-      generatedFeatures.length ? `Destaques do imóvel: ${generatedFeatures.join(', ')}.` : '',
+      generatedFeatures.length ? `Destaques: ${generatedFeatures.join(', ')}.` : '',
       ownerNotes
     ].filter(Boolean).join('\n\n');
 
     setTitle(generatedTitle);
     setDetails(generatedDetails);
     setFeatures(generatedFeatures.join(', '));
-    setStatus('Sugestão gerada. Foi usado 1 crédito de IA. Revise o texto antes de publicar.');
+    setStatus(useAiCredit ? 'Sugestão gerada. Foi usado 1 credito de IA. Revise o texto antes de publicar.' : 'Sugestão grátis gerada. Revise o texto antes de publicar.');
     setIsSuggesting(false);
   }
 
@@ -430,12 +458,6 @@ export default function AnunciarForm({
     const normalizedVideoUrl = normalizeVideoUrl(videoUrl);
     if (videoUrl.trim() && !normalizedVideoUrl) {
       setStatus('Informe um link de vídeo válido, com http:// ou https://.');
-      return;
-    }
-
-    const normalizedTourUrl = normalizeTourUrl(tourUrl);
-    if (tourUrl.trim() && !normalizedTourUrl) {
-      setStatus('Informe um link de tour virtual 3D válido, com http:// ou https://.');
       return;
     }
 
@@ -617,7 +639,6 @@ export default function AnunciarForm({
         lng,
         images: imageUrls,
         video_url: normalizedVideoUrl,
-        tour_url: normalizedTourUrl,
         contact_name: ownerName || null,
         contact_phone: contactMethods.includes('phone') ? ownerPhone : null,
         contact_whatsapp: contactMethods.includes('whatsapp') ? ownerPhone : null,
@@ -648,7 +669,6 @@ export default function AnunciarForm({
           is_pet_friendly: _pet,
           is_furnished: _furnished,
           video_url: _videoUrl,
-          tour_url: _tourUrl,
           ...legacyPayload
         } = listingPayload;
         insertPayload = referralCode ? { ...legacyPayload, referral_code: referralCode } : legacyPayload;
@@ -884,24 +904,7 @@ export default function AnunciarForm({
               {!isLand && <input type="text" placeholder="Condomínio (R$)" value={condoFee} onChange={(event) => setCondoFee(event.target.value)} className={inputClass} />}
             </div>
 
-            <PrecoJustoRNAdvisor
-              price={price}
-              transaction={transaction}
-              propertyType={propertyType}
-              location={location}
-              neighborhood={neighborhood}
-              bedrooms={bedrooms}
-              bathrooms={bathrooms}
-              parking={parking}
-              areaSqm={areaSqm}
-              isFurnished={isFurnished}
-              isPetFriendly={isPetFriendly}
-              imageCount={photos.length}
-              videoUrl={videoUrl}
-              tourUrl={tourUrl}
-              featureCount={features.split(',').map((item) => item.trim()).filter(Boolean).length}
-              descriptionLength={details.length}
-            />
+            <PrecoJustoRNAdvisor price={price} transaction={transaction} propertyType={propertyType} location={location} neighborhood={neighborhood} bedrooms={bedrooms} areaSqm={areaSqm} />
 
             {!isLand && (
               <div className="grid gap-3 text-sm font-semibold text-slate-700 dark:text-slate-200 sm:grid-cols-3">
@@ -952,12 +955,6 @@ export default function AnunciarForm({
               <p className="mt-1 text-xs text-slate-500">Cole um link do YouTube, Instagram, TikTok ou Drive.</p>
               <input id="listing-video-url" type="url" placeholder="https://..." value={videoUrl} onChange={(event) => setVideoUrl(event.target.value)} className={`${inputClass} mt-3`} />
             </div>
-
-            <div className="rounded-2xl border border-violet-100 bg-violet-50/40 p-4 dark:border-slate-800 dark:bg-slate-900">
-              <label className="block text-sm font-semibold text-slate-900 dark:text-white" htmlFor="listing-tour-url">Tour virtual 3D (opcional)</label>
-              <p className="mt-1 text-xs text-slate-500">Cole o link do Matterport, Kuula, CloudPano ou outro tour em 360°.</p>
-              <input id="listing-tour-url" type="url" placeholder="https://..." value={tourUrl} onChange={(event) => setTourUrl(event.target.value)} className={`${inputClass} mt-3`} />
-            </div>
           </section>
         )}
 
@@ -969,10 +966,16 @@ export default function AnunciarForm({
               <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">Preencha apenas os dados básicos. A Potilar escreve o título e a descrição para você.</p>
             </div>
 
-            <button type="button" onClick={generateSuggestion} disabled={isSuggesting} className="flex w-full items-center justify-center gap-2 rounded-2xl bg-ocean-600 px-5 py-4 text-sm font-semibold text-white transition hover:bg-ocean-700 disabled:opacity-60">
-              <Sparkles className="h-4 w-4" aria-hidden="true" />
-              {isSuggesting ? 'Criando anúncio...' : 'Gerar título + descrição - 1 crédito'}
-            </button>
+            <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
+              <button type="button" onClick={() => generateSuggestion()} disabled={isSuggesting} className="flex w-full items-center justify-center gap-2 rounded-2xl bg-ocean-600 px-5 py-4 text-sm font-semibold text-white transition hover:bg-ocean-700 disabled:opacity-60">
+                <Sparkles className="h-4 w-4" aria-hidden="true" />
+                {isSuggesting ? 'Criando anúncio...' : 'Gerar título + descrição grátis'}
+              </button>
+              <button type="button" onClick={() => generateSuggestion(true)} disabled={isSuggesting} className="flex w-full items-center justify-center gap-2 rounded-2xl border border-ocean-200 px-5 py-4 text-sm font-semibold text-ocean-700 transition hover:border-ocean-400 hover:text-ocean-900 disabled:opacity-60 sm:w-auto">
+                <Sparkles className="h-4 w-4" aria-hidden="true" />
+                IA - 1 crédito
+              </button>
+            </div>
 
             <input type="text" placeholder="Título" value={title} onChange={(event) => setTitle(event.target.value)} className={inputClass} />
             <textarea rows={6} placeholder="Descrição" value={details} onChange={(event) => setDetails(event.target.value)} className={inputClass} />
@@ -1049,7 +1052,3 @@ export default function AnunciarForm({
     </form>
   );
 }
-
-
-
-

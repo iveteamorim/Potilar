@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ChevronDown, Save, Sparkles, Upload, X } from 'lucide-react';
 import { compressImage } from '@/lib/imageCompression';
 import { createClient } from '@/lib/supabase/client';
@@ -10,11 +10,20 @@ import { geocodeListingAddress } from '@/lib/geocodeListing';
 import { KNOWN_CITY_NAMES, normalizeKnownCityName, resolveListingCoordinates } from '@/lib/locationCoordinates';
 import { formatPlaceName as formatDisplayPlaceName } from '@/lib/textFormat';
 import { normalizeTourUrl } from '@/lib/tourUrl';
+import type { PropertyType } from '@/lib/propertyTypes';
+import {
+  allowsSeasonalTransaction,
+  COMMERCIAL_FEATURES,
+  COMMERCIAL_SUBTYPES,
+  isCommercialPropertyType,
+  isLandPropertyType,
+  usesResidentialLayoutFields
+} from '@/lib/propertyTypes';
 
 type ListingEditorData = {
   id: string;
   title: string;
-  property_type: 'Casa' | 'Terreno' | 'Apartamento' | 'Kitnet/Conjugado';
+  property_type: PropertyType;
   transaction: 'Compra' | 'Aluguel' | 'Temporada';
   price: number;
   price_period?: 'dia' | 'semana' | 'mes' | null;
@@ -113,6 +122,32 @@ export default function ListingEditorForm({
   const [status, setStatus] = useState('');
   const [saving, setSaving] = useState(false);
   const [isSuggesting, setIsSuggesting] = useState(false);
+  const showResidentialFields = usesResidentialLayoutFields(propertyType);
+  const isLand = isLandPropertyType(propertyType);
+  const isCommercial = isCommercialPropertyType(propertyType);
+
+  useEffect(() => {
+    if (usesResidentialLayoutFields(propertyType)) return;
+    setBedrooms('0');
+    setBathrooms('0');
+    setIsPetFriendly(false);
+    setIsFurnished(false);
+    setCondoIncluded(false);
+    if (isLandPropertyType(propertyType)) {
+      setParking('0');
+    }
+    if (isCommercialPropertyType(propertyType) && transaction === 'Temporada') {
+      setTransaction('Aluguel');
+    }
+  }, [propertyType, transaction]);
+
+  function addFeature(value: string) {
+    setFeatures((current) => {
+      const items = splitFeatures(current);
+      if (items.some((item) => item.toLowerCase() === value.toLowerCase())) return current;
+      return [...items, value].join(', ');
+    });
+  }
 
   function toggleContactMethod(method: string) {
     setContactMethods((current) =>
@@ -153,15 +188,43 @@ export default function ListingEditorForm({
     setIsSuggesting(true);
 
     try {
-      const response = await fetch('/api/ai/credits/use', { method: 'POST' });
+      const response = await fetch('/api/ai/listing', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title,
+          location,
+          neighborhood,
+          community,
+          addressExtra,
+          propertyType,
+          transaction,
+          price,
+          pricePeriod,
+          bedrooms,
+          bathrooms,
+          parking,
+          isFurnished,
+          isPetFriendly,
+          condoIncluded,
+          details: description,
+          features
+        })
+      });
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        setStatus(data.error ?? 'Não foi possível usar créditos de IA. Compre créditos em Minha conta.');
+        setStatus(data.error ?? 'Não foi possível gerar com IA. Compre créditos em Minha conta.');
         return;
       }
+
+      setTitle(data.generated.title);
+      setDescription(data.generated.description);
+      setFeatures((data.generated.features ?? []).join(', '));
+      setStatus(data.free ? 'Anúncio gerado com IA grátis para admin. Revise o texto antes de salvar.' : 'Anúncio gerado com IA. Foi usado 1 crédito. Revise o texto antes de salvar.');
+      return;
     } catch {
-      setStatus('Não foi possível verificar seus créditos de IA.');
+      setStatus('Não foi possível gerar com IA.');
       return;
     } finally {
       setIsSuggesting(false);
@@ -170,10 +233,12 @@ export default function ListingEditorForm({
     setIsSuggesting(true);
 
     const formattedPrice = price ? `R$ ${price.replace(/^R\$\s*/i, '')}${transaction === 'Temporada' ? `/${pricePeriod}` : ''}` : '';
-    const isLand = propertyType === 'Terreno';
-    const bedroomText = !isLand && Number(bedrooms) > 0 ? `${bedrooms} quarto${bedrooms === '1' ? '' : 's'}` : '';
-    const bathroomText = !isLand && Number(bathrooms) > 0 ? `${bathrooms} banheiro${bathrooms === '1' ? '' : 's'}` : '';
-    const parkingText = !isLand && Number(parking) > 0 ? `${parking} vaga${parking === '1' ? '' : 's'} de garagem` : '';
+    const isLand = isLandPropertyType(propertyType);
+    const isCommercial = isCommercialPropertyType(propertyType);
+    const showResidentialFields = usesResidentialLayoutFields(propertyType);
+    const bedroomText = showResidentialFields && Number(bedrooms) > 0 ? `${bedrooms} quarto${bedrooms === '1' ? '' : 's'}` : '';
+    const bathroomText = showResidentialFields && Number(bathrooms) > 0 ? `${bathrooms} banheiro${bathrooms === '1' ? '' : 's'}` : '';
+    const parkingText = Number(parking) > 0 ? `${parking} vaga${parking === '1' ? '' : 's'}${isCommercial ? '' : ' de garagem'}` : '';
     const highlights = [bedroomText, bathroomText, parkingText].filter(Boolean);
     const typedFeatures = splitFeatures(features);
     const correctedLocation = formatDisplayPlaceName(normalizeKnownCityName(location));
@@ -203,7 +268,9 @@ export default function ListingEditorForm({
 
     const layoutSentence = isLand
       ? 'O terreno oferece uma área versátil, com perfil adequado para quem deseja construir, investir ou planejar um projeto próprio.'
-      : highlights.length
+      : isCommercial
+        ? 'O ponto comercial tem área funcional em localização estratégica para lojas, salas ou serviços.'
+        : highlights.length
         ? `A configuração reúne ${highlights.join(', ')}, formando um conjunto funcional e fácil de avaliar durante a visita.`
         : 'O imóvel tem uma proposta simples e funcional, com características que podem atender diferentes perfis de comprador ou inquilino.';
 
@@ -319,9 +386,9 @@ export default function ListingEditorForm({
         new_transaction: transaction,
         new_price: Number(price.replace(/\D/g, '')) || 0,
         new_price_period: transaction === 'Temporada' ? pricePeriod : null,
-        new_bedrooms: Number(bedrooms) || 0,
-        new_bathrooms: Number(bathrooms) || 0,
-        new_parking: Number(parking) || 0,
+        new_bedrooms: showResidentialFields ? Number(bedrooms) || 0 : 0,
+        new_bathrooms: showResidentialFields ? Number(bathrooms) || 0 : 0,
+        new_parking: isLand ? 0 : Number(parking) || 0,
         new_location: formattedLocation,
         new_neighborhood: formattedNeighborhood || null,
         new_community: formattedCommunity || null,
@@ -345,9 +412,9 @@ export default function ListingEditorForm({
         .update({
           video_url: normalizedVideoUrl,
           tour_url: normalizedTourUrl,
-          condo_included: transaction === 'Aluguel' && condoIncluded,
-          is_pet_friendly: isPetFriendly,
-          is_furnished: isFurnished
+          condo_included: showResidentialFields && transaction === 'Aluguel' && condoIncluded,
+          is_pet_friendly: showResidentialFields && isPetFriendly,
+          is_furnished: showResidentialFields && isFurnished
         })
         .eq('id', listing.id);
       if (extraUpdate.error && !/column|schema cache/i.test(extraUpdate.error.message)) {
@@ -377,11 +444,12 @@ export default function ListingEditorForm({
           <option>Terreno</option>
           <option>Apartamento</option>
           <option>Kitnet/Conjugado</option>
+          <option>Ponto comercial</option>
         </select>
         <select value={transaction} onChange={(event) => setTransaction(event.target.value as ListingEditorData['transaction'])} className="rounded-2xl border border-sand-200 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-900">
           <option>Compra</option>
           <option>Aluguel</option>
-          <option>Temporada</option>
+          {allowsSeasonalTransaction(propertyType) && <option>Temporada</option>}
         </select>
       </div>
 
@@ -417,22 +485,29 @@ export default function ListingEditorForm({
         <input value={addressExtra} onChange={(event) => setAddressExtra(event.target.value)} placeholder="Referência" className="rounded-2xl border border-sand-200 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-900" />
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-3">
-        <label className="space-y-1.5">
-          <span className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Quartos</span>
-          <input type="number" min="0" value={bedrooms} onChange={(event) => setBedrooms(event.target.value)} placeholder="0" className="w-full rounded-2xl border border-sand-200 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-900" />
-        </label>
-        <label className="space-y-1.5">
-          <span className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Banheiros</span>
-          <input type="number" min="0" value={bathrooms} onChange={(event) => setBathrooms(event.target.value)} placeholder="0" className="w-full rounded-2xl border border-sand-200 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-900" />
-        </label>
-        <label className="space-y-1.5">
-          <span className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Garagem</span>
+      {showResidentialFields ? (
+        <div className="grid gap-3 sm:grid-cols-3">
+          <label className="space-y-1.5">
+            <span className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Quartos</span>
+            <input type="number" min="0" value={bedrooms} onChange={(event) => setBedrooms(event.target.value)} placeholder="0" className="w-full rounded-2xl border border-sand-200 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-900" />
+          </label>
+          <label className="space-y-1.5">
+            <span className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Banheiros</span>
+            <input type="number" min="0" value={bathrooms} onChange={(event) => setBathrooms(event.target.value)} placeholder="0" className="w-full rounded-2xl border border-sand-200 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-900" />
+          </label>
+          <label className="space-y-1.5">
+            <span className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Garagem</span>
+            <input type="number" min="0" value={parking} onChange={(event) => setParking(event.target.value)} placeholder="0" className="w-full rounded-2xl border border-sand-200 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-900" />
+          </label>
+        </div>
+      ) : isCommercial ? (
+        <label className="block space-y-1.5 sm:max-w-xs">
+          <span className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Vagas</span>
           <input type="number" min="0" value={parking} onChange={(event) => setParking(event.target.value)} placeholder="0" className="w-full rounded-2xl border border-sand-200 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-900" />
         </label>
-      </div>
+      ) : null}
 
-      {propertyType !== 'Terreno' && (
+      {showResidentialFields && (
         <div className="grid gap-3 text-sm font-semibold text-slate-700 dark:text-slate-200 sm:grid-cols-3">
           <label className="inline-flex items-center gap-3 rounded-2xl border border-sand-200 bg-white px-4 py-3 dark:border-slate-700 dark:bg-slate-900">
             <input type="checkbox" checked={isPetFriendly} onChange={(event) => setIsPetFriendly(event.target.checked)} />
@@ -448,6 +523,31 @@ export default function ListingEditorForm({
               Condomínio incluso
             </label>
           )}
+        </div>
+      )}
+
+      {isCommercial && (
+        <div className="space-y-3 rounded-2xl border border-sand-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Tipo comercial</p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {COMMERCIAL_SUBTYPES.map((item) => (
+                <button key={item} type="button" onClick={() => addFeature(item)} className="rounded-full border border-sand-200 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:border-ocean-300 hover:text-ocean-700 dark:border-slate-700 dark:text-slate-200">
+                  {item}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Diferenciais do ponto</p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {COMMERCIAL_FEATURES.map((item) => (
+                <button key={item} type="button" onClick={() => addFeature(item)} className="rounded-full border border-sand-200 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:border-ocean-300 hover:text-ocean-700 dark:border-slate-700 dark:text-slate-200">
+                  {item}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       )}
 
@@ -470,7 +570,7 @@ export default function ListingEditorForm({
       </div>
 
       <textarea rows={5} value={description} onChange={(event) => setDescription(event.target.value)} placeholder="Descrição" className="w-full rounded-2xl border border-sand-200 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-900" />
-      <input value={features} onChange={(event) => setFeatures(event.target.value)} placeholder="Diferenciais separados por vírgula" className="w-full rounded-2xl border border-sand-200 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-900" />
+      <input value={features} onChange={(event) => setFeatures(event.target.value)} placeholder={isCommercial ? 'Diferenciais: vão livre, fachada para rua, carga e descarga' : 'Diferenciais separados por vírgula'} className="w-full rounded-2xl border border-sand-200 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-900" />
 
       <div className="rounded-2xl border border-ocean-100 bg-ocean-50/50 p-4 dark:border-slate-700 dark:bg-slate-900">
         <label className="block text-sm font-semibold text-slate-900 dark:text-white" htmlFor="listing-video-url">
@@ -575,5 +675,3 @@ export default function ListingEditorForm({
     </form>
   );
 }
-
-

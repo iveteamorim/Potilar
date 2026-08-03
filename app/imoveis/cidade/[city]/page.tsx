@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import FavoriteAwarePropertyList from '@/components/FavoriteAwarePropertyList';
 import PropertyMap from '@/components/PropertyMapLoader';
+import CitySeoContent from '@/components/CitySeoContent';
 import { BASE_URL } from '@/lib/config';
 import { getFreeListingLimit, getLaunchPromoDeadlineLabel, isLaunchPromoActive } from '@/lib/plans';
 import {
@@ -146,6 +147,20 @@ function CityStructuredData({
   listingCount: number;
 }) {
   const pageUrl = `${BASE_URL}/imoveis/cidade/${citySlug}`;
+  const faqItems = [
+    {
+      question: `Onde encontrar imóveis em ${cityName}, RN?`,
+      answer: `A Potilar reúne anúncios de casas, apartamentos, terrenos, aluguel e temporada em ${cityName}, com busca por cidade, mapa e contato direto com anunciantes.`
+    },
+    {
+      question: `Como anunciar imóvel em ${cityName}?`,
+      answer: `Para anunciar imóvel em ${cityName}, acesse a Potilar, informe cidade, tipo de imóvel, preço, fotos e dados de contato. O anúncio pode passar por revisão antes de ficar público.`
+    },
+    {
+      question: `A Potilar atende apenas ${cityName}?`,
+      answer: `Não. A Potilar é um portal regional focado em imóveis no Rio Grande do Norte, com páginas por cidade e anúncios de proprietários, corretores e imobiliárias do RN.`
+    }
+  ];
   const payload = {
     '@context': 'https://schema.org',
     '@graph': [
@@ -165,9 +180,21 @@ function CityStructuredData({
         url: pageUrl,
         isPartOf: {
           '@type': 'WebSite',
+          '@id': `${BASE_URL}/#website`,
           name: 'Potilar',
           url: BASE_URL
         }
+      },
+      {
+        '@type': 'FAQPage',
+        mainEntity: faqItems.map((item) => ({
+          '@type': 'Question',
+          name: item.question,
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: item.answer
+          }
+        }))
       }
     ]
   };
@@ -285,6 +312,28 @@ export default async function CityListingsPage({ params }: { params: { city: str
 
         <section className="rounded-3xl border border-sand-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-950">
           <h2 className="text-base font-semibold text-slate-900 dark:text-white">
+            Anunciar imóvel em {cityName}
+          </h2>
+          <p className="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300">
+            Quem quer vender, alugar ou divulgar temporada em {cityName} pode publicar na Potilar e aparecer em uma página
+            feita para buscas locais do Rio Grande do Norte. A página conecta interessados que pesquisam por cidade,
+            tipo de imóvel e contato direto com anunciantes da região.
+          </p>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <Link href={anunciarHref} className="rounded-full border border-ocean-200 px-4 py-2 text-sm font-semibold text-ocean-700">
+              Anunciar em {cityName}
+            </Link>
+            <Link href={`/anunciar-imovel-gratis-em/${params.city}`} className="rounded-full border border-ocean-200 px-4 py-2 text-sm font-semibold text-ocean-700">
+              Anunciar imóvel grátis
+            </Link>
+            <Link href="/quero-anunciar" className="rounded-full border border-ocean-200 px-4 py-2 text-sm font-semibold text-ocean-700">
+              Pedir ajuda para anunciar
+            </Link>
+          </div>
+        </section>
+
+        <section className="rounded-3xl border border-sand-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-950">
+          <h2 className="text-base font-semibold text-slate-900 dark:text-white">
             Buscas populares em {cityName}
           </h2>
           <div className="mt-3 flex flex-wrap gap-2">
@@ -299,6 +348,8 @@ export default async function CityListingsPage({ params }: { params: { city: str
             ))}
           </div>
         </section>
+
+        <CitySeoContent cityName={cityName} />
       </div>
     </main>
   );

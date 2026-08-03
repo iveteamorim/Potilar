@@ -3,8 +3,9 @@
 import Link from 'next/link';
 import { Calculator, Menu, ShieldCheck, UserRound, X } from 'lucide-react';
 import { usePathname } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Logo from './Logo';
+import AccountMenu from './AccountMenu';
 
 const navigation = [
   { label: 'Início', href: '/' },
@@ -23,27 +24,61 @@ const mobileNavigation = [
 export default function Header() {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [accountType, setAccountType] = useState<string | null>(null);
+  const [role, setRole] = useState<string | null>(null);
 
   const isActive = (href: string) => (href === '/' ? pathname === '/' : pathname.startsWith(href));
   const closeMenu = () => setMenuOpen(false);
+  const isParticularAccount = accountType === 'particular' && role !== 'admin';
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadAccountType() {
+      try {
+        const response = await fetch('/api/account-menu', { cache: 'no-store' });
+        const data = (await response.json()) as { authenticated?: boolean; accountType?: string | null; role?: string | null };
+
+        if (!cancelled) {
+          setAccountType(data.authenticated ? data.accountType ?? 'particular' : null);
+          setRole(data.authenticated ? data.role ?? null : null);
+        }
+      } catch {
+        if (!cancelled) {
+          setAccountType(null);
+          setRole(null);
+        }
+      }
+    }
+
+    loadAccountType();
+    window.addEventListener('potilar:auth-changed', loadAccountType);
+
+    return () => {
+      cancelled = true;
+      window.removeEventListener('potilar:auth-changed', loadAccountType);
+    };
+  }, [pathname]);
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-sand-200 bg-white dark:border-slate-800 dark:bg-slate-950">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
         <Logo />
         <div className="flex items-center gap-3.5 sm:gap-4">
-          <Link
-            href="/mi-cuenta"
-            onClick={closeMenu}
-            className={`inline-flex items-center gap-2.5 rounded-full border px-4 py-2.5 text-xs font-semibold transition ${
-              isActive('/mi-cuenta')
-                ? 'border-sun-500 bg-sun-500 text-white'
-                : 'border-sun-300 bg-sun-50 text-slate-900 hover:border-sun-500 dark:border-sun-700 dark:bg-slate-900 dark:text-sand-50'
-            }`}
-          >
-            <UserRound className="h-4 w-4" aria-hidden="true" />
-            <span className="hidden sm:inline">Minha conta</span>
-          </Link>
+          {isActive('/mi-cuenta') && isParticularAccount ? (
+            <div className="block">
+              <AccountMenu showPrimaryAction={false} />
+            </div>
+          ) : (
+            <Link
+              href="/mi-cuenta"
+              onClick={closeMenu}
+              className="inline-flex items-center gap-2.5 rounded-full border border-sun-300 bg-sun-50 px-4 py-2.5 text-xs font-semibold text-slate-900 transition hover:border-sun-500 dark:border-sun-700 dark:bg-slate-900 dark:text-sand-50"
+            >
+              <UserRound className="h-4 w-4" aria-hidden="true" />
+              <span className="hidden sm:inline">Minha conta</span>
+            </Link>
+          )}
           <Link
             href="/anunciar"
             className="hidden rounded-lg border-2 border-slate-900 px-5 py-2.5 text-xs font-bold text-slate-950 transition hover:bg-slate-950 hover:text-white dark:border-white dark:text-white dark:hover:bg-white dark:hover:text-slate-950 sm:inline-flex"

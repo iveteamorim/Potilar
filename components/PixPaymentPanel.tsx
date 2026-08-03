@@ -1,15 +1,15 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
 import QRCode from 'qrcode';
-import { Check, Copy, MessageCircle, QrCode, ShieldCheck } from 'lucide-react';
+import { Check, Copy, FileText, QrCode, ShieldCheck } from 'lucide-react';
 import {
   PIX_KEY,
   buildPixCopiaECola,
   formatPixMoney,
   getPaymentCode,
   getPixPaymentKindLabel,
-  getPixWhatsappLink,
   type PixPaymentKind
 } from '@/lib/pix';
 
@@ -30,7 +30,6 @@ export default function PixPaymentPanel({ listingId, amount, title, kind, headli
     () => buildPixCopiaECola({ amount, paymentCode }),
     [amount, paymentCode]
   );
-  const whatsappHref = getPixWhatsappLink({ paymentCode, title, kind, amount });
   const [qrDataUrl, setQrDataUrl] = useState('');
   const [copied, setCopied] = useState<CopyField | null>(null);
   const [qrError, setQrError] = useState(false);
@@ -116,7 +115,7 @@ export default function PixPaymentPanel({ listingId, amount, title, kind, headli
               </li>
               <li className="flex gap-2">
                 <span className="flex h-6 w-6 flex-none items-center justify-center rounded-full bg-ocean-100 text-xs font-bold text-ocean-800 dark:bg-ocean-900 dark:text-ocean-100">3</span>
-                Envie o comprovante pelo WhatsApp com o codigo <strong>{paymentCode}</strong>.
+                Guarde o comprovante com o codigo <strong>{paymentCode}</strong>. Se precisar, envie uma mensagem pelo formulario.
               </li>
             </ol>
           )}
@@ -145,15 +144,13 @@ export default function PixPaymentPanel({ listingId, amount, title, kind, headli
           </div>
 
           <div className="flex flex-col gap-3 sm:flex-row">
-            <a
-              href={whatsappHref}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex flex-1 items-center justify-center gap-2 rounded-2xl bg-green-600 px-5 py-3.5 text-sm font-semibold text-white shadow-lg shadow-green-600/20 transition hover:bg-green-700"
+            <Link
+              href="/contato"
+              className="inline-flex flex-1 items-center justify-center gap-2 rounded-2xl bg-ocean-700 px-5 py-3.5 text-sm font-semibold text-white shadow-lg shadow-ocean-700/20 transition hover:bg-ocean-800"
             >
-              <MessageCircle className="h-4 w-4" aria-hidden="true" />
-              Enviar comprovante no WhatsApp
-            </a>
+              <FileText className="h-4 w-4" aria-hidden="true" />
+              Falar pelo formulario
+            </Link>
             <button
               type="button"
               onClick={() => copyValue(copiaECola, 'payload')}

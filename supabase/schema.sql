@@ -17,7 +17,7 @@ create table if not exists public.listings (
   owner_id uuid not null references auth.users(id) on delete cascade,
   title text not null,
   slug text not null unique,
-  property_type text not null check (property_type in ('Casa', 'Terreno', 'Apartamento', 'Kitnet/Conjugado')),
+  property_type text not null check (property_type in ('Casa', 'Terreno', 'Apartamento', 'Kitnet/Conjugado', 'Ponto comercial')),
   transaction text not null check (transaction in ('Compra', 'Aluguel', 'Temporada')),
   price integer not null default 0,
   price_period text check (price_period in ('dia', 'semana', 'mes')),
@@ -78,6 +78,7 @@ alter table public.profiles add column if not exists account_type text not null 
 alter table public.profiles add column if not exists email text;
 alter table public.profiles add column if not exists advertiser_document text;
 alter table public.profiles add column if not exists creci text;
+alter table public.profiles add column if not exists professional_plan text;
 
 create unique index if not exists profiles_email_unique_idx
 on public.profiles (lower(email))
@@ -520,7 +521,7 @@ security definer
 set search_path = public
 as $$
 begin
-  if new_property_type not in ('Casa', 'Terreno', 'Apartamento', 'Kitnet/Conjugado') then
+  if new_property_type not in ('Casa', 'Terreno', 'Apartamento', 'Kitnet/Conjugado', 'Ponto comercial') then
     raise exception 'Invalid property type';
   end if;
 

@@ -73,7 +73,7 @@ export default function TermosDeUsoPage() {
           <section>
             <h2 className="text-lg font-semibold text-slate-900 dark:text-white">7. Contato</h2>
             <p className="mt-2">
-              Para dúvidas sobre estes termos, fale com a Potilar pelo WhatsApp +55 21 96972-4141.
+              Para dúvidas sobre estes termos, fale com a Potilar pelo formulario de contato.
             </p>
           </section>
         </div>

@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     absolute: 'Potilar | Imóveis no Rio Grande do Norte'
   },
   description:
-    'Encontre e anuncie casas, apartamentos, terrenos, aluguéis e temporada no Rio Grande do Norte com contato direto.',
+    'A Potilar é o portal de imóveis do Rio Grande do Norte. Encontre e anuncie casas, apartamentos, terrenos, pontos comerciais, aluguéis e temporada no RN.',
   alternates: {
     canonical: '/'
   }
@@ -177,14 +177,12 @@ export default async function HomePage() {
             >
               Anunciar imóvel grátis
             </Link>
-            <a
-              href={`https://wa.me/5521969724141?text=${encodeURIComponent('Olá, vim pelo site Potilar e quero ajuda para anunciar meu imóvel.')}`}
-              target="_blank"
-              rel="noreferrer"
+            <Link
+              href="/quero-anunciar"
               className="block text-xs font-semibold text-ocean-700 underline-offset-4 hover:underline dark:text-ocean-300"
             >
               Quero ajuda para anunciar meu imóvel
-            </a>
+            </Link>
           </div>
         </div>
       </section>
@@ -235,7 +233,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="section-padding bg-sand-100/70 dark:bg-slate-900">
+      <section className="section-padding bg-white dark:bg-slate-950">
         <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[1fr_1.2fr]">
           <div>
             <h2 className="text-3xl font-semibold text-ocean-700 dark:text-ocean-300">

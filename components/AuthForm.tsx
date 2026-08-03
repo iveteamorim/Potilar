@@ -117,6 +117,7 @@ export default function AuthForm() {
   const isProfessionalPlanFlow = Boolean(requestedPlan);
   const isBuyerIntent = intent === 'favorite' || intent === 'alert' || intent === 'chat';
   const confirmed = searchParams.get('confirmed') === '1';
+  const invalidSession = searchParams.get('session') === 'invalid';
   const reset = searchParams.get('reset') === '1';
   const recoveryCode = searchParams.get('code');
   const tokenHash = searchParams.get('token_hash');
@@ -374,7 +375,8 @@ export default function AuthForm() {
             phone: normalizedPhone,
             account_type: accountTypeToSave,
             advertiser_document: advertiserDocument,
-            creci: isBuyerIntent ? null : creci.trim()
+            creci: isBuyerIntent ? null : creci.trim(),
+            potilar_email_pending: true
           }
         }
       });
@@ -403,6 +405,7 @@ export default function AuthForm() {
 
         if (
           profileError &&
+          !profileError.message.toLowerCase().includes('permission denied') &&
           !profileError.message.toLowerCase().includes('account_type') &&
           !profileError.message.toLowerCase().includes('creci') &&
           !profileError.message.toLowerCase().includes('advertiser_document') &&
@@ -416,24 +419,10 @@ export default function AuthForm() {
         }
       }
 
-      if (!data.session) {
-        setSignupEmailSent(true);
-        setMessage(
-          isProfessionalPlanFlow
-            ? 'Conta criada. Confirme seu email para entrar e concluir o pagamento do plano.'
-            : 'Email enviado. Confirme seu email.'
-        );
-        setLoading(false);
-        return;
-      }
-
-      if (requestedPlan) {
-        await startProfessionalCheckout(requestedPlan);
-        return;
-      }
-
-      router.push(next);
-      router.refresh();
+      await supabase.auth.signOut();
+      setSignupEmailSent(true);
+      setMessage('Enviamos um email de confirmação. Abra o link para ativar sua conta.');
+      setLoading(false);
       return;
     }
 
@@ -444,9 +433,57 @@ export default function AuthForm() {
       return;
     }
 
-    if (next === '/mi-cuenta' && signInData.user) {
-      const { data: profile } = await supabase.from('profiles').select('role').eq('id', signInData.user.id).single();
-      if (profile?.role === 'admin') {
+    if (!signInData.user.email_confirmed_at) {
+      await supabase.auth.signOut();
+      setMessage('Confirme sua conta clicando no link enviado ao seu email.');
+      setLoading(false);
+      return;
+    }
+
+    if (signInData.user.user_metadata?.potilar_email_pending === true) {
+      await supabase.auth.updateUser({
+        data: {
+          ...signInData.user.user_metadata,
+          potilar_email_pending: false,
+          potilar_email_confirmed_at: new Date().toISOString()
+        }
+      });
+    }
+
+    if (signInData.user) {
+      const { data: profile } = await supabase.from('profiles').select('role').eq('id', signInData.user.id).maybeSingle();
+      let currentProfile = profile;
+
+      if (!currentProfile) {
+        const metadata = signInData.user.user_metadata ?? {};
+        const { data: createdProfile, error: createProfileError } = await supabase
+          .from('profiles')
+          .upsert({
+            id: signInData.user.id,
+            email: signInData.user.email ?? email.trim().toLowerCase(),
+            full_name: metadata.full_name ?? signInData.user.email?.split('@')[0] ?? 'Usuário Potilar',
+            phone: metadata.phone ?? null,
+            account_type: metadata.account_type ?? 'particular',
+            advertiser_document: metadata.advertiser_document ?? null,
+            creci: metadata.creci ?? null,
+            public_slug: null,
+            company_name: null
+          })
+          .select('role')
+          .maybeSingle();
+
+        if (createProfileError || !createdProfile) {
+          await supabase.auth.signOut();
+          setMessage('Não foi possível preparar sua conta. Tente entrar novamente em alguns minutos.');
+          setLoading(false);
+          return;
+        }
+
+        currentProfile = createdProfile;
+      }
+
+      if (currentProfile?.role === 'admin') {
+        window.dispatchEvent(new Event('potilar:auth-changed'));
         router.push('/admin');
         router.refresh();
         return;
@@ -458,6 +495,7 @@ export default function AuthForm() {
       return;
     }
 
+    window.dispatchEvent(new Event('potilar:auth-changed'));
     router.push(next);
     router.refresh();
   }
@@ -641,15 +679,23 @@ export default function AuthForm() {
         </label>
       )}
 
-      {(confirmed || message) && (
+      {(confirmed || invalidSession || message) && (
         <div className={`rounded-2xl px-4 py-3 text-sm font-semibold ${
           signupEmailSent || resetEmailSent
             ? 'border border-green-200 bg-green-50 text-green-800 dark:border-green-900 dark:bg-green-950/40 dark:text-green-100'
-            : message === 'Email ou senha incorretos.' || message.includes('incorretos') || message.includes('Confirme')
+            : message.toLowerCase().includes('incorretos') || message.toLowerCase().includes('confirme') || invalidSession
               ? 'border border-red-200 bg-red-50 text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-100'
             : 'bg-sand-50 text-slate-700 dark:bg-slate-900 dark:text-slate-200'
         }`}>
-          <p>{message || 'Email confirmado. Agora entre com seu email e senha para anunciar.'}</p>
+          {signupEmailSent && (
+            <p className="mb-2 text-center text-sm font-medium text-slate-600 dark:text-slate-300">
+              Já tem uma conta?{' '}
+              <button type="button" onClick={() => setMode('login')} className="font-bold text-sun-700 hover:text-sun-800">
+                Login
+              </button>
+            </p>
+          )}
+          <p>{message || (invalidSession ? 'Sessão inválida. Entre novamente com uma conta ativa.' : 'Email confirmado. Agora entre com seu email e senha para anunciar.')}</p>
           {resetEmailSent && (
             <p className="mt-2 text-xs font-medium">
               Depois de confirmar, volte para esta página e entre com seu email e senha.

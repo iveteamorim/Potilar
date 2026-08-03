@@ -1,11 +1,12 @@
 import { slugify } from '@/lib/slugify';
+import type { PropertyType } from '@/lib/propertyTypes';
 
 export type Property = {
   id: string;
   ownerId?: string;
   slug: string;
   title: string;
-  propertyType: 'Casa' | 'Terreno' | 'Apartamento' | 'Kitnet/Conjugado';
+  propertyType: PropertyType;
   transaction: 'Aluguel' | 'Compra' | 'Temporada';
   price: number;
   pricePeriod?: 'dia' | 'semana' | 'mes';

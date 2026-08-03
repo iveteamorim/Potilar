@@ -129,6 +129,12 @@ export default async function SeoIntentListingPage({ page, pagePath }: { page: S
             <Link href="/imoveis/terrenos-a-venda" className="rounded-full border border-ocean-200 px-4 py-2 font-semibold text-ocean-700">
               Terrenos a venda
             </Link>
+            <Link href="/imoveis/pontos-comerciais-para-alugar" className="rounded-full border border-ocean-200 px-4 py-2 font-semibold text-ocean-700">
+              Pontos comerciais para alugar
+            </Link>
+            <Link href="/anunciar-imovel-gratis" className="rounded-full border border-ocean-200 px-4 py-2 font-semibold text-ocean-700">
+              Anunciar imóvel grátis
+            </Link>
           </div>
         </section>
       </div>

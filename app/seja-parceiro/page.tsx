@@ -7,9 +7,6 @@ export const metadata: Metadata = {
   description: 'Parcerias com imobiliárias, corretores e negócios locais no Rio Grande do Norte.'
 };
 
-const whatsappHref =
-  'https://wa.me/5521969724141?text=Ola%2C%20quero%20ser%20parceiro%20da%20Potilar%20no%20RN.';
-
 export default function SejaParceiroPage() {
   return (
     <main className="section-padding">
@@ -48,9 +45,9 @@ export default function SejaParceiroPage() {
             melhor caminho: plano profissional, destaques ou integração personalizada.
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
-            <a href={whatsappHref} target="_blank" rel="noreferrer" className="rounded-2xl bg-ocean-700 px-5 py-3 text-sm font-semibold text-white">
+            <Link href="/contato" className="rounded-2xl bg-ocean-700 px-5 py-3 text-sm font-semibold text-white">
               Quero ser parceiro
-            </a>
+            </Link>
             <Link href="/imobiliarias" className="rounded-2xl border border-sand-200 px-5 py-3 text-sm font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">
               Ver planos para imobiliárias
             </Link>

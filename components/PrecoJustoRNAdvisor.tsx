@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import type { PriceInsight } from '@/lib/priceIntelligence';
 import PrecoJustoRNCard from '@/components/PrecoJustoRNCard';
+import { isCommercialPropertyType } from '@/lib/propertyTypes';
 
 type Props = {
   price: string;
@@ -124,6 +125,10 @@ export default function PrecoJustoRNAdvisor({
     featureCount,
     descriptionLength
   ]);
+
+  if (isCommercialPropertyType(propertyType)) {
+    return null;
+  }
 
   if (!numericPrice || !numericAreaSqm || numericAreaSqm <= 0 || !transaction || !propertyType || !location.trim()) {
     return null;

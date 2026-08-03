@@ -8,9 +8,6 @@ export const metadata: Metadata = {
   description: 'Corretores e imobiliárias podem anunciar imóveis no Rio Grande do Norte com a Potilar.'
 };
 
-const whatsappHref =
-  'https://wa.me/5521969724141?text=Ola%2C%20sou%20corretor%20e%20quero%20anunciar%20na%20Potilar.';
-
 export default function AgentesPage() {
   return (
     <main className="section-padding">
@@ -21,7 +18,7 @@ export default function AgentesPage() {
             Corretores e imobiliárias do RN na Potilar
           </h1>
           <p className="mt-4 text-base leading-7 text-slate-600 dark:text-slate-300">
-            Publique imóveis com contato direto pelo WhatsApp, destaque anúncios estratégicos e gerencie tudo em um painel
+            Publique imóveis com contato direto pelo canal do anunciante, destaque anúncios estratégicos e gerencie tudo em um painel
             simples.
           </p>
         </section>
@@ -56,10 +53,10 @@ export default function AgentesPage() {
             <Link href="/planos" className="rounded-2xl border border-ocean-300 px-5 py-3 text-sm font-semibold text-ocean-800 dark:border-ocean-800 dark:text-ocean-200">
               Ver planos
             </Link>
-            <a href={whatsappHref} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-2xl bg-green-600 px-5 py-3 text-sm font-semibold text-white">
+            <Link href="/contato" className="inline-flex items-center gap-2 rounded-2xl bg-ocean-700 px-5 py-3 text-sm font-semibold text-white">
               <MessageCircle className="h-4 w-4" aria-hidden="true" />
               Falar com a Potilar
-            </a>
+            </Link>
           </div>
         </section>
       </div>

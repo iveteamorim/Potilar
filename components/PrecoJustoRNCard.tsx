@@ -130,10 +130,7 @@ export default function PrecoJustoRNCard({ insight, compact = false }: Props) {
 
       {hasComparison ? (
         <p className="mt-3 text-base leading-7 text-slate-700 dark:text-slate-300">
-          Seu imóvel em <strong className="text-slate-950 dark:text-white">{insight.scopeLabel}</strong> foi comparado
-          com {referenceStatLabel.toLowerCase()}.
-          {rangeStatus === 'below' && ' Isso pode atrair mais interessados.'}
-          {rangeStatus === 'above' && ' Reforce os diferenciais reais do imóvel.'}
+          {insight.summary}
         </p>
       ) : (
         <p className="mt-3 text-sm leading-6 text-slate-700 dark:text-slate-300">{insight.summary}</p>

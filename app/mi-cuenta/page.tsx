@@ -2,7 +2,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { AlertTriangle, BarChart3, Eye, Globe2, Home, MessageCircle, Pencil, Plus, Search, Settings, Sparkles } from 'lucide-react';
+import { AlertTriangle, BarChart3, Eye, FileSpreadsheet, Globe2, Home, MessageCircle, Pencil, Plus, Search, Settings, Sparkles } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { SUPABASE_URL } from '@/lib/supabase/config';
@@ -21,6 +21,7 @@ import { getPaymentCode } from '@/lib/pix';
 import { buildProfessionalProfileSlug, getAccountTypeLabel, getPublicProfilePath, isProfessionalAccountType } from '@/lib/publicProfile';
 import { slugify } from '@/lib/slugify';
 import { computeBrokerGamification } from '@/lib/brokerGamification';
+import { normalizeListingImageUrl, normalizeListingImageUrls } from '@/lib/imageUrls';
 import {
   cancelListingHighlight,
   cancelProfessionalSubscription,
@@ -105,7 +106,7 @@ function getPlanLabel(plan?: string | null, accountType?: string | null) {
 }
 
 function toPropertyCardListing(listing: any, profile: any): Property {
-  const propertyType = ['Casa', 'Terreno', 'Apartamento', 'Kitnet/Conjugado'].includes(listing.property_type)
+  const propertyType = ['Casa', 'Terreno', 'Apartamento', 'Kitnet/Conjugado', 'Ponto comercial'].includes(listing.property_type)
     ? listing.property_type
     : 'Casa';
   const transaction = ['Aluguel', 'Compra', 'Temporada'].includes(listing.transaction) ? listing.transaction : 'Compra';
@@ -138,7 +139,7 @@ function toPropertyCardListing(listing: any, profile: any): Property {
     isPetFriendly: Boolean(listing.is_pet_friendly),
     isFurnished: Boolean(listing.is_furnished),
     condoFee: listing.condo_fee ?? undefined,
-    images: Array.isArray(listing.images) ? listing.images : [],
+    images: normalizeListingImageUrls(Array.isArray(listing.images) ? listing.images : []),
     videoUrl: listing.video_url ?? undefined,
     tourUrl: listing.tour_url ?? undefined,
     isFeatured: Boolean(listing.featured_plan && listing.featured_payment_status === 'confirmed'),
@@ -233,6 +234,10 @@ export default async function MinhaContaPage({
           languages: ['Português']
         }
       : null;
+  }
+
+  if (!profile) {
+    redirect('/login?next=/mi-cuenta&session=invalid');
   }
 
   if (user.email && (!profile || !isProfessionalAccountType(profile.account_type))) {
@@ -416,6 +421,7 @@ export default async function MinhaContaPage({
                 ['Visão geral', BarChart3, '/mi-cuenta', 'default'],
                 ['Minha página pública', Globe2, publicPath, 'default'],
                 ['Meus anúncios', Home, '#anuncios', 'default'],
+                ['Importar carteira', FileSpreadsheet, '/mi-cuenta/importar', 'default'],
                 ['Editar perfil', Pencil, '/mi-cuenta/perfil', 'default'],
                 ['Mensagens', MessageCircle, '/mi-cuenta/mensagens', 'default'],
                 ['IA e créditos', Sparkles, '/mi-cuenta/creditos', 'ai'],
@@ -468,6 +474,10 @@ export default async function MinhaContaPage({
                   <Link href="/anunciar" className="inline-flex items-center gap-2 rounded-xl bg-ocean-700 px-4 py-2 text-sm font-semibold text-white">
                     <Plus className="h-4 w-4" aria-hidden="true" />
                     Novo anúncio
+                  </Link>
+                  <Link href="/mi-cuenta/importar" className="inline-flex items-center gap-2 rounded-xl border border-ocean-200 px-4 py-2 text-sm font-semibold text-ocean-700">
+                    <FileSpreadsheet className="h-4 w-4" aria-hidden="true" />
+                    Importar carteira
                   </Link>
                 </div>
               </div>
@@ -691,43 +701,11 @@ export default async function MinhaContaPage({
                 : 'Salve favoritos, acompanhe alertas de busca e gerencie seus anúncios publicados.'}
             </p>
           </div>
-          <div className="flex flex-wrap items-center justify-start gap-2 lg:justify-end">
-            <Link href="/anunciar" className="inline-flex rounded-xl bg-ocean-600 px-3.5 py-2 text-sm font-semibold text-white">
-              Anunciar imóvel
+          {profile?.role === 'admin' && (
+            <Link href="/admin" className="inline-flex h-11 items-center justify-center rounded-xl border border-ocean-200 bg-white px-4 text-sm font-semibold text-ocean-700 shadow-sm hover:border-ocean-400 dark:border-slate-700 dark:bg-slate-900 dark:text-ocean-200">
+              Panel admin
             </Link>
-            <Link href="/mi-cuenta/favoritos" className="inline-flex rounded-xl border border-red-200 px-3.5 py-2 text-sm font-semibold text-red-600 dark:border-red-900 dark:text-red-300">
-              Meus favoritos
-            </Link>
-            <Link href="/mi-cuenta/mensagens" className="inline-flex rounded-xl border border-ocean-200 px-3.5 py-2 text-sm font-semibold text-ocean-700">
-              Mensagens
-            </Link>
-            <Link href="/mi-cuenta/creditos" className="inline-flex rounded-xl border border-sun-200 px-3.5 py-2 text-sm font-semibold text-slate-700">
-              Creditos de IA
-            </Link>
-            {SEARCH_ALERTS_ENABLED && (
-              <Link href="/mi-cuenta/alertas" className="inline-flex rounded-xl border border-ocean-200 px-3.5 py-2 text-sm font-semibold text-ocean-700">
-                Meus alertas
-              </Link>
-            )}
-            {(profile?.account_type === 'corretor' || profile?.account_type === 'imobiliaria') && (
-              <>
-                {profile.public_slug && (
-                  <Link href={getPublicProfilePath(profile.public_slug)} className="inline-flex rounded-xl border border-ocean-200 px-3.5 py-2 text-sm font-semibold text-ocean-700">
-                    Minha página
-                  </Link>
-                )}
-                <Link href="/mi-cuenta/perfil" className="inline-flex rounded-xl border border-violet-200 px-3.5 py-2 text-sm font-semibold text-violet-700 dark:border-violet-900 dark:text-violet-300">
-                  Editar perfil público
-                </Link>
-              </>
-            )}
-            {profile?.role === 'admin' && (
-              <Link href="/admin" className="inline-flex rounded-xl border border-ocean-200 px-3.5 py-2 text-sm font-semibold text-ocean-700">
-                Panel admin
-              </Link>
-            )}
-            <LogoutButton />
-          </div>
+          )}
         </div>
 
         {searchParams?.contact_success && (
@@ -872,6 +850,9 @@ export default async function MinhaContaPage({
                   <Link href={listingPublicHref} className="rounded-full border border-sand-200 px-3 py-1 font-semibold text-slate-700">
                     Ver anúncio
                   </Link>
+                  <Link href={`/mi-cuenta/divulgar/${listing.id}`} className="rounded-full border border-green-200 px-3 py-1 font-semibold text-green-700">
+                    Cartaz e QR
+                  </Link>
                   {advertiserPublicHref && (
                     <Link href={advertiserPublicHref} className="rounded-full border border-ocean-200 px-3 py-1 font-semibold text-ocean-700">
                       Pagina do anunciante
@@ -983,27 +964,31 @@ export default async function MinhaContaPage({
                 <div className="border-t border-sand-200 pt-4 dark:border-slate-800">
                   <p className="text-sm font-semibold text-slate-900 dark:text-white">Foto principal</p>
                   <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-6">
-                    {listing.images.map((image: string, index: number) => (
-                      <form key={image} action={setMainImage} className="space-y-2">
-                        <input type="hidden" name="id" value={listing.id} />
-                        <input type="hidden" name="image_url" value={image} />
-                        <div className="relative aspect-square overflow-hidden rounded-xl bg-sand-100">
-                          <Image src={image} alt={listing.title} fill className="object-cover" />
-                          {index === 0 && (
-                            <span className="absolute left-2 top-2 rounded-full bg-ocean-600 px-2 py-1 text-[10px] font-semibold text-white">
-                              Principal
-                            </span>
-                          )}
-                        </div>
-                        <button
-                          type="submit"
-                          disabled={index === 0}
-                          className="w-full rounded-xl border border-ocean-200 px-3 py-2 text-xs font-semibold text-ocean-700 disabled:cursor-not-allowed disabled:opacity-50"
-                        >
-                          Usar como principal
-                        </button>
-                      </form>
-                    ))}
+                    {listing.images.map((image: string, index: number) => {
+                      const displayImage = normalizeListingImageUrl(image);
+
+                      return (
+                        <form key={image} action={setMainImage} className="space-y-2">
+                          <input type="hidden" name="id" value={listing.id} />
+                          <input type="hidden" name="image_url" value={image} />
+                          <div className="relative aspect-square overflow-hidden rounded-xl bg-sand-100">
+                            <Image src={displayImage} alt={listing.title} fill className="object-cover" />
+                            {index === 0 && (
+                              <span className="absolute left-2 top-2 rounded-full bg-ocean-600 px-2 py-1 text-[10px] font-semibold text-white">
+                                Principal
+                              </span>
+                            )}
+                          </div>
+                          <button
+                            type="submit"
+                            disabled={index === 0}
+                            className="w-full rounded-xl border border-ocean-200 px-3 py-2 text-xs font-semibold text-ocean-700 disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            Usar como principal
+                          </button>
+                        </form>
+                      );
+                    })}
                   </div>
                 </div>
               )}

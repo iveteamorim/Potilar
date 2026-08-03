@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Instagram, MessageCircle } from 'lucide-react';
+import { FileText, Instagram, Mail } from 'lucide-react';
 import { FEATURED_CITY_NAMES, getCityPagePath } from '@/lib/cityPages';
 import { SEO_INTENT_PAGES } from '@/lib/seoIntentPages';
 import Logo from './Logo';
@@ -43,27 +43,41 @@ export default function Footer() {
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">Buscas</p>
           <div className="mt-2 grid gap-1.5 text-xs text-slate-500 dark:text-slate-500">
-            {SEO_INTENT_PAGES.slice(0, 6).map((page) => (
+            {SEO_INTENT_PAGES.slice(0, 9).map((page) => (
               <Link key={page.slug} href={`/imoveis/${page.slug}`} className="hover:text-ocean-700 dark:hover:text-ocean-300">
                 {page.title}
               </Link>
             ))}
+            <Link href="/anunciar-imovel-gratis" className="hover:text-ocean-700 dark:hover:text-ocean-300">
+              Anunciar imóvel grátis no RN
+            </Link>
+            <Link href="/quero-anunciar" className="hover:text-ocean-700 dark:hover:text-ocean-300">
+              Quero anunciar na Potilar
+            </Link>
+            <Link href="/anunciar-ponto-comercial-gratis" className="hover:text-ocean-700 dark:hover:text-ocean-300">
+              Anunciar ponto comercial
+            </Link>
           </div>
         </div>
         <div>
           <p className="text-base font-semibold text-slate-900 dark:text-white">Contato</p>
           <div className="mt-3 flex flex-wrap gap-2">
-            <a
-              href={`https://wa.me/5521969724141?text=${encodeURIComponent('Olá, vim pelo site Potilar e quero falar com atendimento.')}`}
-              target="_blank"
-              rel="noreferrer"
-              aria-label="WhatsApp Potilar"
-              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-green-200 bg-white text-green-600 transition hover:border-green-400 hover:bg-green-50 dark:border-slate-800 dark:bg-slate-900"
+            <Link
+              href="/contato"
+              aria-label="Formulario de contato Potilar"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-ocean-200 bg-white text-ocean-700 transition hover:border-ocean-400 hover:bg-ocean-50 dark:border-slate-800 dark:bg-slate-900"
             >
-              <MessageCircle className="h-5 w-5" aria-hidden="true" />
+              <FileText className="h-5 w-5" aria-hidden="true" />
+            </Link>
+            <a
+              href="mailto:contato@potilar.com.br"
+              aria-label="Email Potilar"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-ocean-200 bg-white text-ocean-700 transition hover:border-ocean-400 hover:bg-ocean-50 dark:border-slate-800 dark:bg-slate-900"
+            >
+              <Mail className="h-5 w-5" aria-hidden="true" />
             </a>
             <a
-              href="https://www.instagram.com/potilar.imoveis"
+              href="https://www.instagram.com/potilar.rn"
               target="_blank"
               rel="noreferrer"
               aria-label="Instagram Potilar"
@@ -78,6 +92,9 @@ export default function Footer() {
           >
             Anunciar meu imóvel
           </Link>
+          <a href="mailto:contato@potilar.com.br" className="mt-3 block text-xs font-semibold text-ocean-700">
+            contato@potilar.com.br
+          </a>
         </div>
       </div>
       <div className="mx-auto mt-8 max-w-6xl px-4 text-xs text-slate-500 sm:px-6">

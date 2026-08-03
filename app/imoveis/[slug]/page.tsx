@@ -20,6 +20,7 @@ import { listingRowToProperty, PUBLIC_LISTING_SELECT_WITH_CONTACT } from '@/lib/
 import { enrichPublicListings } from '@/lib/advertiserProfiles';
 import { formatListingDateLabel } from '@/lib/dateLabels';
 import { getCleanPropertyTitle } from '@/lib/displayTitle';
+import { usesResidentialLayoutFields } from '@/lib/propertyTypes';
 
 const LISTING_SELECT = `owner_id,${PUBLIC_LISTING_SELECT_WITH_CONTACT}`;
 
@@ -198,8 +199,8 @@ export default async function PropertyDetailPage({ params }: { params: { slug: s
   const whatsappHref =
     property.contactWhatsapp && whatsappNumber
       ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(`Olá, tenho interesse no anúncio ${getListingCode(property.id)}: ${displayTitle}`)}`
-      : `https://wa.me/5521969724141?text=${encodeURIComponent(`Olá, vim pelo site Potilar e tenho interesse no anúncio ${getListingCode(property.id)}: ${displayTitle}`)}`;
-  const reportHref = `https://wa.me/5521969724141?text=${encodeURIComponent(`Olá, quero denunciar ou revisar o anúncio ${getListingCode(property.id)}: ${detailUrl}`)}`;
+      : null;
+  const reportHref = `/contato?assunto=${encodeURIComponent(`Denunciar anúncio ${getListingCode(property.id)}`)}&url=${encodeURIComponent(detailUrl)}`;
   const locationDetails = [property.neighborhood, property.community].filter(Boolean).join(' · ');
 
   const jsonLd = {
@@ -221,15 +222,16 @@ export default async function PropertyDetailPage({ params }: { params: { slug: s
   };
 
   const specItems = [
-    property.bedrooms > 0 && `${property.bedrooms} quarto${property.bedrooms > 1 ? 's' : ''}`,
-    property.bathrooms > 0 && `${property.bathrooms} banheiro${property.bathrooms > 1 ? 's' : ''}`,
+    usesResidentialLayoutFields(property.propertyType) && property.bedrooms > 0 && `${property.bedrooms} quarto${property.bedrooms > 1 ? 's' : ''}`,
+    usesResidentialLayoutFields(property.propertyType) && property.bathrooms > 0 && `${property.bathrooms} banheiro${property.bathrooms > 1 ? 's' : ''}`,
     property.parking > 0 && `${property.parking} vaga${property.parking > 1 ? 's' : ''}`,
     property.areaSqm && `${property.areaSqm} m2`,
-    property.condoFee &&
+    usesResidentialLayoutFields(property.propertyType) &&
+      property.condoFee &&
       `Condomínio ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(property.condoFee)}`,
-    property.condoIncluded && 'Condomínio incluso',
-    property.isPetFriendly && 'Aceita pet',
-    property.isFurnished && 'Mobiliado'
+    usesResidentialLayoutFields(property.propertyType) && property.condoIncluded && 'Condomínio incluso',
+    usesResidentialLayoutFields(property.propertyType) && property.isPetFriendly && 'Aceita pet',
+    usesResidentialLayoutFields(property.propertyType) && property.isFurnished && 'Mobiliado'
   ].filter(Boolean) as string[];
   const contactCard = (
     <div className="glass-card space-y-4 p-5">
@@ -276,7 +278,7 @@ export default async function PropertyDetailPage({ params }: { params: { slug: s
         )}
       </div>
       <div className="grid gap-3 sm:grid-cols-3">
-        {property.contactWhatsapp && whatsappNumber && (
+        {property.contactWhatsapp && whatsappNumber && whatsappHref && (
           <WhatsAppStatLink
             listingId={property.id}
             href={whatsappHref}
@@ -308,23 +310,19 @@ export default async function PropertyDetailPage({ params }: { params: { slug: s
           <ListingMessageButton listingId={property.id} ownerId={property.ownerId} title={displayTitle} />
         )}
         {!hasAdvertiserContact && (
-          <a
-            href={whatsappHref}
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-green-600 px-4 py-3 text-sm font-semibold text-white"
+          <Link
+            href="/contato"
+            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-ocean-700 px-4 py-3 text-sm font-semibold text-white"
           >
             <MessageCircle className="h-4 w-4" aria-hidden="true" />
-            WhatsApp Potilar
-          </a>
+            Falar pelo formulario
+          </Link>
         )}
       </div>
       <div className="grid grid-cols-2 gap-2 border-t border-sand-100 pt-4 text-xs dark:border-slate-800">
         <ShareButtons title={displayTitle} url={detailUrl} compact />
         <a
           href={reportHref}
-          target="_blank"
-          rel="noreferrer"
           className="inline-flex items-center justify-center gap-2 rounded-full border border-red-200 px-3 py-2 text-center font-semibold text-red-700 transition hover:bg-red-50 dark:border-red-900/60 dark:text-red-300 dark:hover:bg-red-950/30"
         >
           <Flag className="h-4 w-4" aria-hidden="true" />
@@ -511,13 +509,15 @@ export default async function PropertyDetailPage({ params }: { params: { slug: s
       </div>
       <div className="fixed inset-x-0 bottom-0 z-50 border-t border-sand-200 bg-white/95 p-3 shadow-[0_-12px_30px_rgba(15,23,42,0.12)] backdrop-blur md:hidden">
         <div className="mx-auto flex max-w-md gap-2">
-          <a
-            href={whatsappHref}
-            className="inline-flex flex-1 items-center justify-center gap-2 rounded-2xl bg-green-600 px-4 py-3 text-sm font-semibold text-white"
-          >
-            <MessageCircle className="h-4 w-4" aria-hidden="true" />
-            WhatsApp
-          </a>
+          {whatsappHref && (
+            <a
+              href={whatsappHref}
+              className="inline-flex flex-1 items-center justify-center gap-2 rounded-2xl bg-green-600 px-4 py-3 text-sm font-semibold text-white"
+            >
+              <MessageCircle className="h-4 w-4" aria-hidden="true" />
+              WhatsApp
+            </a>
+          )}
           {property.contactPhone && phoneNumber && (
             <a
               href={`tel:+${phoneNumber}`}

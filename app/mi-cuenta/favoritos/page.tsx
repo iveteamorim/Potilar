@@ -44,9 +44,6 @@ export default async function FavoritosPage() {
               Anuncios salvos na sua conta Potilar, sincronizados entre dispositivos.
             </p>
           </div>
-          <Link href="/mi-cuenta" className="rounded-full border border-sand-200 px-4 py-2 text-sm font-semibold text-slate-600 dark:border-slate-700 dark:text-slate-300">
-            Voltar para minha conta
-          </Link>
         </div>
 
         {properties.length > 0 ? (

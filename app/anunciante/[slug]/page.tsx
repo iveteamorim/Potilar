@@ -395,6 +395,7 @@ export default async function AnunciantePage({ params, searchParams }: Props) {
                   <option value="apartamento">Apartamento</option>
                   <option value="terreno">Terreno</option>
                   <option value="kitnet/conjugado">Kitnet/Conjugado</option>
+                  <option value="ponto comercial">Ponto comercial</option>
                 </select>
               </label>
 

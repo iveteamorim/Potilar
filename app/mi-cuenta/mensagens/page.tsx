@@ -246,10 +246,7 @@ export default async function MensagensPage({ searchParams }: { searchParams?: {
       <div className="mx-auto w-full max-w-6xl">
         <div className={`${selectedThread ? 'hidden lg:flex' : 'mb-4 flex'} items-center justify-between gap-3`}>
           <div>
-            <Link href="/mi-cuenta" className="text-sm font-semibold text-ocean-700">
-              Voltar para Minha conta
-            </Link>
-            <h1 className="mt-2 text-2xl font-semibold text-slate-900 dark:text-white">Mensagens</h1>
+            <h1 className="text-2xl font-semibold text-slate-900 dark:text-white">Mensagens</h1>
           </div>
         </div>
 

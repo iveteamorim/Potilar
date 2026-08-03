@@ -69,9 +69,6 @@ export default async function AiCreditsPage({
               Compre creditos, acompanhe o saldo e veja o historico das melhorias feitas com IA.
             </p>
           </div>
-          <Link href="/mi-cuenta" className="inline-flex rounded-xl border border-ocean-200 px-3.5 py-2 text-sm font-semibold text-ocean-700">
-            Voltar para Minha conta
-          </Link>
         </div>
 
         {searchParams?.pagamento === 'sucesso' && (

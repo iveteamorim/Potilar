@@ -1,12 +1,14 @@
 import type { MetadataRoute } from 'next';
-import { getAllCitySlugs } from '@/lib/cityPages';
+import { FEATURED_CITY_NAMES, getAllCitySlugs } from '@/lib/cityPages';
 import { BASE_URL } from '@/lib/config';
 import { getFeaturedCitySeoIntentPaths, getSeoIntentPaths } from '@/lib/seoIntentPages';
+import { slugify } from '@/lib/slugify';
 import { createClient } from '@supabase/supabase-js';
 import { SUPABASE_ANON_KEY, SUPABASE_URL } from '@/lib/supabase/config';
 
 type SitemapListing = {
   slug: string;
+  location: string | null;
   updated_at: string | null;
   created_at: string | null;
 };
@@ -18,8 +20,14 @@ type SitemapNewsArticle = {
   created_at: string | null;
 };
 
-function buildCityRoutes() {
-  return getAllCitySlugs().map((citySlug) => ({
+const FEATURED_CITY_SLUGS = FEATURED_CITY_NAMES.map((cityName) => slugify(cityName));
+
+function uniqueSlugs(slugs: string[]) {
+  return Array.from(new Set(slugs.filter(Boolean)));
+}
+
+function buildCityRoutes(citySlugs = FEATURED_CITY_SLUGS) {
+  return uniqueSlugs(citySlugs).map((citySlug) => ({
     url: `${BASE_URL}/imoveis/cidade/${citySlug}`,
     lastModified: new Date(),
     changeFrequency: 'weekly' as const,
@@ -27,8 +35,14 @@ function buildCityRoutes() {
   }));
 }
 
-function buildHouseCityAliasRoutes() {
-  return getAllCitySlugs().flatMap((citySlug) => [
+function buildHouseCityAliasRoutes(citySlugs = FEATURED_CITY_SLUGS) {
+  return uniqueSlugs(citySlugs).flatMap((citySlug) => [
+    {
+      url: `${BASE_URL}/anunciar-imovel-gratis-em/${citySlug}`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly' as const,
+      priority: 0.86
+    },
     {
       url: `${BASE_URL}/alugar-casa-em/${citySlug}`,
       lastModified: new Date(),
@@ -40,6 +54,18 @@ function buildHouseCityAliasRoutes() {
       lastModified: new Date(),
       changeFrequency: 'weekly' as const,
       priority: 0.82
+    },
+    {
+      url: `${BASE_URL}/casa-a-venda-em/${citySlug}`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly' as const,
+      priority: 0.84
+    },
+    {
+      url: `${BASE_URL}/aluguel-em/${citySlug}`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly' as const,
+      priority: 0.84
     }
   ]);
 }
@@ -51,6 +77,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     '/imoveis/cidades',
     '/anunciar-casa-para-alugar-gratis',
     '/anunciar-casa-para-vender-gratis',
+    '/anunciar-imovel-gratis',
+    '/anunciar-apartamento-para-alugar-gratis',
+    '/anunciar-ponto-comercial-gratis',
+    '/quero-anunciar',
     '/casa-para-alugar-no-rio-grande-do-norte',
     '/casa-para-vender-no-rio-grande-do-norte',
     '/minha-casa-minha-vida',
@@ -96,11 +126,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   try {
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    const cityRoutes = buildCityRoutes();
-    const houseCityAliasRoutes = buildHouseCityAliasRoutes();
     const { data, error } = await supabase
       .from('listings')
-      .select('slug,updated_at,created_at')
+      .select('slug,location,updated_at,created_at')
       .eq('status', 'approved')
       .order('updated_at', { ascending: false });
 
@@ -116,8 +144,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }));
 
     if (error) {
-      return [...staticRoutes, ...seoIntentRoutes, ...cityIntentRoutes, ...newsRoutes, ...dynamicNewsRoutes, ...cityRoutes, ...houseCityAliasRoutes];
+      return [...staticRoutes, ...seoIntentRoutes, ...cityIntentRoutes, ...newsRoutes, ...dynamicNewsRoutes, ...buildCityRoutes(), ...buildHouseCityAliasRoutes()];
     }
+
+    const activeListingCitySlugs = ((data ?? []) as SitemapListing[])
+      .map((listing) => slugify(listing.location ?? ''))
+      .filter((citySlug) => getAllCitySlugs().includes(citySlug));
+    const priorityCitySlugs = uniqueSlugs([...FEATURED_CITY_SLUGS, ...activeListingCitySlugs]);
+    const cityRoutes = buildCityRoutes(priorityCitySlugs);
+    const houseCityAliasRoutes = buildHouseCityAliasRoutes(priorityCitySlugs);
 
     const propertyRoutes = ((data ?? []) as SitemapListing[]).map((listing) => ({
       url: `${BASE_URL}/imoveis/${listing.slug}`,

@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/server';
 import { getPaymentCode } from '@/lib/pix';
 import { PLANS } from '@/lib/plans';
 import { setMainImage, grantHighlight, updateCreciVerification, updateHighlightStatus, updateListingPaymentStatus, updateListingStatus } from './actions';
+import LogoutButton from '@/components/LogoutButton';
 
 export const metadata: Metadata = {
   title: 'Admin | Potilar'
@@ -192,9 +193,15 @@ export default async function AdminPage({
               Aprove, rejeite ou pause anúncios enviados por proprietários.
             </p>
           </div>
+          <div className="flex flex-wrap gap-2">
+          <Link href="/admin/leads" className="inline-flex rounded-2xl border border-ocean-200 px-4 py-2 text-sm font-semibold text-ocean-700">
+            Leads e importações
+          </Link>
           <Link href="/admin/news" className="inline-flex rounded-2xl border border-ocean-200 px-4 py-2 text-sm font-semibold text-ocean-700">
             Gerenciar notícias
           </Link>
+            <LogoutButton />
+          </div>
         </div>
 
         {searchParams?.error && (

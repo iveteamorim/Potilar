@@ -26,7 +26,7 @@ export const metadata: Metadata = {
   }
 };
 
-const whatsappHref = `https://wa.me/5521969724141?text=${encodeURIComponent('Olá, vim pelo site Potilar e quero conhecer os planos para corretores e imobiliárias.')}`;
+const contactHref = '/contato';
 
 const benefits = [
   { title: 'Contato direto', text: 'Interessados falam com você pelo canal escolhido no anúncio.', Icon: MessageCircle },
@@ -142,7 +142,7 @@ const faqs = [
     'Preciso pagar comissão para a Potilar?',
     'Não. A Potilar funciona como plataforma de divulgação. A conversa e a negociação acontecem diretamente com você.'
   ],
-  ['Como ativo um plano profissional?', 'Fale com a Potilar pelo WhatsApp. Nossa equipe confirma seus dados, o volume de imóveis e o melhor plano para sua carteira.'],
+  ['Como ativo um plano profissional?', 'Fale com a Potilar pelo formulario. Nossa equipe confirma seus dados, o volume de imóveis e o melhor plano para sua carteira.'],
   ['O plano tem fidelidade?', 'Não. Fale com a Potilar para ativar, ajustar ou cancelar quando precisar.'],
   ['Destaques podem ser contratados depois?', 'Sim. Você pode publicar primeiro e destacar os imóveis que precisam de mais visibilidade.']
 ];
@@ -174,23 +174,19 @@ export default function PlanosPage() {
             </p>
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <a
-                href={whatsappHref}
-                target="_blank"
-                rel="noreferrer"
+              <Link
+                href={contactHref}
                 className="inline-flex items-center justify-center gap-2 rounded-2xl bg-ocean-700 px-6 py-4 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-ocean-800 hover:shadow-lg"
               >
                 Falar sobre planos
                 <ArrowRight className="h-4 w-4" />
-              </a>
-              <a
-                href={whatsappHref}
-                target="_blank"
-                rel="noreferrer"
+              </Link>
+              <Link
+                href={contactHref}
                 className="inline-flex items-center justify-center rounded-2xl border border-sand-300 bg-white px-6 py-4 text-sm font-semibold text-ocean-800 transition hover:-translate-y-0.5 hover:border-ocean-300 hover:shadow-md dark:border-slate-700 dark:bg-slate-900"
               >
                 Falar com a Potilar
-              </a>
+              </Link>
             </div>
 
             <div className="mt-8 grid gap-3 text-sm text-slate-600 sm:grid-cols-3 dark:text-slate-300">
@@ -310,10 +306,10 @@ export default function PlanosPage() {
                 Escolha o tamanho da sua carteira.
               </h2>
             </div>
-            <a href={whatsappHref} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 text-sm font-semibold text-ocean-800">
+            <Link href={contactHref} className="inline-flex items-center gap-2 text-sm font-semibold text-ocean-800">
               Falar com a Potilar
               <ArrowRight className="h-4 w-4" />
-            </a>
+            </Link>
           </div>
 
           <div className="mt-8 grid gap-5 lg:grid-cols-3">
@@ -350,7 +346,7 @@ export default function PlanosPage() {
                   ))}
                 </ul>
                 <div className="mt-7">
-                  <ProfessionalPlanCheckoutButton planId={plan.id} fallbackHref={whatsappHref}>
+                  <ProfessionalPlanCheckoutButton planId={plan.id} fallbackHref={contactHref}>
                     {plan.cta}
                   </ProfessionalPlanCheckoutButton>
                 </div>
@@ -447,14 +443,12 @@ export default function PlanosPage() {
               >
                 Ver planos
               </Link>
-              <a
-                href={whatsappHref}
-                target="_blank"
-                rel="noreferrer"
+              <Link
+                href={contactHref}
                 className="inline-flex items-center justify-center rounded-2xl border border-white/40 px-6 py-4 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-white/10"
               >
                 Falar com a Potilar
-              </a>
+              </Link>
             </div>
           </div>
         </section>
@@ -462,5 +456,4 @@ export default function PlanosPage() {
     </main>
   );
 }
-
 

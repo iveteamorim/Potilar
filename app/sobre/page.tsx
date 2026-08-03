@@ -6,7 +6,6 @@ import {
   KEY_URLS,
   POTILAR_DEFINITION,
   SITE_INSTAGRAM,
-  SITE_WHATSAPP,
   buildOrganizationJsonLd
 } from '@/lib/siteIdentity';
 
@@ -115,14 +114,14 @@ export default function SobrePage() {
               </li>
             </ul>
             <p className="mt-6 text-sm text-slate-600 dark:text-slate-300">
-              WhatsApp:{' '}
-              <a href={`https://wa.me/${SITE_WHATSAPP}`} className="font-semibold text-ocean-700 dark:text-ocean-300">
-                +{SITE_WHATSAPP}
-              </a>
+              Atendimento:{' '}
+              <Link href="/contato" className="font-semibold text-ocean-700 dark:text-ocean-300">
+                formulario de contato
+              </Link>
               <br />
               Instagram:{' '}
               <a href={SITE_INSTAGRAM} className="font-semibold text-ocean-700 dark:text-ocean-300">
-                @potilar.imoveis
+                @potilar.rn
               </a>
             </p>
             <p className="mt-4 text-xs text-slate-500">

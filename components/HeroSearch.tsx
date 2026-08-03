@@ -34,7 +34,7 @@ export default function HeroSearch() {
         <div className="max-w-5xl">
           <p className="inline-flex items-center gap-2 rounded-full bg-white/95 px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] text-ocean-800 shadow-sm">
             <MapPin className="h-4 w-4" aria-hidden="true" />
-            O maior portal de imóveis do Rio Grande do Norte
+            Potilar: o maior portal de imóveis do Rio Grande do Norte
           </p>
           <h1 className="mt-7 max-w-[1040px] font-display text-4xl font-semibold leading-[0.98] tracking-normal text-white sm:text-6xl lg:text-7xl">
             Encontre o imóvel
@@ -75,6 +75,7 @@ export default function HeroSearch() {
                 <option value="Terreno">Terreno</option>
                 <option value="Apartamento">Apartamento</option>
                 <option value="Kitnet/Conjugado">Kitnet/Conjugado</option>
+                <option value="Ponto comercial">Ponto comercial</option>
               </select>
             </div>
 

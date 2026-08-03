@@ -199,6 +199,7 @@ export default function PropertyFilters() {
           <option value="Terreno">Terreno</option>
           <option value="Apartamento">Apartamento</option>
           <option value="Kitnet/Conjugado">Kitnet/Conjugado</option>
+          <option value="Ponto comercial">Ponto comercial</option>
         </select>
       </div>
 

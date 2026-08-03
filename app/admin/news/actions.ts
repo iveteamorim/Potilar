@@ -206,6 +206,14 @@ function extractResponseText(payload: any) {
   return textParts?.join('\n') ?? '';
 }
 
+function extractJsonObject(text: string) {
+  const cleaned = text.replace(/^```json\s*/i, '').replace(/```$/g, '').trim();
+  const start = cleaned.indexOf('{');
+  const end = cleaned.lastIndexOf('}');
+  if (start === -1 || end === -1 || end <= start) return cleaned;
+  return cleaned.slice(start, end + 1);
+}
+
 async function generateRealNewsArticle(title: string, category: string, sourceName: string, sourceUrl: string): Promise<GeneratedNews> {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
@@ -240,7 +248,7 @@ async function generateRealNewsArticle(title: string, category: string, sourceNa
   }
 
   const payload = await response.json();
-  const text = extractResponseText(payload).replace(/^```json\s*/i, '').replace(/```$/g, '').trim();
+  const text = extractJsonObject(extractResponseText(payload));
 
   try {
     const parsed = JSON.parse(text) as GeneratedNews;
@@ -330,7 +338,16 @@ export async function generateNewsDrafts() {
         if (usedTitleKeys.has(titleKey) || draftTitleKeys.has(titleKey)) continue;
         if (usedSourceUrls.has(link) || draftSourceUrls.has(link)) continue;
 
-        const generated = await generateRealNewsArticle(title, query.category, source, link);
+        let generated: GeneratedNews;
+        try {
+          generated = await generateRealNewsArticle(title, query.category, source, link);
+        } catch {
+          generated = {
+            title,
+            excerpt: buildDraftExcerpt(title, query.category),
+            content: buildDraftContent(title, query.category, source, link)
+          };
+        }
         const generatedTitleKey = normalizeNewsKey(generated.title);
         if (usedTitleKeys.has(generatedTitleKey) || draftTitleKeys.has(generatedTitleKey)) continue;
 

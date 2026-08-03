@@ -56,7 +56,7 @@ type PublicListingRow = {
 
 export const metadata: Metadata = {
   title: 'Imóveis no RN',
-  description: 'Encontre casas, apartamentos, terrenos, aluguéis e imóveis de temporada no Rio Grande do Norte.',
+  description: 'Encontre casas, apartamentos, terrenos, pontos comerciais, aluguéis e imóveis de temporada no Rio Grande do Norte.',
   alternates: {
     canonical: '/imoveis'
   },
