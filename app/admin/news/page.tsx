@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import { getNewsImageUrl } from '@/data/news';
+import { getNewsImageUrl, sanitizeNewsCopy } from '@/data/news';
 import { generateNewsDrafts, updateNewsArticle, updateNewsStatus } from './actions';
 import SubmitButton from '@/components/SubmitButton';
 
@@ -76,7 +76,22 @@ export default async function AdminNewsPage({
     .order('created_at', { ascending: false })
     .limit(40);
 
-  const articles = error ? [] : ((data ?? []) as NewsAdminRow[]);
+  const articles = (error ? [] : ((data ?? []) as NewsAdminRow[])).map((article) => {
+    const sanitized = sanitizeNewsCopy({
+      title: article.title,
+      excerpt: article.excerpt,
+      content: article.content,
+      sourceUrl: article.source_url
+    });
+
+    return {
+      ...article,
+      title: sanitized.title,
+      excerpt: sanitized.excerpt,
+      content: sanitized.content,
+      source_url: sanitized.sourceUrl
+    };
+  });
   const counts = articles.reduce(
     (acc, article) => {
       acc[article.status] = (acc[article.status] ?? 0) + 1;

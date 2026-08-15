@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
-import { dedupeNewsArticles, fallbackNewsArticles, formatNewsDate, getNewsImageUrl, withUniqueNewsImages, type NewsArticle } from '@/data/news';
+import { dedupeNewsArticles, fallbackNewsArticles, formatNewsDate, getNewsImageUrl, sanitizeNewsArticle, withUniqueNewsImages, type NewsArticle } from '@/data/news';
 
 export const metadata: Metadata = {
   title: 'Potilar Notícias | Mercado imobiliário no RN',
@@ -27,7 +27,7 @@ type NewsRow = {
 function rowToArticle(row: NewsRow): NewsArticle {
   const isOldAiDraft = row.excerpt.includes('Rascunho para revisão') || row.content.includes('Rascunho gerado automaticamente');
 
-  return {
+  return sanitizeNewsArticle({
     slug: row.slug,
     category: row.category,
     title: row.title,
@@ -39,7 +39,7 @@ function rowToArticle(row: NewsRow): NewsArticle {
     sourceName: row.source_name,
     sourceUrl: row.source_url,
     publishedAt: row.published_at
-  };
+  });
 }
 
 async function getNewsArticles() {

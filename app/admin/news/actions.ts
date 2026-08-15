@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { slugify } from '@/lib/slugify';
-import { getNewsImageUrl, getNewsTitleFingerprint } from '@/data/news';
+import { getNewsImageUrl, getNewsTitleFingerprint, sanitizeNewsCopy } from '@/data/news';
 
 async function ensureAdmin() {
   const supabase = createClient();
@@ -36,16 +36,17 @@ export async function createNewsArticle(formData: FormData) {
 
     const { supabase, userId } = await ensureAdmin();
     const publishedAt = status === 'published' ? new Date().toISOString() : null;
+    const sanitized = sanitizeNewsCopy({ title, excerpt, content, sourceUrl });
 
     const { error } = await supabase.from('news_articles').insert({
-      title,
-      slug: slugify(title),
+      title: sanitized.title,
+      slug: slugify(sanitized.title),
       category,
-      excerpt,
-      content,
+      excerpt: sanitized.excerpt,
+      content: sanitized.content,
       image_url: imageUrl || null,
       source_name: sourceName || null,
-      source_url: sourceUrl || null,
+      source_url: sanitized.sourceUrl,
       status,
       reviewed_by: status === 'published' ? userId : null,
       published_at: publishedAt,
@@ -108,16 +109,17 @@ export async function updateNewsArticle(formData: FormData) {
     if (!title || !excerpt || !content) throw new Error('Titulo, resumo e conteudo sao obrigatorios');
 
     const { supabase } = await ensureAdmin();
+    const sanitized = sanitizeNewsCopy({ title, excerpt, content, sourceUrl });
     const { error } = await supabase
       .from('news_articles')
       .update({
-        title,
+        title: sanitized.title,
         category,
-        excerpt,
-        content,
+        excerpt: sanitized.excerpt,
+        content: sanitized.content,
         image_url: imageUrl || null,
         source_name: sourceName || null,
-        source_url: sourceUrl || null,
+        source_url: sanitized.sourceUrl,
         updated_at: new Date().toISOString()
       })
       .eq('id', id);
@@ -180,12 +182,11 @@ function buildDraftExcerpt(title: string, category: string) {
   return `${title}. Entenda por que esse tema pode influenciar proprietários, compradores, inquilinos e profissionais do mercado imobiliário no Rio Grande do Norte.`;
 }
 
-function buildDraftContent(title: string, category: string, sourceName: string, sourceUrl: string) {
+function buildDraftContent(title: string, category: string) {
   return [
     `${title} chama a atenção para um movimento importante dentro do mercado imobiliário. Para quem acompanha compra, venda, aluguel ou investimento em imóveis, esse tipo de informação ajuda a entender melhor o momento antes de tomar uma decisão.`,
     `No Rio Grande do Norte, notícias ligadas a ${category.toLowerCase()} podem afetar a forma como proprietários definem valores, como interessados comparam oportunidades e como corretores e imobiliárias orientam seus clientes.`,
-    `A recomendação da Potilar é sempre comparar anúncios semelhantes, observar a localização, revisar a documentação e confirmar as informações diretamente com as fontes oficiais ou profissionais qualificados antes de fechar qualquer negociação.`,
-    `Esta notícia foi preparada pela Potilar a partir de informações publicadas por ${sourceName || 'fonte externa'}. Consulte a fonte original para conferir detalhes, datas e dados completos: ${sourceUrl}`
+    `A recomendação da Potilar é sempre comparar anúncios semelhantes, observar a localização, revisar a documentação e confirmar as informações diretamente com as fontes oficiais ou profissionais qualificados antes de fechar qualquer negociação.`
   ].join('\n');
 }
 
@@ -193,6 +194,7 @@ type GeneratedNews = {
   title: string;
   excerpt: string;
   content: string;
+  sourceUrl?: string | null;
 };
 
 function extractResponseText(payload: any) {
@@ -214,6 +216,21 @@ function extractJsonObject(text: string) {
   return cleaned.slice(start, end + 1);
 }
 
+function extractAnnotationUrls(payload: any) {
+  const urls: string[] = [];
+  const items = payload?.output ?? [];
+
+  for (const item of items) {
+    for (const content of item?.content ?? []) {
+      for (const annotation of content?.annotations ?? []) {
+        if (typeof annotation?.url === 'string') urls.push(annotation.url);
+      }
+    }
+  }
+
+  return urls;
+}
+
 async function generateRealNewsArticle(title: string, category: string, sourceName: string, sourceUrl: string): Promise<GeneratedNews> {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
@@ -233,11 +250,11 @@ async function generateRealNewsArticle(title: string, category: string, sourceNa
         {
           role: 'developer',
           content:
-            'Você é editor de um portal imobiliário. Escreva notícias factuais em português do Brasil. Use busca web para verificar a fonte. Não copie trechos da fonte. Não invente dados. Se algo não estiver confirmado, diga de forma cuidadosa. Responda somente JSON válido.'
+            'Você é editor de um portal imobiliário. Escreva notícias factuais em português do Brasil. Use busca web para verificar a fonte. Não copie trechos da fonte. Não invente dados. Se algo não estiver confirmado, diga de forma cuidadosa. Responda somente JSON válido. Não inclua citações, footnotes, markdown, links, URLs nem a linha Fonte no título, no resumo ou no corpo. Não use [texto](url) nem ([site](url)). O corpo deve ser só parágrafos em prosa, separados por \\n. A fonte oficial fica fora do JSON.'
         },
         {
           role: 'user',
-          content: `Crie uma notícia pronta para publicação na Potilar Notícias, sem mencionar propaganda da Potilar no corpo. Tema: ${title}. Categoria: ${category}. Fonte: ${sourceName}. Link: ${sourceUrl}. Formato JSON: {"title":"...","excerpt":"...","content":"paragrafo 1\\nparagrafo 2\\nparagrafo 3\\nparagrafo 4"}.`
+          content: `Crie uma notícia pronta para revisão na Potilar Notícias, sem mencionar propaganda da Potilar no corpo. Tema: ${title}. Categoria: ${category}. Fonte de verificação: ${sourceName}. Link de verificação: ${sourceUrl}. Formato JSON: {"title":"...","excerpt":"...","content":"paragrafo 1\\nparagrafo 2\\nparagrafo 3\\nparagrafo 4"}.`
         }
       ]
     })
@@ -253,7 +270,20 @@ async function generateRealNewsArticle(title: string, category: string, sourceNa
   try {
     const parsed = JSON.parse(text) as GeneratedNews;
     if (!parsed.title || !parsed.excerpt || !parsed.content) throw new Error('JSON incompleto');
-    return parsed;
+    const sanitized = sanitizeNewsCopy({
+      title: parsed.title,
+      excerpt: parsed.excerpt,
+      content: parsed.content,
+      sourceUrl,
+      citationText: text,
+      citationUrls: extractAnnotationUrls(payload)
+    });
+    return {
+      title: sanitized.title,
+      excerpt: sanitized.excerpt,
+      content: sanitized.content,
+      sourceUrl: sanitized.sourceUrl
+    };
   } catch {
     throw new Error('A IA não retornou uma notícia válida. Tente novamente.');
   }
@@ -261,7 +291,7 @@ async function generateRealNewsArticle(title: string, category: string, sourceNa
 
 export async function generateNewsDrafts() {
   try {
-    const { supabase, userId } = await ensureAdmin();
+    const { supabase } = await ensureAdmin();
     await supabase
       .from('news_articles')
       .update({ status: 'archived', updated_at: new Date().toISOString() })
@@ -296,10 +326,9 @@ export async function generateNewsDrafts() {
       image_url: string;
       source_name: string | null;
       source_url: string | null;
-      status: 'published';
+      status: 'draft';
       ai_generated: true;
-      reviewed_by: string;
-      published_at: string;
+      published_at: null;
       updated_at: string;
     }> = [];
     const draftTitleKeys = new Set<string>();
@@ -345,25 +374,30 @@ export async function generateNewsDrafts() {
           generated = {
             title,
             excerpt: buildDraftExcerpt(title, query.category),
-            content: buildDraftContent(title, query.category, source, link)
+            content: buildDraftContent(title, query.category)
           };
         }
         const generatedTitleKey = normalizeNewsKey(generated.title);
         if (usedTitleKeys.has(generatedTitleKey) || draftTitleKeys.has(generatedTitleKey)) continue;
-
-        drafts.push({
+        const sanitized = sanitizeNewsCopy({
           title: generated.title,
-          slug: `${slugify(title)}-${Date.now().toString(36)}`,
-          category: query.category,
           excerpt: generated.excerpt,
           content: generated.content,
+          sourceUrl: generated.sourceUrl || link
+        });
+
+        drafts.push({
+          title: sanitized.title,
+          slug: `${slugify(title)}-${Date.now().toString(36)}`,
+          category: query.category,
+          excerpt: sanitized.excerpt,
+          content: sanitized.content,
           image_url: getNewsImageUrl(query.category, null, title),
           source_name: source,
-          source_url: link,
-          status: 'published',
+          source_url: sanitized.sourceUrl,
+          status: 'draft',
           ai_generated: true,
-          reviewed_by: userId,
-          published_at: new Date().toISOString(),
+          published_at: null,
           updated_at: new Date().toISOString()
         });
         draftTitleKeys.add(titleKey);

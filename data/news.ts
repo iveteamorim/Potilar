@@ -144,6 +144,117 @@ const newsTitleStopWords = new Set([
   'pelas'
 ]);
 
+const trackingQueryParam = /^(utm_|fbclid|gclid|mc_cid|mc_eid|igshid|_hsenc|_hsmi)/i;
+
+function extractMarkdownUrls(value: string) {
+  const urls: string[] = [];
+  const pattern = /\[[^\]]*\]\((https?:\/\/[^)\s]+)\)/g;
+  let match: RegExpExecArray | null;
+
+  while ((match = pattern.exec(value))) {
+    urls.push(match[1]);
+  }
+
+  return urls;
+}
+
+function isWeakNewsSourceUrl(url?: string | null) {
+  if (!url) return true;
+
+  try {
+    const host = new URL(url).hostname.toLowerCase();
+    return host === 'news.google.com' || host.endsWith('.news.google.com') || host === 'news.google.com.br';
+  } catch {
+    return false;
+  }
+}
+
+export function cleanNewsSourceUrl(url?: string | null) {
+  const value = url?.trim();
+  if (!value) return null;
+
+  try {
+    const parsed = new URL(value);
+    for (const key of [...parsed.searchParams.keys()]) {
+      if (trackingQueryParam.test(key)) parsed.searchParams.delete(key);
+    }
+    parsed.hash = '';
+    const query = parsed.searchParams.toString();
+    parsed.search = query ? `?${query}` : '';
+    return parsed.toString();
+  } catch {
+    return value;
+  }
+}
+
+function pickPreferredSourceUrl(currentUrl: string | null | undefined, citationUrls: string[]) {
+  const cleanedCitations = citationUrls
+    .map((url) => cleanNewsSourceUrl(url))
+    .filter((url): url is string => Boolean(url))
+    .filter((url) => !isWeakNewsSourceUrl(url));
+
+  if (cleanedCitations[0]) return cleanedCitations[0];
+  return cleanNewsSourceUrl(currentUrl ?? null);
+}
+
+function cleanNewsProse(value: string) {
+  return value
+    .replace(/【[^】]*】/g, '')
+    .replace(/\s*\(\[[^\]]+\]\((https?:\/\/[^)]+)\)\)/g, '')
+    .replace(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g, '$1')
+    .replace(/\s*\(https?:\/\/[^\s)]+\)/g, '')
+    .replace(/[ \t]+\n/g, '\n')
+    .replace(/[ \t]{2,}/g, ' ')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
+function stripInlineSourceFooters(value: string) {
+  return value
+    .split(/\n+/)
+    .map((line) => line.replace(/\s*fonte\s*:\s*.+$/i, '').trim())
+    .filter((line) => line.length > 0)
+    .join('\n');
+}
+
+export function sanitizeNewsCopy(input: {
+  title: string;
+  excerpt: string;
+  content: string;
+  sourceUrl?: string | null;
+  citationText?: string;
+  citationUrls?: string[];
+}) {
+  const citationUrls = [
+    ...extractMarkdownUrls([input.title, input.excerpt, input.content, input.citationText ?? ''].join('\n')),
+    ...(input.citationUrls ?? [])
+  ];
+
+  return {
+    title: cleanNewsProse(input.title).replace(/\s+/g, ' ').trim(),
+    excerpt: cleanNewsProse(stripInlineSourceFooters(input.excerpt)).replace(/\s+/g, ' ').trim(),
+    content: cleanNewsProse(stripInlineSourceFooters(input.content)),
+    sourceUrl: pickPreferredSourceUrl(input.sourceUrl, citationUrls)
+  };
+}
+
+export function sanitizeNewsArticle<T extends Pick<NewsArticle, 'title' | 'excerpt' | 'content' | 'sourceUrl'>>(article: T): T {
+  const sanitized = sanitizeNewsCopy({
+    title: article.title,
+    excerpt: article.excerpt,
+    content: article.content.join('\n'),
+    sourceUrl: article.sourceUrl
+  });
+
+  return {
+    ...article,
+    title: sanitized.title,
+    excerpt: sanitized.excerpt,
+    content: sanitized.content.split('\n').map((paragraph) => paragraph.trim()).filter(Boolean),
+    sourceUrl: sanitized.sourceUrl
+  };
+}
+
 export function getNewsTitleFingerprint(title: string) {
   const words = title
     .normalize('NFD')

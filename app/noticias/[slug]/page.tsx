@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import { fallbackNewsArticles, formatNewsDate, getNewsImageUrl, type NewsArticle } from '@/data/news';
+import { fallbackNewsArticles, formatNewsDate, getNewsImageUrl, sanitizeNewsArticle, type NewsArticle } from '@/data/news';
 
 type NewsRow = {
   slug: string;
@@ -23,7 +23,7 @@ function rowToArticle(row: NewsRow): NewsArticle {
     row.content.includes('Sugestao editorial');
 
   if (isOldAiDraft) {
-    return {
+    return sanitizeNewsArticle({
       slug: row.slug,
       category: row.category,
       title: row.title,
@@ -38,10 +38,10 @@ function rowToArticle(row: NewsRow): NewsArticle {
       sourceName: row.source_name,
       sourceUrl: row.source_url,
       publishedAt: row.published_at
-    };
+    });
   }
 
-  return {
+  return sanitizeNewsArticle({
     slug: row.slug,
     category: row.category,
     title: row.title,
@@ -51,7 +51,7 @@ function rowToArticle(row: NewsRow): NewsArticle {
     sourceName: row.source_name,
     sourceUrl: row.source_url,
     publishedAt: row.published_at
-  };
+  });
 }
 
 async function getArticle(slug: string): Promise<NewsArticle | null> {
