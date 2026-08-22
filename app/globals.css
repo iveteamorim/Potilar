@@ -12,7 +12,7 @@ body {
 }
 
 body {
-  @apply bg-sand-50 text-slate-900 antialiased;
+  @apply bg-white text-slate-900 antialiased;
   text-rendering: optimizeLegibility;
   font-feature-settings: "liga" 1, "kern" 1;
 }

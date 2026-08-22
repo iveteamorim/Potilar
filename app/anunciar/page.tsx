@@ -93,7 +93,7 @@ export default async function AnunciarPage({
     : 'Publique casas, apartamentos, terrenos e imóveis de temporada em qualquer cidade do Rio Grande do Norte.';
 
   return (
-    <main className="section-padding">
+    <main className="section-padding bg-white dark:bg-slate-950">
       <div className="mx-auto flex max-w-4xl flex-col items-center gap-10">
         <div className="mx-auto max-w-2xl space-y-6 text-center">
           <div>
@@ -105,7 +105,7 @@ export default async function AnunciarPage({
             </h1>
             <p className="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300">
               {promoActive
-                ? `Publique seus ${freeLimit} primeiros anúncios grátis na Potilar. Cada anúncio fica ativo por 60 dias.`
+                ? 'Publique seu primeiro anúncio grátis na Potilar. Cada anúncio fica ativo por 60 dias.'
                 : `Publique seu primeiro anúncio gratuito por 60 dias. ${cityLine}`}
             </p>
           </div>
@@ -124,12 +124,12 @@ export default async function AnunciarPage({
             />
           </div>
         ) : (
-          <div className="glass-card mx-auto w-full max-w-3xl space-y-4 p-6">
+          <div className="glass-card mx-auto w-full max-w-3xl space-y-4 p-6 text-center sm:p-8">
             <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Crie sua conta para anunciar</h2>
-            <p className="text-sm text-slate-600 dark:text-slate-300">
+            <p className="mx-auto max-w-2xl text-sm leading-7 text-slate-600 dark:text-slate-300">
               Para publicar e gerenciar seus anúncios, entre ou crie uma conta gratuita. Depois, clique em Anunciar imóvel dentro de Minha conta.
             </p>
-            <Link href={`/login?next=${encodeURIComponent('/mi-cuenta')}`} className="inline-flex w-full justify-center rounded-2xl bg-ocean-600 px-5 py-3 text-sm font-semibold text-white">
+            <Link href="/login" className="inline-flex w-full justify-center rounded-2xl bg-ocean-600 px-5 py-3 text-sm font-semibold text-white">
               Entrar ou criar conta
             </Link>
           </div>

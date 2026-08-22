@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Camera, RotateCcw, Upload } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
@@ -20,15 +20,25 @@ export default function DemoProfileImageManager({
 }: Props) {
   const router = useRouter();
   const [bannerUrl, setBannerUrl] = useState(bannerImageUrl);
-  const bannerInitial = useMemo(() => bannerImageUrl, [bannerImageUrl]);
+  const [savedBannerUrl, setSavedBannerUrl] = useState(bannerImageUrl);
   const [status, setStatus] = useState('');
   const [uploading, setUploading] = useState(false);
+
+  useEffect(() => {
+    setBannerUrl(bannerImageUrl);
+    setSavedBannerUrl(bannerImageUrl);
+  }, [bannerImageUrl]);
 
   async function uploadBanner(file: File | null | undefined) {
     if (!file || !file.type.startsWith('image/')) return;
 
-    setBannerUrl(URL.createObjectURL(file));
-    if (!publicSlug) return;
+    const previousUrl = savedBannerUrl;
+    const localPreview = URL.createObjectURL(file);
+    setBannerUrl(localPreview);
+    if (!publicSlug) {
+      setStatus('Defina o endere\u00e7o p\u00fablico do perfil antes de trocar a capa.');
+      return;
+    }
 
     setUploading(true);
     setStatus('');
@@ -40,6 +50,7 @@ export default function DemoProfileImageManager({
       } = await supabase.auth.getUser();
 
       if (!user) {
+        setBannerUrl(previousUrl);
         setStatus('Entre na conta para salvar a imagem.');
         return;
       }
@@ -55,6 +66,7 @@ export default function DemoProfileImageManager({
         });
 
       if (uploadError) {
+        setBannerUrl(previousUrl);
         setStatus(uploadError.message);
         return;
       }
@@ -68,16 +80,27 @@ export default function DemoProfileImageManager({
           banner_image_url: data.publicUrl
         })
       });
-      const payload = await response.json();
+      const payload = await response.json().catch(() => ({}));
 
       if (!response.ok) {
+        setBannerUrl(previousUrl);
         setStatus(payload.error ?? 'N\u00e3o foi poss\u00edvel salvar a imagem.');
         return;
       }
 
+      const persistedUrl = typeof payload.banner_image_url === 'string' && payload.banner_image_url
+        ? payload.banner_image_url
+        : data.publicUrl;
+
+      setBannerUrl(persistedUrl);
+      setSavedBannerUrl(persistedUrl);
       setStatus('Capa salva.');
       router.refresh();
+    } catch (error) {
+      setBannerUrl(previousUrl);
+      setStatus(error instanceof Error ? error.message : 'N\u00e3o foi poss\u00edvel salvar a imagem.');
     } finally {
+      URL.revokeObjectURL(localPreview);
       setUploading(false);
     }
   }
@@ -110,7 +133,7 @@ export default function DemoProfileImageManager({
         <div className="flex justify-end p-4">
           <button
             type="button"
-            onClick={() => setBannerUrl(bannerInitial)}
+            onClick={() => setBannerUrl(savedBannerUrl)}
             className="inline-flex items-center gap-2 rounded-xl border border-sand-200 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-sand-50 dark:border-slate-700 dark:text-slate-300"
           >
             <RotateCcw className="h-4 w-4" aria-hidden="true" />

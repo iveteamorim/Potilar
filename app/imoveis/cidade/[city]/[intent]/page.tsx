@@ -164,36 +164,40 @@ export default async function CityIntentPage({ params }: { params: { city: strin
           </div>
         </section>
 
-        {listings.length > 0 ? (
-          <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
-            <section className="space-y-4">
-              <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Anúncios em {cityName}</h2>
+        <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
+          <section className="space-y-4">
+            {listings.length > 0 ? (
+              <>
+                <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Anúncios em {cityName}</h2>
               <FavoriteAwarePropertyList items={listings} />
-            </section>
-            <aside className="glass-card h-fit p-4 sm:p-6 lg:sticky lg:top-24">
-              <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Mapa em {cityName}</h2>
-              <div className="mt-4">
-                <PropertyMap items={listings} height="420px" />
+              </>
+            ) : (
+              <div className="glass-card space-y-4 p-8 text-center">
+                <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
+                  Não temos imóveis disponíveis agora em {cityName}
+                </h2>
+                <p className="mx-auto max-w-2xl text-sm leading-7 text-slate-600 dark:text-slate-300">
+                  Crie um alerta para esta busca ou seja o primeiro a anunciar um imóvel em {cityName}.
+                </p>
+                <Link
+                  href={`/anunciar?cidade=${encodeURIComponent(cityName)}`}
+                  className="inline-flex rounded-2xl bg-ocean-600 px-6 py-3 text-sm font-semibold text-white"
+                >
+                  Seja o primeiro a anunciar
+                </Link>
               </div>
-            </aside>
-          </div>
-        ) : (
-          <section className="glass-card space-y-4 p-8 text-center">
-            <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
-              Ainda não há anúncios nesta busca em {cityName}
-            </h2>
-            <p className="mx-auto max-w-2xl text-sm leading-7 text-slate-600 dark:text-slate-300">
-              A Potilar está ampliando o inventário no interior do RN. Publique o primeiro anúncio nesta cidade ou veja
-              todos os imóveis disponíveis em {cityName}.
-            </p>
-            <Link
-              href={`/anunciar?cidade=${encodeURIComponent(cityName)}`}
-              className="inline-flex rounded-2xl bg-ocean-600 px-6 py-3 text-sm font-semibold text-white"
-            >
-              Anunciar em {cityName}
-            </Link>
+            )}
           </section>
-        )}
+          <aside className="glass-card h-fit p-4 sm:p-6 lg:sticky lg:top-24">
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Mapa em {cityName}</h2>
+            <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+              {listings.length === 0 ? 'Explore a região enquanto novos anúncios chegam.' : 'Explore os anúncios publicados na cidade.'}
+            </p>
+            <div className="mt-4">
+              <PropertyMap items={listings} height="420px" />
+            </div>
+          </aside>
+        </div>
 
         <section className="rounded-3xl border border-sand-200 bg-sand-50 p-6 dark:border-slate-800 dark:bg-slate-950/40">
           <h2 className="text-base font-semibold text-slate-900 dark:text-white">Outras buscas em {cityName}</h2>

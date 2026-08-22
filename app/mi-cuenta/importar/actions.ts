@@ -47,7 +47,7 @@ function parseCsvLine(line: string) {
       continue;
     }
 
-    if ((char === ';' || char === ',') && !insideQuotes) {
+    if ((char === ';' || char === ',' || char === '\t') && !insideQuotes) {
       values.push(current.trim());
       current = '';
       continue;

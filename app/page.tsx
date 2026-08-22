@@ -14,7 +14,7 @@ import Link from 'next/link';
 import { getFreeListingLimit, getLaunchPromoDeadlineLabel, isLaunchPromoActive } from '@/lib/plans';
 import { POTILAR_DEFINITION } from '@/lib/siteIdentity';
 import agencyMatchImage from '@/components/ayudamosencontrarimobiliaria.jpg';
-import { dedupeNewsArticles, fallbackNewsArticles, formatNewsDate, getNewsImageUrl, withUniqueNewsImages, type NewsArticle } from '@/data/news';
+import { dedupeNewsArticles, fallbackNewsArticles, formatNewsDate, getNewsImageUrl, sanitizeNewsArticle, withUniqueNewsImages, type NewsArticle } from '@/data/news';
 
 
 export const dynamic = 'force-dynamic';
@@ -111,19 +111,19 @@ type NewsRow = {
 function newsRowToArticle(row: NewsRow): NewsArticle {
   const isOldAiDraft = row.excerpt.includes('Rascunho para revisao') || row.content.includes('Rascunho gerado automaticamente');
 
-  return {
+  return sanitizeNewsArticle({
     slug: row.slug,
     category: row.category,
     title: row.title,
     excerpt: isOldAiDraft
-      ? `${row.title}. Entenda por que esse tema pode influenciar o mercado imobiliario no Rio Grande do Norte.`
+      ? `${row.title}. Entenda por que esse tema pode influenciar o mercado imobiliário no Rio Grande do Norte.`
       : row.excerpt,
     content: row.content.split('\n').filter(Boolean),
     imageUrl: getNewsImageUrl(row.category, row.image_url, row.slug),
     sourceName: row.source_name,
     sourceUrl: row.source_url,
     publishedAt: row.published_at
-  };
+  });
 }
 
 async function getHomeNews(): Promise<NewsArticle[]> {
@@ -160,13 +160,13 @@ export default async function HomePage() {
 
       <section className="border-b border-sand-200 bg-white py-8 dark:border-slate-800 dark:bg-slate-950">
         <div className="mx-auto grid max-w-6xl gap-6 px-4 sm:px-6 lg:grid-cols-[1fr_auto] lg:items-center">
-          <div>
+          <div className="hidden md:block">
             <h2 className="mt-2 text-2xl font-semibold leading-tight text-slate-950 dark:text-white sm:text-3xl">
               Tem um imóvel no Rio Grande do Norte?
             </h2>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600 dark:text-slate-300">
               {isLaunchPromoActive()
-                ? 'Publique seus 2 primeiros anúncios grátis na Potilar.'
+                ? 'Publique seu primeiro anúncio grátis na Potilar.'
                 : 'Anuncie seu primeiro imóvel grátis na Potilar.'}
             </p>
           </div>
@@ -187,7 +187,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="section-padding">
+      <section className="section-padding bg-white dark:bg-slate-950">
         <div className="mx-auto max-w-6xl">
           <div className="flex items-center justify-between">
             <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">Imóveis em destaque</h2>
@@ -209,7 +209,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="section-padding bg-white dark:bg-slate-950">
+      <section className="bg-white px-4 pb-4 pt-10 dark:bg-slate-950 sm:px-6 sm:py-16 lg:px-8 lg:py-24">
         <div className="mx-auto grid max-w-6xl items-center gap-0 lg:grid-cols-[1.25fr_0.75fr]">
           <div className="overflow-hidden border border-sand-200 bg-sand-100 dark:border-slate-800 dark:bg-slate-900">
             <img
@@ -233,37 +233,43 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="section-padding bg-white dark:bg-slate-950">
+      <section className="bg-white px-4 pb-10 pt-4 dark:bg-slate-950 sm:px-6 sm:py-14 lg:px-8 lg:py-12">
         <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[1fr_1.2fr]">
-          <div>
-            <h2 className="text-3xl font-semibold text-ocean-700 dark:text-ocean-300">
+          <div className="hidden md:block">
+            <h2 className="hidden text-3xl font-semibold text-ocean-700 dark:text-ocean-300 md:block">
               Busca por mapa
             </h2>
-            <p className="mt-4 text-2xl font-semibold text-slate-900 dark:text-white">
+            <p className="mt-0 text-3xl font-semibold leading-tight text-ocean-700 dark:text-ocean-300 md:mt-4 md:text-2xl md:text-slate-900 md:dark:text-white">
               Encontre imóveis pela região que você procura.
             </p>
-            <p className="mt-4 text-sm text-slate-600 dark:text-slate-300">
+            <p className="mt-4 hidden text-sm text-slate-600 dark:text-slate-300 md:block">
               Veja os anúncios publicados no Rio Grande do Norte e use a localização para comparar cidades, bairros e
               oportunidades com mais clareza.
             </p>
-            <div className="mt-6 flex flex-wrap gap-3">
+            <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4 lg:flex lg:flex-wrap">
               <Link
                 href="/imoveis?transaction=Compra#mapa"
-                className="inline-flex min-w-32 justify-center rounded-full bg-sun-500 px-6 py-3 text-sm font-semibold text-white shadow-soft transition hover:bg-sun-600"
+                className="inline-flex h-14 min-w-32 items-center justify-center rounded-full border border-ocean-700 bg-white px-5 text-sm font-semibold text-ocean-700 shadow-soft transition hover:border-ocean-900 hover:text-ocean-900 dark:border-ocean-300 dark:bg-slate-950 dark:text-ocean-200 md:border-0 md:bg-sun-500 md:text-white md:hover:bg-sun-600"
               >
                 Comprar
               </Link>
               <Link
                 href="/imoveis?transaction=Aluguel#mapa"
-                className="inline-flex min-w-32 justify-center rounded-full border border-ocean-700 bg-white px-6 py-3 text-sm font-semibold text-ocean-700 shadow-soft transition hover:border-ocean-900 hover:text-ocean-900 dark:border-ocean-300 dark:bg-slate-950 dark:text-ocean-200"
+                className="inline-flex h-14 min-w-32 items-center justify-center rounded-full border border-ocean-700 bg-white px-5 text-sm font-semibold text-ocean-700 shadow-soft transition hover:border-ocean-900 hover:text-ocean-900 dark:border-ocean-300 dark:bg-slate-950 dark:text-ocean-200"
               >
                 Alugar
               </Link>
               <Link
-                href="/imoveis#mapa"
-                className="inline-flex min-w-32 justify-center rounded-full border border-sand-300 bg-white/70 px-6 py-3 text-sm font-semibold text-slate-700 transition hover:border-ocean-300 hover:text-ocean-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                href="/imoveis?transaction=Temporada#mapa"
+                className="inline-flex h-14 min-w-32 items-center justify-center rounded-full border border-ocean-700 bg-white px-5 text-sm font-semibold text-ocean-700 shadow-soft transition hover:border-ocean-900 hover:text-ocean-900 dark:border-ocean-300 dark:bg-slate-950 dark:text-ocean-200"
               >
-                Ver todos
+                Temporada
+              </Link>
+              <Link
+                href="/imoveis#mapa"
+                className="inline-flex h-14 min-w-32 items-center justify-center rounded-full border border-ocean-700 bg-white px-5 text-sm font-semibold text-ocean-700 shadow-soft transition hover:border-ocean-900 hover:text-ocean-900 dark:border-ocean-300 dark:bg-slate-950 dark:text-ocean-200"
+              >
+                Todos
               </Link>
             </div>
           </div>
@@ -271,27 +277,37 @@ export default async function HomePage() {
             <PropertyMap items={approvedListings} height="360px" />
           </div>
         </div>
-        <div className="mx-auto mt-8 max-w-6xl md:hidden">
-          <MobilePropertyMapToggle items={approvedListings} height="360px" />
+        <div className="mx-auto mt-0 max-w-6xl md:hidden">
+          <h2 className="mb-4 text-3xl font-semibold text-ocean-700 dark:text-ocean-300">
+            Busca por mapa
+          </h2>
+          <MobilePropertyMapToggle items={approvedListings} height="360px" closedLabel="Abrir mapa" />
         </div>
       </section>
 
-      <section className="section-padding bg-white dark:bg-slate-950">
+      <section className="bg-white px-4 pb-12 pt-6 dark:bg-slate-950 sm:px-6 sm:pb-16 sm:pt-10 lg:px-8 lg:pb-16 lg:pt-8">
         <div className="mx-auto max-w-6xl">
           <div className="border-b border-sand-200 pb-4 dark:border-slate-800">
             <h2 className="text-3xl font-semibold text-slate-950 dark:text-white">
-              Potilar<span className="text-slate-500">/noticias</span>
+              Potilar <span className="text-slate-500">notícias</span>
             </h2>
             <p className="mt-3 text-base text-slate-600 dark:text-slate-300">
-              Notícias e orientações sobre mercado imobiliário, aluguel, compra e segurança no RN.
+              Notícias e orientações sobre mercado imobiliário, aluguel e compra no RN.
             </p>
-            <div className="mt-5 flex flex-wrap gap-8 text-sm font-bold text-slate-600 dark:text-slate-300">
-              <span className="border-b-4 border-ocean-700 pb-3 text-ocean-700">Notícias destacadas</span>
-              <span>Imobiliario</span>
-              <span>Financiamento</span>
-              <span>Temporada</span>
-              <span>Seguranca</span>
-            </div>
+            <nav
+              aria-label="Categorias de notícias"
+              className="mt-5 flex flex-nowrap items-center gap-8 overflow-x-auto text-sm font-bold text-slate-600 dark:text-slate-300"
+            >
+              <Link href="/noticias?tema=mercado-imobiliario" className="whitespace-nowrap border-b-4 border-ocean-700 pb-3 text-ocean-700">
+                Imobiliário
+              </Link>
+              <Link href="/noticias?tema=financiamento" className="whitespace-nowrap pb-3 transition hover:text-ocean-700">
+                Financiamento
+              </Link>
+              <Link href="/noticias?tema=temporada" className="whitespace-nowrap pb-3 transition hover:text-ocean-700">
+                Temporada
+              </Link>
+            </nav>
           </div>
 
           <div className="mt-8 grid gap-6 md:grid-cols-3">
@@ -321,14 +337,14 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="border-y border-sand-200 bg-sand-50/70 py-6 dark:border-slate-800 dark:bg-slate-900/50">
+      <section className="border-y border-sand-200 bg-white py-6 dark:border-slate-800 dark:bg-slate-950">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <h2 className="text-sm font-semibold text-slate-950 dark:text-white">Sobre a Potilar</h2>
           <p className="mt-2 max-w-4xl text-sm leading-7 text-slate-600 dark:text-slate-300">{POTILAR_DEFINITION}</p>
         </div>
       </section>
 
-      <section className="section-padding">
+      <section className="section-padding bg-white dark:bg-slate-950">
         <div className="mx-auto max-w-6xl rounded-3xl bg-ocean-700 px-6 py-10 text-white shadow-soft">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>

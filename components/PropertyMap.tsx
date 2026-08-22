@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import L from 'leaflet';
 import { BedDouble, Bath, MapPin, X } from 'lucide-react';
@@ -303,28 +302,6 @@ export default function PropertyMap({
     router.push(href);
   }
 
-  if (mapItems.length === 0) {
-    return (
-      <div
-        className="flex flex-col items-center justify-center gap-3 rounded-3xl border border-dashed border-sand-300 bg-sand-50 px-6 text-center dark:border-slate-700 dark:bg-slate-900"
-        style={{ height }}
-        role="status"
-      >
-        <MapPin className="h-8 w-8 text-slate-400" aria-hidden="true" />
-        <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">Nenhum anúncio com localização nesta busca</p>
-        <p className="max-w-xs text-xs text-slate-500 dark:text-slate-400">
-          Ajuste os filtros ou explore outras cidades para ver imóveis no mapa.
-        </p>
-        <Link
-          href="/imoveis"
-          className="mt-1 rounded-full border border-sand-200 px-4 py-2 text-xs font-semibold text-slate-600 transition hover:bg-white dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
-        >
-          Limpar busca
-        </Link>
-      </div>
-    );
-  }
-
   return (
     <div className="relative space-y-3">
       <div
@@ -350,7 +327,7 @@ export default function PropertyMap({
         >
           <MapSizeFixer active={mapActive} />
           <MapZoomTracker onZoomChange={setCurrentZoom} />
-          {!center && <MapBoundsFitter items={mapItems} />}
+          {!center && mapItems.length > 0 && <MapBoundsFitter items={mapItems} />}
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -394,6 +371,17 @@ export default function PropertyMap({
             );
           })}
         </MapContainer>
+        {mapItems.length === 0 && (
+          <div className="pointer-events-none absolute inset-x-4 bottom-4 z-[500] rounded-2xl border border-white/80 bg-white/95 p-4 text-center shadow-soft backdrop-blur dark:border-slate-700 dark:bg-slate-900/95">
+            <MapPin className="mx-auto h-6 w-6 text-ocean-600" aria-hidden="true" />
+            <p className="mt-2 text-sm font-semibold text-slate-900 dark:text-white">
+              Nenhum imóvel com localização nesta busca
+            </p>
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+              O mapa continua disponível para explorar a região.
+            </p>
+          </div>
+        )}
       </div>
 
       {selectedProperty && (

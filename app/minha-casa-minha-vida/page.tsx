@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight, BookOpen, CheckCircle2, FileText } from 'lucide-react';
 import MinhaCasaMinhaVidaSimulator, { MinhaCasaMinhaVidaHighlights } from '@/components/MinhaCasaMinhaVidaSimulator';
@@ -94,9 +93,9 @@ const paymentTypes = [
 export default function MinhaCasaMinhaVidaPage() {
   return (
     <main>
-      <section className="relative overflow-hidden bg-[#f8ddca] py-10 dark:bg-slate-950 sm:py-14">
-        <div className="mx-auto grid max-w-7xl items-center gap-8 px-4 sm:px-6 lg:grid-cols-[1.05fr_0.95fr]">
-          <div className="relative z-10 rounded-[2rem] border border-white/80 bg-white p-7 shadow-[0_24px_70px_rgba(15,23,42,0.16)] sm:p-10">
+      <section className="relative overflow-hidden bg-sand-50 py-6 dark:bg-slate-950 sm:py-14">
+        <div className="mx-auto grid max-w-7xl items-center gap-5 px-4 sm:gap-8 sm:px-6 lg:grid-cols-[1.05fr_0.95fr]">
+          <div className="relative z-10 rounded-[1.5rem] border border-white/80 bg-white p-6 shadow-[0_18px_48px_rgba(15,23,42,0.14)] sm:rounded-[2rem] sm:p-10 sm:shadow-[0_24px_70px_rgba(15,23,42,0.16)]">
             <p className="inline-flex items-center gap-2 text-sm font-semibold text-green-700">
               <CheckCircle2 className="h-5 w-5" aria-hidden="true" />
               Simulação gratuita e orientativa
@@ -117,14 +116,12 @@ export default function MinhaCasaMinhaVidaPage() {
             </div>
           </div>
 
-          <div className="relative min-h-[360px] overflow-hidden rounded-t-[8rem] bg-white/30 shadow-[0_24px_70px_rgba(15,23,42,0.16)] lg:min-h-[520px]">
-            <Image
-              src="/minhacasa-minhavida.jpg"
+          <div className="relative min-h-[260px] overflow-hidden rounded-[1.75rem] bg-white/30 shadow-[0_18px_48px_rgba(15,23,42,0.14)] sm:min-h-[360px] sm:rounded-t-[8rem] lg:min-h-[520px]">
+            <img
+              src="/minhacasa-minhavida-web.jpg"
               alt="Família em casa simulando financiamento imobiliário"
-              fill
-              priority
-              className="object-cover"
-              sizes="(min-width: 1024px) 45vw, 100vw"
+              className="absolute inset-0 h-full w-full object-cover"
+              loading="eager"
             />
           </div>
         </div>

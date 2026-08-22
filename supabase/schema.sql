@@ -365,17 +365,6 @@ begin
       contact_whatsapp = new_contact_whatsapp,
       contact_email = new_contact_email,
       contact_methods = coalesce(new_contact_methods, '{}'),
-      status = case
-        when listings.owner_id = auth.uid()
-          and not exists (
-            select 1
-            from public.profiles
-            where profiles.id = auth.uid()
-            and profiles.role = 'admin'
-          )
-        then 'pending'
-        else listings.status
-      end,
       updated_at = now()
   where id = listing_id;
 end;

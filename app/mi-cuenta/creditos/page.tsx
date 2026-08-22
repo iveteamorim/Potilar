@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import AccountNotice from '@/components/AccountNotice';
+import AccountTabs from '@/components/AccountTabs';
 import AiCreditsPurchasePanel from '@/components/AiCreditsPurchasePanel';
 import { PLANS } from '@/lib/plans';
 import { createClient } from '@/lib/supabase/server';
@@ -60,16 +61,17 @@ export default async function AiCreditsPage({
 
   return (
     <main className="section-padding">
-      <div className="mx-auto max-w-5xl space-y-7">
+      <div className="mx-auto max-w-6xl space-y-7">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-ocean-600">Minha conta</p>
-            <h1 className="mt-2 text-3xl font-bold text-slate-900 dark:text-white">IA e creditos</h1>
+            <h1 className="text-3xl font-bold text-slate-900 dark:text-white">IA e creditos</h1>
             <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
               Compre creditos, acompanhe o saldo e veja o historico das melhorias feitas com IA.
             </p>
           </div>
         </div>
+
+        <AccountTabs active="pagamentos" />
 
         {searchParams?.pagamento === 'sucesso' && (
           <AccountNotice>

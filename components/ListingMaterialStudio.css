@@ -16,10 +16,16 @@
   grid-template-columns: minmax(300px, 390px) minmax(0, 1fr);
   gap: 28px;
   color: var(--navy);
+  align-items: start;
 }
 
 .poster-options {
   align-self: start;
+  position: sticky;
+  top: 18px;
+  max-height: calc(100vh - 36px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
   border: 1px solid #e9d2a5;
   border-radius: 24px;
   padding: 22px;
@@ -335,6 +341,8 @@
 
 .preview-panel {
   min-width: 0;
+  position: sticky;
+  top: 18px;
   overflow: hidden;
   background: var(--background);
   border: 1px solid #e9d2a5;
@@ -362,7 +370,8 @@
 }
 
 .preview-stage {
-  min-height: 720px;
+  height: calc(100vh - 122px);
+  min-height: 620px;
   display: grid;
   place-items: center;
   padding: 24px;
@@ -418,16 +427,59 @@
   grid-template-rows: 10% 24% 8% 35% 10% 13%;
 }
 
-.property-poster--window.property-poster--agency {
-  grid-template-rows: 13% 24% 9% 27% 11% 16%;
+.property-poster--window.property-poster--agency,
+.property-poster--gate.property-poster--agency,
+.property-poster--post.property-poster--agency {
+  /* head / foto / precio / info+ / wa / brand — info más alta para no tapar texto del QR */
+  grid-template-rows: 11% 21% 8% 35% 10% 15%;
 }
 
-.property-poster--window.property-poster--premium {
-  grid-template-rows: 13% 7% 26% 28% 11% 15%;
+.property-poster--window.property-poster--premium,
+.property-poster--gate.property-poster--premium,
+.property-poster--post.property-poster--premium {
+  /* head / precio / foto / info+ / wa / brand */
+  grid-template-rows: 12% 7% 23% 34% 10% 14%;
 }
 
-.property-poster--window.property-poster--classic {
-  grid-template-rows: 15% 12% 45% 12% 16%;
+.property-poster--window.property-poster--classic,
+.property-poster--gate.property-poster--classic,
+.property-poster--post.property-poster--classic {
+  grid-template-rows: 14% 11% 47% 12% 16%;
+}
+
+/* Janela / Reja / Poste: QR un poco menor + aire bajo el texto */
+.property-poster--window .qr-wrap,
+.property-poster--gate .qr-wrap,
+.property-poster--post .qr-wrap {
+  width: min(92cqw, 72cqh, 240px);
+  height: min(92cqw, 72cqh, 240px);
+}
+
+.property-poster--window .premium-info,
+.property-poster--window .agency-info,
+.property-poster--gate .premium-info,
+.property-poster--gate .agency-info,
+.property-poster--post .premium-info,
+.property-poster--post .agency-info {
+  align-items: center;
+  padding: 2% 4.5% 3.5%;
+}
+
+.property-poster--window .qr-block,
+.property-poster--gate .qr-block,
+.property-poster--post .qr-block {
+  justify-content: center;
+  gap: 5px;
+  min-height: 0;
+}
+
+.property-poster--window .premium-info ul,
+.property-poster--window .agency-info ul,
+.property-poster--gate .premium-info ul,
+.property-poster--gate .agency-info ul,
+.property-poster--post .premium-info ul,
+.property-poster--post .agency-info ul {
+  height: min(36cqi, 260px);
 }
 
 .property-poster--social.property-poster--classic {
@@ -491,6 +543,12 @@
   justify-content: center;
   padding-left: 0;
   font-size: clamp(13px, 3.8cqi, 21px);
+}
+
+.property-poster--social .feature-icon {
+  width: 1.35em;
+  height: 1.35em;
+  stroke-width: 2.25;
 }
 
 .property-poster--social .premium-info li,
@@ -683,12 +741,12 @@
   flex-direction: column;
   justify-content: space-evenly;
   gap: 0;
-  /* Misma altura visual que el QR, sin aire muerto entre filas */
-  height: min(34cqi, 280px);
+  /* Misma altura visual que el QR en impresos */
+  height: min(42cqi, 340px);
   margin: 0;
   padding: 0 0 0 2%;
   color: var(--navy);
-  font-size: clamp(13px, 3.3cqi, 22px);
+  font-size: clamp(16px, 4.4cqi, 34px);
   font-weight: 1000;
   list-style: none;
   text-transform: uppercase;
@@ -698,8 +756,9 @@
 .agency-info li {
   display: flex;
   align-items: center;
-  gap: clamp(10px, 2cqi, 16px);
+  gap: clamp(12px, 2.4cqi, 18px);
   line-height: 1.05;
+  white-space: nowrap;
 }
 
 .premium-info li::before,
@@ -708,11 +767,26 @@
 }
 
 .feature-icon {
-  width: 1.35em;
-  height: 1.35em;
+  width: 1.55em;
+  height: 1.55em;
   flex: 0 0 auto;
   color: var(--green-dark);
-  stroke-width: 2.25;
+  stroke-width: 2.15;
+}
+
+/* Lona / Fachada: iconos aún más presentes junto al QR grande */
+.property-poster--banner .premium-info ul,
+.property-poster--banner .agency-info ul,
+.property-poster--facade .premium-info ul,
+.property-poster--facade .agency-info ul {
+  height: min(48cqi, 360px);
+  font-size: clamp(18px, 4.8cqi, 38px);
+}
+
+.property-poster--banner .feature-icon,
+.property-poster--facade .feature-icon {
+  width: 1.65em;
+  height: 1.65em;
 }
 
 .poster-qr-logo {
@@ -821,7 +895,15 @@
     grid-template-columns: 1fr;
   }
 
+  .poster-options,
+  .preview-panel {
+    position: static;
+    max-height: none;
+    overflow: visible;
+  }
+
   .preview-stage {
+    height: auto;
     min-height: 650px;
   }
 }

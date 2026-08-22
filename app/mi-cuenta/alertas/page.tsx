@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation';
+import AccountTabs from '@/components/AccountTabs';
 import AlertsManager from '@/components/AlertsManager';
 import { createClient } from '@/lib/supabase/server';
 import { SEARCH_ALERTS_ENABLED } from '@/lib/config';
@@ -17,13 +18,14 @@ export default async function AlertasPage() {
 
   return (
     <main className="section-padding">
-      <div className="mx-auto max-w-4xl space-y-6">
+      <div className="mx-auto max-w-6xl space-y-6">
         <div>
           <h1 className="text-3xl font-semibold text-slate-900 dark:text-white">Meus alertas</h1>
           <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
             Buscas salvas na sua conta para acompanhar novidades por cidade, tipo de imóvel e faixa de preço.
           </p>
         </div>
+        <AccountTabs active="alertas" />
         <AlertsManager />
       </div>
     </main>

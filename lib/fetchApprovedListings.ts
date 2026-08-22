@@ -198,12 +198,62 @@ export async function fetchPublicListingDetail(
   const normalizedSlug = decodeURIComponent(slugOrId).toLowerCase().trim();
   const listingId = extractListingIdFromSlug(normalizedSlug);
 
+  async function loadFreshContactFields(row: PublicListingDetailRow): Promise<PublicListingDetailRow> {
+    if (!withContact) return row;
+
+    const id = String(row.id ?? '');
+    if (!id) return row;
+
+    const fresh = await supabase
+      .from('listings')
+      .select('contact_name,contact_phone,contact_whatsapp,contact_email,contact_methods,updated_at')
+      .eq('id', id)
+      .maybeSingle();
+
+    if (fresh.error || !fresh.data) {
+      // Anon RLS may block contact columns; try service role.
+      try {
+        const { createAdminClient } = await import('@/lib/supabase/admin');
+        const admin = createAdminClient();
+        const adminFresh = await admin
+          .from('listings')
+          .select('contact_name,contact_phone,contact_whatsapp,contact_email,contact_methods,updated_at')
+          .eq('id', id)
+          .maybeSingle();
+        if (!adminFresh.error && adminFresh.data) {
+          return {
+            ...row,
+            contact_name: adminFresh.data.contact_name ?? null,
+            contact_phone: adminFresh.data.contact_phone ?? null,
+            contact_whatsapp: adminFresh.data.contact_whatsapp ?? null,
+            contact_email: adminFresh.data.contact_email ?? null,
+            contact_methods: adminFresh.data.contact_methods ?? null,
+            updated_at: adminFresh.data.updated_at ?? row.updated_at
+          };
+        }
+      } catch {
+        // Service role unavailable in this environment.
+      }
+      return row;
+    }
+
+    return {
+      ...row,
+      contact_name: fresh.data.contact_name ?? null,
+      contact_phone: fresh.data.contact_phone ?? null,
+      contact_whatsapp: fresh.data.contact_whatsapp ?? null,
+      contact_email: fresh.data.contact_email ?? null,
+      contact_methods: fresh.data.contact_methods ?? null,
+      updated_at: fresh.data.updated_at ?? row.updated_at
+    };
+  }
+
   const bySlug = await supabase.rpc('get_public_approved_listing_by_slug', {
     listing_slug: normalizedSlug
   });
   const bySlugRow = pickListingFromRpcRows(bySlug.data as PublicListingDetailRow[] | null);
   if (!bySlug.error && bySlugRow) {
-    return bySlugRow;
+    return loadFreshContactFields(bySlugRow);
   }
 
   if (listingId) {
@@ -212,7 +262,7 @@ export async function fetchPublicListingDetail(
     });
     const byIdRow = pickListingFromRpcRows(byId.data as PublicListingDetailRow[] | null);
     if (!byId.error && byIdRow) {
-      return byIdRow;
+      return loadFreshContactFields(byIdRow);
     }
   }
 
@@ -236,7 +286,7 @@ export async function fetchPublicListingDetail(
       });
       const resolvedRow = pickListingFromRpcRows(resolved.data as PublicListingDetailRow[] | null);
       if (!resolved.error && resolvedRow) {
-        return resolvedRow;
+        return loadFreshContactFields(resolvedRow);
       }
     }
 
@@ -307,5 +357,5 @@ export async function fetchPublicListingDetail(
     return null;
   }
 
-  return data;
+  return loadFreshContactFields(data);
 }

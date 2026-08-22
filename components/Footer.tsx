@@ -6,7 +6,7 @@ import Logo from './Logo';
 
 export default function Footer() {
   return (
-    <footer className="border-t border-sand-200 bg-sand-50/70 py-10 text-sm text-slate-600 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300">
+    <footer className="border-t border-sand-200 bg-white py-10 text-sm text-slate-600 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300">
       <div className="mx-auto grid max-w-6xl gap-6 px-4 sm:px-6 md:grid-cols-2 lg:grid-cols-5">
         <div>
           <Logo />

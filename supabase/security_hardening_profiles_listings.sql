@@ -137,25 +137,33 @@ begin
     end if;
   end if;
 
-  if new.account_type = 'corretor' then
-    if not public.is_valid_cpf(new.advertiser_document) then
-      raise exception 'INVALID_CPF';
-    end if;
+  -- Only validate document/CRECI when those fields change (or on insert).
+  -- Otherwise banner/photo/bio updates fail for brokers missing CPF/CNPJ.
+  if tg_op = 'INSERT'
+    or new.account_type is distinct from old.account_type
+    or new.advertiser_document is distinct from old.advertiser_document
+    or new.creci is distinct from old.creci
+  then
+    if new.account_type = 'corretor' then
+      if not public.is_valid_cpf(new.advertiser_document) then
+        raise exception 'INVALID_CPF';
+      end if;
 
-    if length(trim(coalesce(new.creci, ''))) < 3 then
-      raise exception 'CRECI_REQUIRED';
-    end if;
-  elsif new.account_type = 'imobiliaria' then
-    if not public.is_valid_cnpj(new.advertiser_document) then
-      raise exception 'INVALID_CNPJ';
-    end if;
+      if length(trim(coalesce(new.creci, ''))) < 3 then
+        raise exception 'CRECI_REQUIRED';
+      end if;
+    elsif new.account_type = 'imobiliaria' then
+      if not public.is_valid_cnpj(new.advertiser_document) then
+        raise exception 'INVALID_CNPJ';
+      end if;
 
-    if length(trim(coalesce(new.creci, ''))) < 3 then
-      raise exception 'CRECI_REQUIRED';
-    end if;
-  elsif new.account_type = 'particular' then
-    if length(document_digits) > 0 and not public.is_valid_cpf(new.advertiser_document) then
-      raise exception 'INVALID_CPF';
+      if length(trim(coalesce(new.creci, ''))) < 3 then
+        raise exception 'CRECI_REQUIRED';
+      end if;
+    elsif new.account_type = 'particular' then
+      if length(document_digits) > 0 and not public.is_valid_cpf(new.advertiser_document) then
+        raise exception 'INVALID_CPF';
+      end if;
     end if;
   end if;
 

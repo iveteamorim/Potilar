@@ -7,6 +7,7 @@ import { Bath, BedDouble, Box, Camera, Car, ChevronLeft, ChevronRight, CheckCirc
 import type { Property } from '@/data/properties';
 import { formatListingDateLabel } from '@/lib/dateLabels';
 import { getCleanPropertyTitle } from '@/lib/displayTitle';
+import { BASE_URL } from '@/lib/config';
 import { getListingHref } from '@/lib/listingUrls';
 import { getPublicProfilePath } from '@/lib/publicProfile';
 import { showsDestaquePresentation } from '@/lib/legacyHomeFeatured';
@@ -62,13 +63,13 @@ function AdvertiserBrandMark({
 
   const mark = (
     <div
-      className={`flex shrink-0 items-center justify-center overflow-hidden rounded-md border border-sand-200 bg-white p-1.5 font-bold text-ocean-800 shadow-sm dark:border-slate-700 dark:bg-white ${boxClassName}`}
+      className={`flex shrink-0 items-center justify-center overflow-hidden rounded-md border border-sand-200 bg-white font-bold text-ocean-800 shadow-sm dark:border-slate-700 dark:bg-white ${boxClassName}`}
     >
       {property.advertiserImageUrl ? (
         <img
           src={property.advertiserImageUrl}
           alt={displayName ? `Logo de ${displayName}` : 'Logo do profissional'}
-          className="max-h-full max-w-full object-contain"
+          className="h-full w-full object-cover"
         />
       ) : (
         <span aria-hidden="true">{initials}</span>
@@ -138,14 +139,20 @@ export default function PropertyCard({
           property.contactPhone ? 'phone' : '',
           property.contactEmail ? 'email' : ''
         ].filter(Boolean);
-  const whatsappNumber = cleanPhone(property.contactWhatsapp);
-  const phoneNumber = cleanPhone(property.contactPhone);
+  const whatsappSource =
+    property.contactWhatsapp || (contactMethods.includes('whatsapp') ? property.contactPhone : undefined);
+  const phoneSource =
+    property.contactPhone || (contactMethods.includes('phone') ? property.contactWhatsapp : undefined);
+  const whatsappNumber = cleanPhone(whatsappSource);
+  const phoneNumber = cleanPhone(phoneSource);
   const emailAddress = property.contactEmail?.trim();
+  const detailUrl = `${BASE_URL}${getListingHref(property)}`;
+  const whatsappMessage = `Ola, vi este imovel na PotiLar e tenho interesse: ${displayTitle}. Ainda esta disponivel? ${detailUrl}`;
   const contactButtons = [
     contactMethods.includes('whatsapp') && whatsappNumber
       ? {
           key: 'whatsapp',
-          href: `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(`Olá, tenho interesse no anúncio: ${displayTitle}`)}`,
+          href: `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(whatsappMessage)}`,
           label: 'WhatsApp',
           icon: MessageCircle,
           className: 'bg-green-600 text-white',

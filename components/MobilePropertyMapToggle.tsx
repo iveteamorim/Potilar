@@ -7,11 +7,13 @@ import type { Property } from '@/data/properties';
 type Props = {
   items: Property[];
   height?: string;
+  closedLabel?: string;
+  openLabel?: string;
 };
 
-export default function MobilePropertyMapToggle({ items, height = '360px' }: Props) {
+export default function MobilePropertyMapToggle({ items, height = '360px', closedLabel, openLabel }: Props) {
   return (
-    <MobileMapToggle count={items.length}>
+    <MobileMapToggle count={items.length} closedLabel={closedLabel} openLabel={openLabel}>
       <PropertyMap items={items} height={height} mapActive />
     </MobileMapToggle>
   );

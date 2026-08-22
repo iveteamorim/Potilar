@@ -2,11 +2,12 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { AlertTriangle, BarChart3, Eye, FileSpreadsheet, Globe2, Home, MessageCircle, Pencil, Plus, Search, Settings, Sparkles } from 'lucide-react';
+import { AlertTriangle, BarChart3, Bath, BedDouble, Bell, Car, Check, Clock3, CreditCard, ExternalLink, Eye, FileSpreadsheet, Globe2, Heart, Home, MessageCircle, MoreVertical, Pencil, Plus, Ruler, Search, Settings, Share2, Sparkles, Trash2, User } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { SUPABASE_URL } from '@/lib/supabase/config';
 import AccountNotice from '@/components/AccountNotice';
+import AccountTabs from '@/components/AccountTabs';
 import DemoProfileImageManager from '@/components/DemoProfileImageManager';
 import ProfessionalProfilePanelCard from '@/components/ProfessionalProfilePanelCard';
 import BrokerPotilarScoreCard from '@/components/BrokerPotilarScoreCard';
@@ -379,7 +380,8 @@ export default async function MinhaContaPage({
   if (isProfessional && profile) {
     const displayName = profile?.company_name || profile?.full_name || user.email || 'Anunciante';
     const accountLabel = getAccountTypeLabel(profile.account_type as 'corretor' | 'imobiliaria');
-    const publicPath = profile.public_slug ? getPublicProfilePath(profile.public_slug) : '/mi-cuenta/perfil';
+    const effectivePublicSlug = profile.public_slug || buildProfessionalProfileSlug(profile, user.id);
+    const publicPath = getPublicProfilePath(effectivePublicSlug);
     const profileImageUrl = profile.profile_image_url || DEFAULT_PROFESSIONAL_PHOTO;
     const bannerImageUrl = profile.banner_image_url || DEFAULT_PROFESSIONAL_BANNER;
     const professionalListings = (listings ?? []).map((listing) => toPropertyCardListing(listing, profile));
@@ -543,7 +545,7 @@ export default async function MinhaContaPage({
               creciVerified={Boolean(profile.creci_verified)}
               languages={languages}
               bio={profile.bio || ''}
-              publicSlug={profile.public_slug ?? undefined}
+              publicSlug={effectivePublicSlug}
               updateAction={updateProfessionalProfile}
             />
 
@@ -551,7 +553,7 @@ export default async function MinhaContaPage({
             <DemoProfileImageManager
               displayName={displayName}
               bannerImageUrl={bannerImageUrl}
-              publicSlug={profile.public_slug ?? undefined}
+              publicSlug={effectivePublicSlug}
             />
             </div>
 
@@ -689,13 +691,15 @@ export default async function MinhaContaPage({
       <div className="mx-auto max-w-6xl space-y-8">
         <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-start">
           <div className="min-w-0">
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-ocean-600">Minha conta</p>
+            <h1 className="text-4xl font-bold leading-tight text-ocean-950 dark:text-white">
+              Minha conta
+            </h1>
             {isProfessional && (
-              <h1 className="mt-2 text-3xl font-semibold text-slate-950 dark:text-white">
+              <p className="mt-2 text-sm font-semibold uppercase tracking-[0.16em] text-ocean-600">
                 Painel {professionalLabel}
-              </h1>
+              </p>
             )}
-            <p className="mt-3 text-sm text-slate-600 dark:text-slate-300">
+            <p className="mt-3 max-w-2xl text-base leading-7 text-slate-500 dark:text-slate-300">
               {isProfessional
                 ? 'Gerencie sua carteira, página profissional, contatos e anúncios publicados.'
                 : 'Salve favoritos, acompanhe alertas de busca e gerencie seus anúncios publicados.'}
@@ -771,8 +775,12 @@ export default async function MinhaContaPage({
         {searchParams?.contact_error && (
           <AccountNotice tone="error">
             {searchParams.contact_error === 'phone'
-              ? 'Informe um telefone ou WhatsApp valido.'
-              : 'Não foi possível atualizar o contato.'}
+              ? 'Informe o telefone/WhatsApp com DDI (ex: +55 84 99999-9999 ou +34 687 153 601).'
+              : searchParams.contact_error === 'email'
+                ? 'Informe um email valido ou desmarque a opcao Email.'
+                : searchParams.contact_error === 'missing'
+                  ? 'Selecione ao menos um canal de contato (WhatsApp, Telefone ou Email).'
+                  : 'Não foi possível atualizar o contato.'}
           </AccountNotice>
         )}
 
@@ -822,288 +830,182 @@ export default async function MinhaContaPage({
           </section>
         )}
 
-        <div className="grid gap-4">
+        <div id="anuncios">
+          <AccountTabs active="anuncios" />
+        </div>
+
+        <div className="grid gap-5">
           {(listings ?? []).map((listing) => {
             const seasonalRenewal = listing.transaction === 'Temporada' ? getSeasonalRenewalInfo(listing.created_at) : null;
-            const stats = statsByListingId.get(listing.id);
             const listingPublicHref = `/imoveis/${slugify(`${listing.title}-${listing.location}-${listing.id}`)}`;
-            const advertiserPublicHref = profile?.public_slug ? getPublicProfilePath(profile.public_slug) : null;
+            const hasPendingPayment = listing.payment_status === 'pix_pending';
+            const isPublished = listing.status === 'approved' && !hasPendingPayment;
+            const coverImage = listing.images?.[0] ? normalizeListingImageUrl(listing.images[0]) : null;
+            const statusPill = hasPendingPayment
+              ? 'Pagamento pendente'
+              : listing.status === 'approved'
+                ? 'Publicado'
+                : getStatusLabel(listing.status);
+            const actionButtonClass =
+              'inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-lg border border-sand-300 bg-white px-4 text-sm font-bold text-ocean-800 dark:border-slate-700 dark:bg-slate-900';
 
             return (
-            <article key={listing.id} className="glass-card space-y-5 p-5">
-              <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
-                    <h2 className="text-base font-semibold text-slate-900 dark:text-white">{listing.title}</h2>
-                    <span className="text-base font-bold text-ocean-700">
-                      {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(listing.price)}
-                    </span>
-                  </div>
-                  <p className="text-sm text-slate-500">{listing.location}</p>
-                  {stats && (
-                    <p className="mt-1 text-xs font-semibold text-slate-500">
-                      {stats.view_count ?? 0} visualizações · {stats.whatsapp_click_count ?? 0} cliques no WhatsApp
-                    </p>
-                  )}
-                </div>
-                <div className="flex flex-wrap items-center gap-3 text-sm lg:justify-end">
-                  <Link href={listingPublicHref} className="rounded-full border border-sand-200 px-3 py-1 font-semibold text-slate-700">
-                    Ver anúncio
-                  </Link>
-                  <Link href={`/mi-cuenta/divulgar/${listing.id}`} className="rounded-full border border-green-200 px-3 py-1 font-semibold text-green-700">
-                    Cartaz e QR
-                  </Link>
-                  {advertiserPublicHref && (
-                    <Link href={advertiserPublicHref} className="rounded-full border border-ocean-200 px-3 py-1 font-semibold text-ocean-700">
-                      Pagina do anunciante
-                    </Link>
-                  )}
-                  <Link href={`/mi-cuenta/editar/${listing.id}`} className="rounded-full border border-ocean-200 px-3 py-1 font-semibold text-ocean-700">
-                    Editar
-                  </Link>
-                  {listing.status === 'paused' ? (
-                    <form action={updateOwnListingStatus}>
-                      <input type="hidden" name="id" value={listing.id} />
-                      <input type="hidden" name="action" value="reactivate" />
-                      <button type="submit" className="rounded-full border border-green-200 px-3 py-1 font-semibold text-green-700">
-                        Reativar
-                      </button>
-                    </form>
-                  ) : (
+            <article key={listing.id} className="relative overflow-hidden rounded-2xl border border-sand-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+              <details className="absolute right-4 top-4 z-10">
+                <summary className="flex h-8 w-8 cursor-pointer list-none items-center justify-center rounded-full text-slate-400 hover:bg-sand-50 hover:text-slate-600 [&::-webkit-details-marker]:hidden">
+                  <MoreVertical className="h-5 w-5" aria-hidden="true" />
+                  <span className="sr-only">Mais opções</span>
+                </summary>
+                <div className="absolute right-0 mt-1 w-44 overflow-hidden rounded-xl border border-sand-200 bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-slate-900">
+                  {!hasPendingPayment && listing.status === 'approved' && (
                     <form action={updateOwnListingStatus}>
                       <input type="hidden" name="id" value={listing.id} />
                       <input type="hidden" name="action" value="pause" />
-                      <button type="submit" className="rounded-full border border-sun-200 px-3 py-1 font-semibold text-slate-700">
-                        Pausar
+                      <button type="submit" className="block w-full px-4 py-2.5 text-left text-sm font-semibold text-slate-700 hover:bg-sand-50 dark:text-slate-200 dark:hover:bg-slate-800">
+                        Pausar anúncio
                       </button>
                     </form>
                   )}
-                  <form action={deleteOwnListing}>
-                    <input type="hidden" name="id" value={listing.id} />
-                    <button type="submit" className="rounded-full border border-red-200 px-3 py-1 font-semibold text-red-700">
-                      Eliminar
-                    </button>
-                  </form>
-                  <span className="rounded-full bg-sand-100 px-3 py-1 font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-200">
-                    {getStatusLabel(listing.status)}
-                  </span>
-                  {listing.payment_status === 'pix_pending' && (
-                    <span className="rounded-full bg-sun-100 px-3 py-1 font-semibold text-slate-800">
-                      Pagamento pendente
-                    </span>
+                  {!hasPendingPayment && listing.status === 'paused' && (
+                    <form action={updateOwnListingStatus}>
+                      <input type="hidden" name="id" value={listing.id} />
+                      <input type="hidden" name="action" value="reactivate" />
+                      <button type="submit" className="block w-full px-4 py-2.5 text-left text-sm font-semibold text-green-700 hover:bg-sand-50">
+                        Reativar anúncio
+                      </button>
+                    </form>
                   )}
-                  {listing.payment_status === 'confirmed' && listing.listing_expires_at && (
-                    <span className="rounded-full bg-green-100 px-3 py-1 font-semibold text-green-800">
-                      Ativo até {formatDate(listing.listing_expires_at)}
-                    </span>
-                  )}
-                  {listing.featured_payment_status === 'confirmed' && listing.featured_expires_at && (
-                    <span className="rounded-full bg-violet-100 px-3 py-1 font-semibold text-violet-800">
-                      Destaque até {formatDate(listing.featured_expires_at)}
-                    </span>
-                  )}
+                  <Link href={`/mi-cuenta/editar/${listing.id}`} className="block px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-sand-50 dark:text-slate-200 dark:hover:bg-slate-800">
+                    Editar anúncio
+                  </Link>
                 </div>
-              </div>
+              </details>
 
-              {seasonalRenewal?.shouldShowNotice && (
-                <div className="space-y-3">
-                  <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">
-                    {seasonalRenewal.daysLeft > 0
-                      ? `Temporada expira em ${seasonalRenewal.daysLeft} dia${seasonalRenewal.daysLeft === 1 ? '' : 's'}.`
-                      : 'O prazo de 60 dias da temporada ja venceu.'}
-                  </p>
-                  <div className="grid gap-4 lg:grid-cols-2">
-                    {SEASONAL_RENEWAL_OPTIONS.map((option) => (
-                      <div
-                        key={option.days}
-                        className="rounded-3xl border border-ocean-100 bg-ocean-50 p-4 dark:border-ocean-900 dark:bg-ocean-950/30"
-                      >
-                        <p className="text-sm font-semibold text-slate-950 dark:text-white">{option.headline}</p>
-                        <p className="mt-1 text-2xl font-semibold text-ocean-800">{formatPlanPrice(option.amount)}</p>
-                        <div className="mt-4">
-                          <ListingMercadoPagoButton
-                            listingId={listing.id}
-                            kind={option.days === PLANS.listing.seasonalRenewal30DurationDays ? 'renewal30' : 'renewal60'}
-                            label={`Pagar renovacao ${option.days} dias`}
-                          />
-                        </div>
+              <div className="grid gap-6 p-6 lg:grid-cols-[240px_minmax(0,1fr)_300px]">
+                <div>
+                  <div className="relative h-[200px] overflow-hidden rounded-lg bg-sand-100">
+                    {coverImage ? (
+                      <Image src={coverImage} alt={listing.title} fill className="object-cover" />
+                    ) : (
+                      <div className="flex h-full min-h-48 items-center justify-center text-sm font-semibold text-slate-400">
+                        Sem foto
                       </div>
-                    ))}
+                    )}
                   </div>
+                  {!isPublished && (
+                    <div className="mt-4 flex items-center gap-6">
+                      <Link href={`/mi-cuenta/editar/${listing.id}`} className="inline-flex items-center gap-2 text-sm font-bold text-ocean-800">
+                        <Pencil className="h-4 w-4" />
+                        Editar anúncio
+                      </Link>
+                      <form action={deleteOwnListing}>
+                        <input type="hidden" name="id" value={listing.id} />
+                        <button type="submit" className="inline-flex items-center gap-2 text-sm font-bold text-red-700">
+                          <Trash2 className="h-4 w-4" />
+                          Excluir anúncio
+                        </button>
+                      </form>
+                    </div>
+                  )}
                 </div>
-              )}
 
-              {listing.payment_status === 'pix_pending' && listing.payment_proof_sent_at ? (
-                <div className="rounded-2xl border border-sun-200 bg-sun-50 p-4 text-sm text-slate-800 dark:border-sun-900 dark:bg-sun-950/20 dark:text-slate-100">
-                  <p className="font-semibold">Comprovante enviado. Aguardando revisão da Potilar.</p>
-                  <p className="mt-1 text-xs text-slate-600 dark:text-slate-300">
-                    Recebemos sua confirmação em {formatDate(listing.payment_proof_sent_at)}. O admin ainda precisa confirmar o pagamento para liberar o anúncio.
+                <div className="flex min-w-0 flex-col pr-8">
+                  <h2 className="text-2xl font-bold leading-tight text-ocean-950 dark:text-white">{listing.title}</h2>
+                  <p className="mt-2 text-sm font-medium text-slate-500">{listing.location}</p>
+                  <div className="mt-4 flex flex-wrap gap-x-7 gap-y-3 text-sm font-semibold text-slate-600 dark:text-slate-300">
+                    {listing.bedrooms > 0 && <span className="inline-flex items-center gap-2"><BedDouble className="h-4 w-4" />{listing.bedrooms} quartos</span>}
+                    {listing.bathrooms > 0 && <span className="inline-flex items-center gap-2"><Bath className="h-4 w-4" />{listing.bathrooms} banheiros</span>}
+                    {listing.parking > 0 && <span className="inline-flex items-center gap-2"><Car className="h-4 w-4" />{listing.parking} vaga{listing.parking === 1 ? '' : 's'}</span>}
+                    {listing.area_sqm && <span className="inline-flex items-center gap-2"><Ruler className="h-4 w-4" />{listing.area_sqm} m²</span>}
+                  </div>
+                  <p className="mt-7 text-3xl font-bold text-ocean-950 dark:text-white">
+                    {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(listing.price)}
+                    {listing.transaction === 'Aluguel' && <span className="text-base font-semibold text-slate-500"> / mês</span>}
+                    {listing.transaction === 'Temporada' && <span className="text-base font-semibold text-slate-500"> / {listing.price_period ?? 'dia'}</span>}
+                  </p>
+                  <p className="mt-3 text-sm font-medium text-slate-500">
+                    {isPublished
+                      ? `Publicado em ${formatDate(listing.created_at)}`
+                      : `Criado em ${formatDate(listing.created_at)}`}
                   </p>
                 </div>
-              ) : listing.payment_status === 'pix_pending' ? (
-                <div className="space-y-3">
-                  <div className="rounded-3xl border border-ocean-100 bg-ocean-50 p-4 dark:border-ocean-900 dark:bg-ocean-950/30">
-                    <p className="text-sm font-semibold text-slate-950 dark:text-white">
-                      {listing.transaction === 'Temporada' ? 'Anúncio de temporada pendente' : 'Publicação pendente'}
-                    </p>
-                    <p className="mt-1 text-2xl font-semibold text-ocean-800">
-                      {formatPlanPrice(Number(listing.payment_amount ?? 0))}
-                    </p>
-                    <div className="mt-4">
+
+                <aside className="flex flex-col gap-5 lg:border-l lg:border-sand-200 lg:pl-8 lg:pr-8 dark:lg:border-slate-800">
+                  <div className="flex justify-start lg:justify-center">
+                    <span className={`inline-flex items-center rounded-full px-4 py-2 text-sm font-bold ${
+                      hasPendingPayment
+                        ? 'bg-sun-100 text-sun-700'
+                        : listing.status === 'approved'
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-sand-100 text-slate-700'
+                    }`}>
+                      {hasPendingPayment && <Clock3 className="mr-2 h-4 w-4" />}
+                      {listing.status === 'approved' && !hasPendingPayment && <Check className="mr-2 h-4 w-4" />}
+                      {statusPill}
+                    </span>
+                  </div>
+
+                  {hasPendingPayment ? (
+                    <div className="mt-auto space-y-5">
+                      <p className="text-center text-sm leading-6 text-slate-600 dark:text-slate-300">
+                        Seu anúncio está pronto. Finalize o pagamento para publicar.
+                      </p>
+                      <div className="border-t border-sand-200 pt-4 text-center dark:border-slate-800">
+                        <p className="text-xs font-semibold text-slate-500">Valor para publicação</p>
+                        <p className="mt-1 text-3xl font-bold text-slate-950 dark:text-white">
+                          {formatPlanPrice(Number(listing.payment_amount ?? 0))}
+                        </p>
+                      </div>
                       <ListingMercadoPagoButton
                         listingId={listing.id}
                         kind={listing.transaction === 'Temporada' ? 'seasonal' : 'listing'}
-                        label="Pagar agora"
+                        label="Pagar e publicar"
                       />
                     </div>
-                  </div>
-                </div>
-              ) : null}
-
-              {listing.images && listing.images.length > 0 && (
-                <div className="border-t border-sand-200 pt-4 dark:border-slate-800">
-                  <p className="text-sm font-semibold text-slate-900 dark:text-white">Foto principal</p>
-                  <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-6">
-                    {listing.images.map((image: string, index: number) => {
-                      const displayImage = normalizeListingImageUrl(image);
-
-                      return (
-                        <form key={image} action={setMainImage} className="space-y-2">
-                          <input type="hidden" name="id" value={listing.id} />
-                          <input type="hidden" name="image_url" value={image} />
-                          <div className="relative aspect-square overflow-hidden rounded-xl bg-sand-100">
-                            <Image src={displayImage} alt={listing.title} fill className="object-cover" />
-                            {index === 0 && (
-                              <span className="absolute left-2 top-2 rounded-full bg-ocean-600 px-2 py-1 text-[10px] font-semibold text-white">
-                                Principal
-                              </span>
-                            )}
-                          </div>
-                          <button
-                            type="submit"
-                            disabled={index === 0}
-                            className="w-full rounded-xl border border-ocean-200 px-3 py-2 text-xs font-semibold text-ocean-700 disabled:cursor-not-allowed disabled:opacity-50"
-                          >
-                            Usar como principal
-                          </button>
-                        </form>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              <form action={requestListingHighlight} className="grid gap-3 border-t border-sand-200 pt-4 dark:border-slate-800">
-                <input type="hidden" name="id" value={listing.id} />
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <p className="text-sm font-semibold text-slate-900 dark:text-white">Destacar anúncio</p>
-                    {listing.featured_plan && (
-                      <p className="mt-1 text-xs text-slate-500">
-                        Atual: {getHighlightLabel(listing.featured_plan)} - {formatPlanPrice(Number(listing.featured_payment_amount ?? 0))} - {listing.featured_payment_status}
-                      </p>
-                    )}
-                  </div>
-                </div>
-                <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
-                  <select
-                    name="featured_plan"
-                    defaultValue={listing.featured_plan ?? '7_days'}
-                    className="w-full rounded-2xl border border-sand-200 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-900"
-                  >
-                    {(['7_days', '15_days', '30_days'] as const).map((planId) => (
-                      <option key={planId} value={planId}>
-                        {getHighlightLabel(planId)} - {formatPlanPrice(getHighlightPrice(planId))}
-                      </option>
-                    ))}
-                  </select>
-                  <button type="submit" className="rounded-2xl bg-sun-500 px-5 py-3 text-sm font-semibold text-white">
-                    Ativar destaque
-                  </button>
-                </div>
-              </form>
-
-              {listing.featured_plan && listing.featured_payment_status === 'pix_pending' && listing.featured_payment_proof_sent_at ? (
-                <div className="rounded-2xl border border-violet-200 bg-violet-50 p-4 text-sm text-slate-800 dark:border-violet-900 dark:bg-violet-950/20 dark:text-slate-100">
-                  <p className="font-semibold">Comprovante do destaque enviado. Aguardando revisão da Potilar.</p>
-                  <p className="mt-1 text-xs text-slate-600 dark:text-slate-300">
-                    Recebemos sua confirmação em {formatDate(listing.featured_payment_proof_sent_at)}. O destaque entra no ar depois da confirmação do pagamento.
-                  </p>
-                </div>
-              ) : listing.featured_plan && listing.featured_payment_status === 'pix_pending' ? (
-                <div className="space-y-3">
-                  <div className="rounded-3xl border border-violet-100 bg-violet-50 p-4 dark:border-violet-900 dark:bg-violet-950/30">
-                    <p className="text-sm font-semibold text-slate-950 dark:text-white">
-                      Destaque - {getHighlightLabel(listing.featured_plan)}
-                    </p>
-                    <p className="mt-1 text-2xl font-semibold text-violet-800">
-                      {formatPlanPrice(Number(listing.featured_payment_amount ?? 0))}
-                    </p>
-                    <div className="mt-4">
-                      <ListingMercadoPagoButton listingId={listing.id} kind="highlight" label="Pagar destaque" />
+                  ) : isPublished ? (
+                    <div className="mt-auto space-y-4 text-center text-sm text-slate-600 dark:text-slate-300">
+                      <p>{listing.listing_expires_at ? `Publicado até ${formatDate(listing.listing_expires_at)}` : 'Anúncio publicado.'}</p>
+                      {seasonalRenewal?.shouldShowNotice && (
+                        <div className="rounded-xl border border-ocean-100 bg-ocean-50 p-3 text-left dark:border-ocean-900 dark:bg-ocean-950/30">
+                          <p className="font-semibold text-slate-900 dark:text-white">
+                            {seasonalRenewal.daysLeft > 0
+                              ? `Temporada expira em ${seasonalRenewal.daysLeft} dia${seasonalRenewal.daysLeft === 1 ? '' : 's'}.`
+                              : 'O prazo de 60 dias da temporada ja venceu.'}
+                          </p>
+                        </div>
+                      )}
                     </div>
-                  </div>
-                </div>
-              ) : null}
+                  ) : (
+                    <p className="mt-auto text-center text-sm leading-6 text-slate-600 dark:text-slate-300">
+                      {listing.status === 'pending' ? 'Seu anúncio está em revisão.' : 'Este anúncio não está publicado.'}
+                    </p>
+                  )}
+                </aside>
+              </div>
 
-              {listing.featured_plan && listing.featured_payment_status === 'pix_pending' && (
-                <form action={cancelListingHighlight}>
-                  <input type="hidden" name="id" value={listing.id} />
-                  <button type="submit" className="rounded-2xl border border-red-200 px-5 py-3 text-sm font-semibold text-red-700">
-                    Cancelar destaque
-                  </button>
-                </form>
+              {isPublished && (
+                <div className="grid gap-3 border-t border-sand-200 px-6 py-4 dark:border-slate-800 sm:grid-cols-2 lg:grid-cols-4">
+                  <Link href={listingPublicHref} className={actionButtonClass}>
+                    <ExternalLink className="h-4 w-4" />
+                    Ver anúncio
+                  </Link>
+                  <Link href={`/mi-cuenta/divulgar/${listing.id}`} className={actionButtonClass}>
+                    <Share2 className="h-4 w-4" />
+                    Kit de divulgação
+                  </Link>
+                  <Link href={`/mi-cuenta/editar/${listing.id}`} className={actionButtonClass}>
+                    <Pencil className="h-4 w-4" />
+                    Editar anúncio
+                  </Link>
+                  <form action={deleteOwnListing} className="w-full">
+                    <input type="hidden" name="id" value={listing.id} />
+                    <button type="submit" className={`${actionButtonClass} text-red-700`}>
+                      <Trash2 className="h-4 w-4" />
+                      Excluir anúncio
+                    </button>
+                  </form>
+                </div>
               )}
-
-              <form action={updateListingContact} className="grid gap-3 border-t border-sand-200 pt-4 dark:border-slate-800">
-                <input type="hidden" name="id" value={listing.id} />
-                <div className="grid gap-3 sm:grid-cols-3">
-                  <input
-                    name="contact_name"
-                    type="text"
-                    defaultValue={listing.contact_name ?? ''}
-                    placeholder="Nome para contato"
-                    className="w-full rounded-2xl border border-sand-200 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-900"
-                  />
-                  <input
-                    name="contact_phone"
-                    type="tel"
-                    defaultValue={listing.contact_whatsapp ?? listing.contact_phone ?? ''}
-                    placeholder="Telefone ou WhatsApp"
-                    inputMode="numeric"
-                    maxLength={12}
-                    pattern="[0-9 ]{11,12}"
-                    className="w-full rounded-2xl border border-sand-200 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-900"
-                  />
-                  <input
-                    name="contact_email"
-                    type="email"
-                    defaultValue={listing.contact_email ?? ''}
-                    placeholder="Email"
-                    className="w-full rounded-2xl border border-sand-200 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-900"
-                  />
-                </div>
-                <div className="flex flex-wrap items-center gap-3">
-                  {[
-                    ['whatsapp', 'WhatsApp'],
-                    ['phone', 'Telefone'],
-                    ['email', 'Email']
-                  ].map(([value, label]) => (
-                    <label key={value} className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-sand-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
-                      <input
-                        type="checkbox"
-                        name="contact_methods"
-                        value={value}
-                        defaultChecked={(listing.contact_methods ?? []).includes(value)}
-                      />
-                      {label}
-                    </label>
-                  ))}
-                  <button type="submit" className="rounded-2xl bg-ocean-600 px-5 py-3 text-sm font-semibold text-white">
-                    Guardar contato
-                  </button>
-                </div>
-              </form>
             </article>
             );
           })}
@@ -1112,7 +1014,7 @@ export default async function MinhaContaPage({
               <p className="text-base font-semibold text-slate-900 dark:text-white">Nenhum anúncio ainda</p>
               <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
                 {isLaunchPromoActive()
-                  ? `Publique seus ${getFreeListingLimit()} primeiros anúncios grátis.`
+                  ? 'Publique seu primeiro anúncio grátis.'
                   : 'Publique seu primeiro anúncio gratuito.'}
               </p>
               <Link href="/anunciar" className="mt-5 inline-flex rounded-2xl bg-ocean-600 px-5 py-3 text-sm font-semibold text-white">

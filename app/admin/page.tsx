@@ -575,6 +575,9 @@ export default async function AdminPage({
                     <Link href={`/admin/editar/${listing.id}`} className="rounded-xl border border-ocean-200 px-4 py-2 text-xs font-semibold text-ocean-700">
                       Editar anúncio
                     </Link>
+                    <Link href={`/admin/divulgar/${listing.id}`} className="rounded-xl border border-green-200 px-4 py-2 text-xs font-semibold text-green-700">
+                      Criar banner
+                    </Link>
                     {listing.status !== 'approved' && (
                       <form action={updateListingStatus}>
                         <input type="hidden" name="id" value={listing.id} />

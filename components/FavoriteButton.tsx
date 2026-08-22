@@ -61,7 +61,7 @@ export default function FavoriteButton({
 }: {
   propertyId: string;
   title: string;
-  variant?: 'floating' | 'inline';
+  variant?: 'floating' | 'inline' | 'icon';
   floatingClassName?: string;
 }) {
   const [isFavorite, setIsFavorite] = useState(false);
@@ -199,9 +199,13 @@ export default function FavoriteButton({
         className={`${
           variant === 'floating'
             ? floatingClassName ?? 'absolute bottom-3 right-3 z-20 h-10 w-10'
-            : 'h-11 px-4'
-        } flex items-center justify-center gap-2 rounded-full shadow-soft transition ${
-          isFavorite ? 'bg-red-500 text-white' : 'bg-white/95 text-slate-700 hover:text-red-500'
+            : variant === 'icon'
+              ? 'h-11 w-11 border border-sand-300 bg-white text-slate-500 hover:border-red-300 hover:text-red-500 dark:border-slate-700 dark:bg-slate-900'
+              : 'h-11 px-4'
+        } flex items-center justify-center gap-2 rounded-full transition ${
+          variant !== 'icon' ? 'shadow-soft' : ''
+        } ${
+          isFavorite ? 'bg-red-500 text-white border-red-500' : variant === 'icon' ? '' : 'bg-white/95 text-slate-700 hover:text-red-500'
         }`}
       >
         <Heart className={`h-5 w-5 ${isFavorite ? 'fill-current' : ''}`} aria-hidden="true" />

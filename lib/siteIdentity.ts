@@ -38,7 +38,7 @@ export type FaqItem = {
 
 export function getFaqItems(now = new Date()): FaqItem[] {
   const pricingAnswer = isLaunchPromoActive(now)
-    ? `Na promoção de lançamento, cada conta pode publicar seus ${getFreeListingLimit(now)} primeiros anúncios grátis por 60 dias. Depois disso, anúncios adicionais têm taxa via Pix. Veja valores em ${KEY_URLS.plans}.`
+    ? `Na promoção de lançamento, cada conta pode publicar seu primeiro anúncio grátis por 60 dias. Depois disso, anúncios adicionais têm taxa via Pix. Veja valores em ${KEY_URLS.plans}.`
     : `O primeiro anúncio por conta é gratuito por 60 dias. Anúncios adicionais têm taxa via Pix. Veja valores em ${KEY_URLS.plans}.`;
 
   return [
@@ -166,7 +166,7 @@ export function buildWebsiteJsonLd() {
 
 function pricingSummary(now = new Date()) {
   if (isLaunchPromoActive(now)) {
-    return `Promoção de lançamento: ${getFreeListingLimit(now)} primeiros anúncios grátis por conta, 60 dias cada.`;
+    return 'Promoção de lançamento: 1 anúncio grátis por conta, 60 dias.';
   }
   return '1 anúncio grátis por conta (60 dias); anúncios adicionais com taxa via Pix.';
 }

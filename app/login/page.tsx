@@ -43,10 +43,9 @@ export default function LoginPage({ searchParams }: Props) {
       ];
 
   return (
-    <main className="px-4 py-4 sm:px-6 sm:py-8 lg:px-8 lg:py-14">
+    <main className="bg-white px-4 py-4 sm:px-6 sm:py-8 lg:px-8 lg:py-14 dark:bg-slate-950">
       <div className="mx-auto grid max-w-6xl gap-5 lg:grid-cols-[0.9fr_1.1fr] lg:gap-10">
-        <div className="relative hidden overflow-hidden rounded-[2rem] p-1 lg:block lg:min-h-[520px]">
-          <div className="pointer-events-none absolute inset-0 opacity-[0.06] [background-image:radial-gradient(circle_at_20%_20%,#075f8f_0,transparent_28%),radial-gradient(circle_at_80%_70%,#16a34a_0,transparent_24%)]" />
+        <div className="relative hidden overflow-hidden rounded-[2rem] bg-white p-1 lg:block lg:min-h-[520px] dark:bg-slate-950">
           <p className="text-xs font-bold uppercase tracking-[0.18em] text-ocean-600 sm:text-sm">
             {professionalFlow ? 'Plano profissional' : 'Conta Potilar'}
           </p>
@@ -69,8 +68,8 @@ export default function LoginPage({ searchParams }: Props) {
             ))}
           </div>
           <div className="mt-8 hidden flex-wrap gap-3 text-xs font-semibold text-slate-500 lg:flex">
-            <span className="rounded-full border border-sand-200 bg-white px-3 py-2">+ de 20 imóveis publicados</span>
-            <span className="rounded-full border border-sand-200 bg-white px-3 py-2">100% focado no Rio Grande do Norte</span>
+            <span className="rounded-full border border-ocean-100 bg-white px-3 py-2">+ de 20 imóveis publicados</span>
+            <span className="rounded-full border border-ocean-100 bg-white px-3 py-2">100% focado no Rio Grande do Norte</span>
           </div>
         </div>
         <Suspense fallback={<div className="glass-card h-80 animate-pulse p-6" />}>

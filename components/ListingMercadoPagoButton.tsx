@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { CreditCard } from 'lucide-react';
+import { Lock } from 'lucide-react';
 
 type PaymentKind = 'listing' | 'seasonal' | 'highlight' | 'renewal30' | 'renewal60';
 
@@ -51,9 +51,9 @@ export default function ListingMercadoPagoButton({ listingId, kind, label = 'Pag
         type="button"
         onClick={handleClick}
         disabled={loading}
-        className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-ocean-700 px-5 py-4 text-sm font-bold text-white shadow-lg shadow-ocean-700/15 transition hover:-translate-y-0.5 hover:bg-ocean-800 disabled:cursor-not-allowed disabled:opacity-60"
+        className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-ocean-800 px-5 py-3.5 text-sm font-bold text-white transition hover:bg-ocean-900 disabled:cursor-not-allowed disabled:opacity-60"
       >
-        <CreditCard className="h-5 w-5" aria-hidden="true" />
+        <Lock className="h-4 w-4" aria-hidden="true" />
         {loading ? 'Abrindo pagamento...' : label}
       </button>
       {message && <p className="text-center text-xs font-semibold text-red-600">{message}</p>}

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { ChevronDown, Save, Sparkles, Upload, X } from 'lucide-react';
 import { compressImage } from '@/lib/imageCompression';
+import { formatContactPhoneInput, isValidContactPhone, normalizeContactPhone } from '@/lib/contactPhone';
 import { createClient } from '@/lib/supabase/client';
 import { geocodeListingAddress } from '@/lib/geocodeListing';
 import { KNOWN_CITY_NAMES, normalizeKnownCityName, resolveListingCoordinates } from '@/lib/locationCoordinates';
@@ -19,6 +20,7 @@ import {
   isLandPropertyType,
   usesResidentialLayoutFields
 } from '@/lib/propertyTypes';
+import { saveListingEditorChanges } from '@/app/mi-cuenta/saveListingEditor';
 
 type ListingEditorData = {
   id: string;
@@ -375,51 +377,52 @@ export default function ListingEditorForm({
       const [lat, lng] =
         geocodedCoordinates ??
         resolveListingCoordinates(formattedLocation, formattedNeighborhood, formattedCommunity, addressExtra);
-      const cleanedPhone = contactPhone.trim() || null;
+      const cleanedPhone = normalizeContactPhone(contactPhone);
+      if ((contactMethods.includes('phone') || contactMethods.includes('whatsapp')) && !isValidContactPhone(cleanedPhone)) {
+        throw new Error('Informe o telefone/WhatsApp com DDI (ex: +55 84 99999-9999 ou +34 687 153 601).');
+      }
+      if (contactMethods.includes('email') && !contactEmail.trim()) {
+        throw new Error('Informe um email valido ou desmarque a opcao Email.');
+      }
+      if (contactMethods.length === 0) {
+        throw new Error('Selecione ao menos um canal de contato.');
+      }
+
       const listingContactPhone = contactMethods.includes('phone') ? cleanedPhone : null;
       const listingContactWhatsapp = contactMethods.includes('whatsapp') ? cleanedPhone : null;
 
-      const { error } = await supabase.rpc('update_listing_details', {
-        listing_id: listing.id,
-        new_title: title,
-        new_property_type: propertyType,
-        new_transaction: transaction,
-        new_price: Number(price.replace(/\D/g, '')) || 0,
-        new_price_period: transaction === 'Temporada' ? pricePeriod : null,
-        new_bedrooms: showResidentialFields ? Number(bedrooms) || 0 : 0,
-        new_bathrooms: showResidentialFields ? Number(bathrooms) || 0 : 0,
-        new_parking: isLand ? 0 : Number(parking) || 0,
-        new_location: formattedLocation,
-        new_neighborhood: formattedNeighborhood || null,
-        new_community: formattedCommunity || null,
-        new_address_extra: addressExtra || null,
-        new_lat: lat,
-        new_lng: lng,
-        new_description: description,
-        new_features: splitFeatures(features),
-        new_images: finalImages,
-        new_contact_name: contactName || null,
-        new_contact_phone: listingContactPhone,
-        new_contact_whatsapp: listingContactWhatsapp,
-        new_contact_email: contactMethods.includes('email') ? contactEmail || null : null,
-        new_contact_methods: contactMethods
+      const result = await saveListingEditorChanges({
+        listingId: listing.id,
+        title,
+        propertyType,
+        transaction,
+        price: Number(price.replace(/\D/g, '')) || 0,
+        pricePeriod: transaction === 'Temporada' ? pricePeriod : null,
+        bedrooms: showResidentialFields ? Number(bedrooms) || 0 : 0,
+        bathrooms: showResidentialFields ? Number(bathrooms) || 0 : 0,
+        parking: isLand ? 0 : Number(parking) || 0,
+        location: formattedLocation,
+        neighborhood: formattedNeighborhood || null,
+        community: formattedCommunity || null,
+        addressExtra: addressExtra || null,
+        lat,
+        lng,
+        description,
+        features: splitFeatures(features),
+        images: finalImages,
+        contactName: contactName || null,
+        contactPhone: listingContactPhone,
+        contactWhatsapp: listingContactWhatsapp,
+        contactEmail: contactMethods.includes('email') ? contactEmail || null : null,
+        contactMethods,
+        videoUrl: normalizedVideoUrl,
+        tourUrl: normalizedTourUrl,
+        condoIncluded: showResidentialFields && transaction === 'Aluguel' && condoIncluded,
+        isPetFriendly: showResidentialFields && isPetFriendly,
+        isFurnished: showResidentialFields && isFurnished
       });
 
-      if (error) throw new Error(error.message);
-
-      const extraUpdate = await supabase
-        .from('listings')
-        .update({
-          video_url: normalizedVideoUrl,
-          tour_url: normalizedTourUrl,
-          condo_included: showResidentialFields && transaction === 'Aluguel' && condoIncluded,
-          is_pet_friendly: showResidentialFields && isPetFriendly,
-          is_furnished: showResidentialFields && isFurnished
-        })
-        .eq('id', listing.id);
-      if (extraUpdate.error && !/column|schema cache/i.test(extraUpdate.error.message)) {
-        throw new Error(extraUpdate.error.message);
-      }
+      if (!result.ok) throw new Error(result.error);
 
       setStatus('Anúncio atualizado com sucesso.');
       router.push(backHref);
@@ -639,9 +642,19 @@ export default function ListingEditorForm({
         <p className="text-sm font-semibold text-slate-900 dark:text-white">Contato do anúncio</p>
         <div className="mt-3 grid gap-3 sm:grid-cols-3">
           <input value={contactName} onChange={(event) => setContactName(event.target.value)} placeholder="Nome" className="rounded-2xl border border-sand-200 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-900" />
-          <input value={contactPhone} onChange={(event) => setContactPhone(event.target.value)} placeholder="Telefone ou WhatsApp" className="rounded-2xl border border-sand-200 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-900" />
+          <input
+            value={contactPhone}
+            onChange={(event) => setContactPhone(formatContactPhoneInput(event.target.value))}
+            placeholder="+55 84 99999-9999"
+            inputMode="tel"
+            maxLength={20}
+            className="rounded-2xl border border-sand-200 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-900"
+          />
           <input value={contactEmail} onChange={(event) => setContactEmail(event.target.value)} placeholder="Email" className="rounded-2xl border border-sand-200 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-900" />
         </div>
+        <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+          Use DDI com +. Ex: +55 84… (Brasil) ou +34… (Espanha).
+        </p>
         <div className="mt-3 flex flex-wrap gap-3">
           {[
             ['whatsapp', 'WhatsApp'],

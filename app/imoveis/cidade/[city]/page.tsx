@@ -248,44 +248,46 @@ export default async function CityListingsPage({ params }: { params: { city: str
           </div>
         </div>
 
-        {listings.length === 0 ? (
-          <section className="glass-card space-y-4 p-8 text-center">
-            <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
-              Ainda não há anúncios publicados em {cityName}
-            </h2>
-            <p className="mx-auto max-w-2xl text-sm leading-7 text-slate-600 dark:text-slate-300">
-              Seja o primeiro a anunciar casas, apartamentos, terrenos ou temporada em {cityName}.
-              {promoActive
-                ? ` Particulares podem publicar seus ${freeLimit} primeiros anúncios grátis na Potilar, com contato direto entre anunciante e interessado.`
-                : ' Particulares podem publicar o primeiro anúncio grátis na Potilar, com contato direto entre anunciante e interessado.'}
-            </p>
-            <Link href={anunciarHref} className="inline-flex rounded-2xl bg-ocean-600 px-6 py-3 text-sm font-semibold text-white">
-              Anunciar grátis em {cityName}
-            </Link>
-          </section>
-        ) : (
-          <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
-            <section className="space-y-4">
+        <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
+          <section className="space-y-4">
+            {listings.length === 0 ? (
+              <div className="glass-card space-y-4 p-8 text-center">
+                <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
+                  Não temos imóveis disponíveis agora em {cityName}
+                </h2>
+                <p className="mx-auto max-w-2xl text-sm leading-7 text-slate-600 dark:text-slate-300">
+                  Crie um alerta para ser avisado quando surgirem anúncios nesta cidade ou seja o primeiro a anunciar em {cityName}.
+                  {promoActive
+                    ? ' Particulares podem publicar o primeiro anúncio grátis na Potilar.'
+                    : ' Particulares podem publicar o primeiro anúncio grátis na Potilar.'}
+                </p>
+                <Link href={anunciarHref} className="inline-flex rounded-2xl bg-ocean-600 px-6 py-3 text-sm font-semibold text-white">
+                  Seja o primeiro a anunciar
+                </Link>
+              </div>
+            ) : (
               <div>
                 <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Anúncios em {cityName}</h2>
                 <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
                   {listings.length} anúncio{listings.length === 1 ? '' : 's'} encontrado{listings.length === 1 ? '' : 's'}.
                 </p>
+                <div className="mt-4">
+                  <FavoriteAwarePropertyList items={listings} />
+                </div>
               </div>
-              <FavoriteAwarePropertyList items={listings} />
-            </section>
+            )}
+          </section>
 
-            <aside className="glass-card h-fit p-4 sm:p-6 lg:sticky lg:top-24">
-              <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Mapa em {cityName}</h2>
-              <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-                Explore os anúncios publicados na cidade.
-              </p>
-              <div className="mt-4">
-                <PropertyMap items={listings} height="420px" />
-              </div>
-            </aside>
-          </div>
-        )}
+          <aside className="glass-card h-fit p-4 sm:p-6 lg:sticky lg:top-24">
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Mapa em {cityName}</h2>
+            <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+              {listings.length === 0 ? 'Explore a região enquanto novos anúncios chegam.' : 'Explore os anúncios publicados na cidade.'}
+            </p>
+            <div className="mt-4">
+              <PropertyMap items={listings} height="420px" />
+            </div>
+          </aside>
+        </div>
 
         <section className="rounded-3xl border border-sand-200 bg-sand-50 p-6 dark:border-slate-800 dark:bg-slate-950/40">
           <h2 className="text-base font-semibold text-slate-900 dark:text-white">

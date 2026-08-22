@@ -6,7 +6,7 @@ export const PLANS = {
     firstFree: true,
     /** Promocao de lancamento ate setembro/2026 */
     launchPromo: {
-      freeListingLimit: 2,
+      freeListingLimit: 1,
       /** Fim da promo: 30/set/2026 23:59 (horario de Brasilia) */
       endsAtIso: '2026-10-01T02:59:59.999Z'
     },
@@ -29,9 +29,9 @@ export const PLANS = {
     '30_days': { label: 'Destaque 30 dias', days: 30, price: 24.9 }
   } satisfies Record<FeaturedPlanId, { label: string; days: number; price: number }>,
   professional: {
-    corretor: { label: 'Plano Corretor', price: 159.9, listingLimit: 10, aiCredits: 5 },
-    imobiliaria: { label: 'Plano Imobiliaria', price: 259.9, listingLimit: 30, aiCredits: 15 },
-    plus: { label: 'Plano Imobiliaria Plus', price: 389.9, listingLimit: 75, aiCredits: 30 }
+    corretor: { label: 'Plano Corretor', price: 199.9, listingLimit: 10, aiCredits: 5 },
+    imobiliaria: { label: 'Plano Imobiliaria', price: 349.9, listingLimit: 30, aiCredits: 15 },
+    plus: { label: 'Plano Imobiliaria Plus', price: 599.9, listingLimit: 75, aiCredits: 30 }
   } satisfies Record<ProfessionalPlanId, { label: string; price: number; listingLimit: number; aiCredits: number }>
 } as const;
 
@@ -52,7 +52,7 @@ export function getLaunchPromoDeadlineLabel() {
 
 export function getLaunchPromoShortLabel() {
   return isLaunchPromoActive()
-    ? `2 anúncios grátis até ${getLaunchPromoDeadlineLabel()}`
+    ? `1 anúncio grátis até ${getLaunchPromoDeadlineLabel()}`
     : '1 anúncio grátis';
 }
 

@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Camera, ChevronDown, Eye, Sparkles, X } from 'lucide-react';
-import PixPaymentPanel from '@/components/PixPaymentPanel';
 import PrecoJustoRNAdvisor from '@/components/PrecoJustoRNAdvisor';
 import type { Property } from '@/data/properties';
 import { compressImage } from '@/lib/imageCompression';
@@ -82,15 +81,13 @@ function formatCpfDocument(value: string) {
     .replace(/\.(\d{3})(\d)/, '.$1-$2');
 }
 
-function formatBrazilPhone(value: string) {
-  const digits = cleanDocument(value).slice(0, 11);
-  if (digits.length <= 2) return digits;
-  return `${digits.slice(0, 2)} ${digits.slice(2)}`;
+function formatContactPhone(value: string) {
+  return value.replace(/[^\d+ ()-]/g, '').slice(0, 20);
 }
 
-function isValidBrazilMobilePhone(value: string) {
+function isValidContactPhone(value: string) {
   const digits = cleanDocument(value);
-  return digits.length === 11 && digits[2] === '9';
+  return value.trim().startsWith('+') && digits.length >= 8 && digits.length <= 15;
 }
 
 function hasRepeatedDigits(value: string) {
@@ -186,18 +183,21 @@ export default function AnunciarForm({
   const [listingId] = useState(() => crypto.randomUUID());
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [requiresPayment, setRequiresPayment] = useState(false);
+  const [activeListingCount, setActiveListingCount] = useState<number | null>(null);
   const [isPublishing, setIsPublishing] = useState(false);
   const [isSuggesting, setIsSuggesting] = useState(false);
   const [activeStep, setActiveStep] = useState(1);
   const isSeasonal = transaction === 'Temporada';
   const isLand = propertyType === 'Terreno';
+  const freeListingLimit = getFreeListingLimit();
+  const shouldRequirePaymentNow = !isAdmin && ((activeListingCount !== null && activeListingCount >= freeListingLimit) || isSeasonal);
   const ownerDocumentDigits = cleanDocument(ownerDocument);
   const lockedDocumentDigits = cleanDocument(defaultDocument);
   const hasLockedDocument = lockedDocumentDigits.length === 11;
   const ownerDocumentHasError =
     ownerDocumentDigits.length > 0 &&
     (ownerDocumentDigits.length < 11 || (ownerDocumentDigits.length === 11 && !isValidCpf(ownerDocument)));
-  const ownerPhoneHasError = ownerPhone.length > 0 && !isValidBrazilMobilePhone(ownerPhone);
+  const ownerPhoneHasError = ownerPhone.length > 0 && !isValidContactPhone(ownerPhone);
   const filteredCities = useMemo(() => {
     const search = normalizeSearch(location);
     if (!search) return KNOWN_CITY_NAMES;
@@ -214,6 +214,42 @@ export default function AnunciarForm({
     setIsPetFriendly(false);
     setIsFurnished(false);
   }, [isLand]);
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadActiveListingCount() {
+      if (isAdmin) {
+        setActiveListingCount(0);
+        return;
+      }
+
+      const supabase = createClient();
+      const {
+        data: { user }
+      } = await supabase.auth.getUser();
+
+      if (!user) return;
+
+      const { count } = await supabase
+        .from('listings')
+        .select('id', { count: 'exact', head: true })
+        .eq('owner_id', user.id)
+        .in('status', [...getActiveListingStatuses()]);
+
+      if (active) setActiveListingCount(count ?? 0);
+    }
+
+    loadActiveListingCount();
+
+    return () => {
+      active = false;
+    };
+  }, [isAdmin]);
+
+  useEffect(() => {
+    setRequiresPayment(shouldRequirePaymentNow);
+  }, [shouldRequirePaymentNow]);
 
   function handlePhotos(event: React.ChangeEvent<HTMLInputElement>) {
     const selected = Array.from(event.target.files ?? [])
@@ -483,8 +519,8 @@ export default function AnunciarForm({
       return;
     }
 
-    if ((contactMethods.includes('phone') || contactMethods.includes('whatsapp')) && !isValidBrazilMobilePhone(ownerPhone)) {
-      setStatus('Informe um telefone ou WhatsApp válido.');
+    if ((contactMethods.includes('phone') || contactMethods.includes('whatsapp')) && !isValidContactPhone(ownerPhone)) {
+      setStatus('Informe o telefone ou WhatsApp com DDI, DDD e numero. Exemplo: +55 47 99999-9999.');
       return;
     }
 
@@ -561,7 +597,6 @@ export default function AnunciarForm({
       const formattedLocation = formatDisplayPlaceName(normalizeKnownCityName(location));
       const formattedNeighborhood = neighborhood ? formatDisplayPlaceName(neighborhood) : '';
       const formattedCommunity = community ? formatDisplayPlaceName(community) : '';
-      const freeListingLimit = getFreeListingLimit();
       const freeSlotsUsed = !canBypassDocument && (count ?? 0) >= freeListingLimit;
       const requiresListingPix = !canBypassDocument && (freeSlotsUsed || isSeasonal);
       const listingPaymentAmount = isSeasonal ? SEASONAL_LISTING_PRICE : PAID_LISTING_PRICE;
@@ -739,18 +774,18 @@ export default function AnunciarForm({
               <div>
                 <input
                   type="tel"
-                  inputMode="numeric"
-                  maxLength={12}
-                  placeholder="WhatsApp"
+                  inputMode="tel"
+                  maxLength={20}
+                  placeholder="+55 47 99999-9999"
                   value={ownerPhone}
-                  onChange={(event) => setOwnerPhone(formatBrazilPhone(event.target.value))}
+                  onChange={(event) => setOwnerPhone(formatContactPhone(event.target.value))}
                   className={`w-full rounded-2xl border bg-white px-4 py-3 text-sm dark:bg-slate-900 ${
                     ownerPhoneHasError
                       ? 'border-red-300 text-red-700 focus:border-red-500 focus:outline-none dark:border-red-800 dark:text-red-200'
                       : 'border-sand-200 dark:border-slate-700'
                   }`}
                 />
-                {ownerPhoneHasError && <p className="mt-2 text-xs font-semibold text-red-600">WhatsApp inválido.</p>}
+                {ownerPhoneHasError && <p className="mt-2 text-xs font-semibold text-red-600">Use DDI, DDD e numero. Exemplo: +55 47 99999-9999.</p>}
               </div>
             </div>
 
@@ -1012,7 +1047,14 @@ export default function AnunciarForm({
             </div>
 
             {requiresPayment && (
-              <PixPaymentPanel listingId={listingId} amount={isSeasonal ? SEASONAL_LISTING_PRICE : PAID_LISTING_PRICE} title={title || 'Novo anúncio Potilar'} kind={isSeasonal ? 'seasonal' : 'listing'} headline={isSeasonal ? `Temporada ${PLANS.listing.seasonalDurationDays} dias` : 'Imóvel adicional'} />
+              <div className="rounded-3xl border border-ocean-100 bg-ocean-50 p-5 text-sm text-ocean-900 dark:border-ocean-900 dark:bg-ocean-950/30 dark:text-ocean-100">
+                <p className="font-semibold">
+                  {isSeasonal ? `Anúncio de temporada: ${SEASONAL_PRICE_LABEL}` : `Anúncio adicional: ${LISTING_PRICE_LABEL}`}
+                </p>
+                <p className="mt-2 leading-6">
+                  Ao enviar, você será direcionado para pagar com Mercado Pago. Pagamento confirmado e validações aprovadas publicam o anúncio automaticamente.
+                </p>
+              </div>
             )}
 
             <label className="flex items-start gap-3 rounded-2xl border border-sand-200 bg-sand-50 px-4 py-3 text-xs text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">
@@ -1044,7 +1086,7 @@ export default function AnunciarForm({
           ) : (
             <button type="button" onClick={publishListing} disabled={isPublishing} className="flex items-center justify-center gap-2 rounded-2xl bg-ocean-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-ocean-700 disabled:cursor-not-allowed disabled:opacity-60">
               <Eye className="h-4 w-4" aria-hidden="true" />
-              {isPublishing ? 'Publicando...' : requiresPayment ? 'Enviar anúncio pago para revisão' : 'Publicar anúncio grátis'}
+              {isPublishing ? 'Publicando...' : shouldRequirePaymentNow || requiresPayment ? 'Enviar anúncio para pagamento' : 'Publicar anúncio grátis'}
             </button>
           )}
         </div>

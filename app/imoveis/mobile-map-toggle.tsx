@@ -7,9 +7,16 @@ import { motion, AnimatePresence } from 'framer-motion';
 type Props = {
   children: React.ReactNode;
   count?: number;
+  closedLabel?: string;
+  openLabel?: string;
 };
 
-export default function MobileMapToggle({ children, count }: Props) {
+export default function MobileMapToggle({
+  children,
+  count,
+  closedLabel = 'Mostrar mapa',
+  openLabel = 'Ocultar mapa',
+}: Props) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -21,7 +28,7 @@ export default function MobileMapToggle({ children, count }: Props) {
         aria-expanded={open}
       >
         <Map className="h-4 w-4" aria-hidden="true" />
-        {open ? 'Ocultar mapa' : 'Mostrar mapa'}
+        {open ? openLabel : closedLabel}
         {typeof count === 'number' && !open && (
           <span className="rounded-full bg-ocean-700 px-2 py-0.5 text-xs font-bold text-white">{count}</span>
         )}

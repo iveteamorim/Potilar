@@ -240,7 +240,7 @@ export default async function ImoveisPage({
   const filtered = applyFilters(approvedListings, searchParams);
 
   return (
-    <main className="border-t border-sand-200 bg-sand-50/40 dark:border-slate-800 dark:bg-slate-950">
+    <main className="border-t border-sand-200 bg-white dark:border-slate-800 dark:bg-slate-950">
       <div className="mx-auto max-w-[1500px] px-4 py-6 sm:px-6">
         <div className="grid gap-8 lg:grid-cols-[360px_minmax(0,1fr)]">
           <aside className="hidden lg:block">
@@ -286,5 +286,4 @@ export default async function ImoveisPage({
     </main>
   );
 }
-
 

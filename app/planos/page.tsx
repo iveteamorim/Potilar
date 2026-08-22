@@ -61,7 +61,8 @@ const professionalPlans = [
     limit: PLANS.professional.corretor.listingLimit,
     aiCredits: PLANS.professional.corretor.aiCredits,
     cta: 'Assinar Corretor',
-    features: ['Página profissional personalizada', 'Renovação automática dos anúncios']
+    promotionKit: true,
+    features: ['Perfil profissional', 'Gestão dos anúncios', 'Contato direto', 'Estatísticas dos anúncios']
   },
   {
     id: 'imobiliaria' as ProfessionalPlanId,
@@ -72,7 +73,8 @@ const professionalPlans = [
     aiCredits: PLANS.professional.imobiliaria.aiCredits,
     cta: 'Assinar Imobiliária',
     popular: true,
-    features: ['Página profissional personalizada', 'Renovação automática dos anúncios']
+    promotionKit: true,
+    features: ['Logo da empresa', 'Página própria', 'Gestão centralizada']
   },
   {
     id: 'plus' as ProfessionalPlanId,
@@ -82,7 +84,8 @@ const professionalPlans = [
     limit: PLANS.professional.plus.listingLimit,
     aiCredits: PLANS.professional.plus.aiCredits,
     cta: 'Assinar Plus',
-    features: ['Página profissional personalizada', 'Renovação automática dos anúncios', 'Destaque da imobiliária']
+    promotionKit: true,
+    features: ['Página destacada', '3 destaques incluídos', 'Suporte prioritário']
   }
 ];
 
@@ -162,8 +165,8 @@ export default function PlanosPage() {
   return (
     <main className="section-padding">
       <div className="mx-auto max-w-7xl space-y-20">
-        <section className="grid items-center gap-10 lg:grid-cols-[1fr_0.85fr]">
-          <div>
+        <section>
+          <div className="max-w-3xl">
             <p className="text-sm font-semibold uppercase tracking-[0.24em] text-ocean-600">Planos para profissionais</p>
             <h1 className="mt-5 max-w-3xl text-5xl font-semibold leading-tight text-slate-950 dark:text-white md:text-6xl">
               Mais clientes. Menos trabalho.
@@ -201,47 +204,6 @@ export default function PlanosPage() {
               <div className="flex items-center gap-2">
                 <Sparkles className="h-5 w-5 text-ocean-700" />
                 Destaques opcionais
-              </div>
-            </div>
-          </div>
-
-          <div className="rounded-[2rem] border border-sand-200 bg-white p-5 shadow-soft dark:border-slate-800 dark:bg-slate-900">
-            <div className="rounded-[1.5rem] bg-sand-50 p-5 dark:bg-slate-950">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-ocean-600">Painel profissional</p>
-                  <h2 className="mt-2 text-2xl font-semibold text-slate-950 dark:text-white">Sua carteira no RN</h2>
-                </div>
-                <span className="rounded-full bg-ocean-700 px-3 py-1 text-xs font-semibold text-white">Ao vivo</span>
-              </div>
-              <div className="mt-6 grid gap-3 sm:grid-cols-3">
-                {[
-                  ['Imóveis ativos', String(PLANS.professional.imobiliaria.listingLimit)],
-                  ['Contatos', '32'],
-                  ['Cidades', '8']
-                ].map(([label, value]) => (
-                  <div key={label} className="rounded-2xl bg-white p-4 dark:bg-slate-900">
-                    <p className="text-2xl font-semibold text-ocean-800">{value}</p>
-                    <p className="mt-1 text-xs text-slate-500">{label}</p>
-                  </div>
-                ))}
-              </div>
-              <div className="mt-5 rounded-3xl bg-white p-4 dark:bg-slate-900">
-                <div className="flex gap-4">
-                  <div className="h-24 w-28 shrink-0 rounded-2xl bg-gradient-to-br from-ocean-100 via-sand-100 to-sun-100" />
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold text-slate-950 dark:text-white">Casa para venda em Natal</p>
-                    <p className="mt-2 text-2xl font-semibold text-ocean-800">R$ 450.000</p>
-                    <div className="mt-3 flex flex-wrap gap-2 text-xs text-slate-500">
-                      <span>3 quartos</span>
-                      <span>2 banheiros</span>
-                      <span>1 vaga</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="mt-5 rounded-3xl border border-ocean-100 bg-ocean-50 p-4 text-sm font-semibold text-ocean-900">
-                Novo contato recebido pelo chat da Potilar.
               </div>
             </div>
           </div>
@@ -331,15 +293,29 @@ export default function PlanosPage() {
                 <p className="mt-3 rounded-2xl bg-sand-50 px-4 py-3 text-sm font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-200">
                   Até {plan.limit} imóveis ativos
                 </p>
-                <div className="mt-2 flex items-center justify-between gap-3 rounded-2xl bg-ocean-50 px-4 py-3 text-sm font-semibold text-ocean-800 dark:bg-ocean-950/40 dark:text-ocean-100">
-                  <span>IA para melhorar anúncios</span>
-                  <button type="button" className="group relative inline-flex rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ocean-500" aria-label={`Até ${plan.aiCredits} utilizações por mês`}>
-                    <Info className="h-4 w-4" aria-hidden="true" />
-                    <span className="pointer-events-none absolute right-0 top-6 z-20 w-52 rounded-xl bg-slate-950 px-3 py-2 text-xs font-semibold leading-5 text-white opacity-0 shadow-soft transition group-hover:opacity-100 group-focus-within:opacity-100">
-                      Até {plan.aiCredits} utilizações por mês.
-                    </span>
-                  </button>
-                </div>
+                {plan.promotionKit ? (
+                  <div className="mt-3 rounded-2xl border border-ocean-100 bg-ocean-50 px-4 py-3 text-ocean-900 dark:border-ocean-900/60 dark:bg-ocean-950/40 dark:text-ocean-100">
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-sm font-extrabold">Kit de divulgação profissional</span>
+                      <button
+                        type="button"
+                        className="group relative inline-flex rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ocean-500"
+                        aria-label="O que inclui o kit de divulgação profissional"
+                      >
+                        <Info className="h-4 w-4" aria-hidden="true" />
+                        <span className="pointer-events-none absolute right-0 top-6 z-20 w-72 rounded-xl bg-slate-950 px-3 py-2 text-left text-xs font-semibold leading-5 text-white opacity-0 shadow-soft transition group-hover:opacity-100 group-focus-within:opacity-100">
+                          <span className="mb-1 block">Kit de divulgação profissional</span>
+                          <span className="mb-1 block font-medium">Incluído no plano.</span>
+                          <span className="block">• IA para melhorar anúncios</span>
+                          <span className="block">• QR Code exclusivo para cada imóvel</span>
+                          <span className="block">• Cartazes para impressão</span>
+                          <span className="block">• Materiais para redes sociais</span>
+                          <span className="block">• Conteúdos prontos para compartilhar</span>
+                        </span>
+                      </button>
+                    </div>
+                  </div>
+                ) : null}
                 <ul className="mt-5 space-y-3">
                   {plan.features.map((feature) => (
                     <CheckItem key={feature}>{feature}</CheckItem>
@@ -456,4 +432,3 @@ export default function PlanosPage() {
     </main>
   );
 }
-

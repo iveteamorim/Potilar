@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, LayoutGrid, X } from 'lucide-react';
 
 export default function PropertyGallery({ images }: { images: string[] }) {
   const safeImages = images.length > 0 ? images : ['/og-home.svg'];
@@ -25,29 +25,39 @@ export default function PropertyGallery({ images }: { images: string[] }) {
           key={safeImages[active]}
           initial={{ opacity: 0.8 }}
           animate={{ opacity: 1 }}
-          className="relative h-[240px] w-full overflow-hidden rounded-2xl bg-sand-100 sm:h-[300px] lg:h-[360px]"
+          className="relative h-[260px] w-full overflow-hidden rounded-2xl bg-sand-100 sm:h-[340px] lg:h-[420px]"
         >
           <Image src={safeImages[active]} alt="Foto do imóvel" fill className="object-cover transition duration-500 group-hover:scale-105" />
-          <span className="absolute bottom-3 right-3 rounded-full bg-slate-950/75 px-3 py-1 text-xs font-semibold text-white">
-            {active + 1}/{safeImages.length} fotos
+          <span className="absolute bottom-3 right-3 rounded-md bg-slate-950/80 px-3 py-1 text-xs font-semibold text-white">
+            {active + 1} / {safeImages.length} fotos
           </span>
         </motion.div>
       </button>
 
-      <div className="flex gap-2 overflow-auto">
-        {safeImages.map((image, index) => (
-          <button
-            key={image}
-            type="button"
-            onClick={() => setActive(index)}
-            className={`relative h-14 w-20 flex-shrink-0 overflow-hidden rounded-xl border sm:h-16 sm:w-24 ${
-              index === active ? 'border-ocean-500' : 'border-transparent'
-            }`}
-            aria-label={`Ver foto ${index + 1}`}
-          >
-            <Image src={image} alt="Miniatura do imóvel" fill className="object-cover" />
-          </button>
-        ))}
+      <div className="flex items-end gap-3">
+        <div className="flex min-w-0 flex-1 gap-2 overflow-auto">
+          {safeImages.map((image, index) => (
+            <button
+              key={`${image}-${index}`}
+              type="button"
+              onClick={() => setActive(index)}
+              className={`relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg border-2 sm:h-[72px] sm:w-[72px] ${
+                index === active ? 'border-agreste-500' : 'border-transparent'
+              }`}
+              aria-label={`Ver foto ${index + 1}`}
+            >
+              <Image src={image} alt="Miniatura do imóvel" fill className="object-cover" />
+            </button>
+          ))}
+        </div>
+        <button
+          type="button"
+          onClick={() => setIsOpen(true)}
+          className="inline-flex h-16 shrink-0 items-center gap-2 rounded-xl border border-sand-300 bg-white px-4 text-sm font-bold text-ocean-800 transition hover:border-ocean-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+        >
+          <LayoutGrid className="h-4 w-4" aria-hidden="true" />
+          Ver todas as fotos
+        </button>
       </div>
 
       {isOpen && (

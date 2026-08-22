@@ -3,7 +3,17 @@
 import { Copy, MessageCircle } from 'lucide-react';
 import { useState } from 'react';
 
-export default function ShareButtons({ title, url, compact = false }: { title: string; url: string; compact?: boolean }) {
+export default function ShareButtons({
+  title,
+  url,
+  compact = false,
+  toolbar = false
+}: {
+  title: string;
+  url: string;
+  compact?: boolean;
+  toolbar?: boolean;
+}) {
   const [copied, setCopied] = useState(false);
   const message = `Olha este imóvel na Potilar: ${title} ${url}`;
 
@@ -11,6 +21,29 @@ export default function ShareButtons({ title, url, compact = false }: { title: s
     await navigator.clipboard.writeText(url);
     setCopied(true);
     setTimeout(() => setCopied(false), 1800);
+  }
+
+  if (toolbar) {
+    const itemClass =
+      'inline-flex flex-col items-center gap-1.5 text-[11px] font-semibold text-slate-600 transition hover:text-ocean-800 dark:text-slate-300';
+
+    return (
+      <>
+        <a
+          href={`https://wa.me/?text=${encodeURIComponent(message)}`}
+          target="_blank"
+          rel="noreferrer"
+          className={itemClass}
+        >
+          <MessageCircle className="h-5 w-5" aria-hidden="true" />
+          Compartilhar
+        </a>
+        <button type="button" onClick={copyLink} className={itemClass}>
+          <Copy className="h-5 w-5" aria-hidden="true" />
+          {copied ? 'Copiado' : 'Copiar link'}
+        </button>
+      </>
+    );
   }
 
   if (compact) {

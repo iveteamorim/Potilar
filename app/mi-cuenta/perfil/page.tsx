@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
+import AccountTabs from '@/components/AccountTabs';
 import ProfileEditorForm from '@/components/ProfileEditorForm';
 import { createClient } from '@/lib/supabase/server';
 import { buildProfessionalProfileSlug, getPublicProfilePath, isProfessionalAccountType } from '@/lib/publicProfile';
@@ -46,14 +47,11 @@ export default async function PerfilPublicoPage() {
 
   return (
     <main className="section-padding">
-      <div className="mx-auto max-w-3xl space-y-6">
+      <div className="mx-auto max-w-6xl space-y-6">
         <div>
-          <Link href="/mi-cuenta" className="text-sm font-semibold text-ocean-700">
-            Voltar para Minha conta
-          </Link>
-          <h1 className="mt-4 text-3xl font-semibold text-slate-900 dark:text-white">Perfil público</h1>
+          <h1 className="text-3xl font-semibold text-slate-900 dark:text-white">Dados da conta</h1>
           <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-            Corretores e imobiliárias podem ter uma página com todos os anúncios ativos.
+            Nome, email, telefone e tipo de conta usados no Potilar.
           </p>
           {profile?.public_slug && (
             <p className="mt-3 text-sm font-semibold text-ocean-700">
@@ -64,8 +62,11 @@ export default async function PerfilPublicoPage() {
             </p>
           )}
         </div>
+        <AccountTabs active="perfil" />
         <ProfileEditorForm
           fullName={profile?.full_name ?? ''}
+          email={user.email ?? ''}
+          phone={profile?.phone ?? ''}
           companyName={profile?.company_name ?? ''}
           bio={profile?.bio ?? ''}
           publicSlug={publicSlug}

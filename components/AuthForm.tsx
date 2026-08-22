@@ -31,15 +31,13 @@ function formatCnpj(value: string) {
     .replace(/(\d{4})(\d)/, '$1-$2');
 }
 
-function formatBrazilPhone(value: string) {
-  const digits = cleanDocument(value).slice(0, 11);
-  if (digits.length <= 2) return digits;
-  return `${digits.slice(0, 2)} ${digits.slice(2)}`;
+function formatContactPhone(value: string) {
+  return value.replace(/[^\d+ ()-]/g, '').slice(0, 20);
 }
 
-function isValidBrazilMobilePhone(value: string) {
+function isValidContactPhone(value: string) {
   const digits = cleanDocument(value);
-  return digits.length === 11 && digits[2] === '9';
+  return value.trim().startsWith('+') && digits.length >= 8 && digits.length <= 15;
 }
 
 function hasRepeatedDigits(value: string) {
@@ -147,7 +145,7 @@ export default function AuthForm() {
   const cnpjDigits = cleanDocument(cnpj);
   const cpfHasLengthError = cpfDigits.length > 0 && cpfDigits.length < 11;
   const cnpjHasLengthError = cnpjDigits.length > 0 && cnpjDigits.length < 14;
-  const phoneHasError = phone.length > 0 && !isValidBrazilMobilePhone(phone);
+  const phoneHasError = phone.length > 0 && !isValidContactPhone(phone);
 
   async function startProfessionalCheckout(planId: ProfessionalPlanId) {
     const response = await fetch('/api/professional-plans/checkout', {
@@ -315,8 +313,8 @@ export default function AuthForm() {
         return;
       }
 
-      if (!isBuyerIntent && !isValidBrazilMobilePhone(phone)) {
-        setMessage('Informe um WhatsApp valido.');
+      if (!isBuyerIntent && !isValidContactPhone(phone)) {
+        setMessage('Informe o WhatsApp com DDI, DDD e numero. Exemplo: +55 47 99999-9999.');
         setLoading(false);
         return;
       }
@@ -530,10 +528,10 @@ export default function AuthForm() {
               <div>
                 <input
                   value={phone}
-                  onChange={(event) => setPhone(formatBrazilPhone(event.target.value))}
-                  placeholder="WhatsApp"
-                  inputMode="numeric"
-                  maxLength={12}
+                  onChange={(event) => setPhone(formatContactPhone(event.target.value))}
+                  placeholder="+55 47 99999-9999"
+                  inputMode="tel"
+                  maxLength={20}
                   className={`w-full rounded-xl border bg-white px-4 py-2.5 text-sm dark:bg-slate-900 ${
                     phoneHasError
                       ? 'border-red-300 text-red-700 focus:border-red-500 focus:outline-none dark:border-red-800 dark:text-red-200'
@@ -542,7 +540,7 @@ export default function AuthForm() {
                 />
                 {phoneHasError && (
                   <p className="mt-2 text-xs font-semibold text-red-600 dark:text-red-300">
-                    WhatsApp invalido.
+                    Use DDI, DDD e numero. Exemplo: +55 47 99999-9999.
                   </p>
                 )}
               </div>

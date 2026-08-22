@@ -4,14 +4,11 @@ import { redirect } from 'next/navigation';
 import { ArrowLeft, CheckCircle2, FileSpreadsheet, Globe2, Link2, Pencil, PlugZap, ShieldCheck, Upload } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { importListingsFromCsv, importListingsFromPortal, importListingsFromXml } from './actions';
+import { SpreadsheetImportForm } from './SpreadsheetImportForm';
 
 export const metadata: Metadata = {
   title: 'Importar carteira | Potilar'
 };
-
-const CSV_EXAMPLE = `titulo;tipo;operacao;preco;cidade;bairro;quartos;banheiros;vagas;area;descricao;fotos
-Casa com quintal;Casa;Aluguel;1800;Natal;Lagoa Nova;3;2;2;120;Casa ampla perto de servicos.;https://site.com/foto1.jpg|https://site.com/foto2.jpg
-Apartamento mobiliado;Apartamento;Compra;320000;Parnamirim;Nova Parnamirim;2;2;1;68;Apartamento pronto para morar.;`;
 
 const options = [
   {
@@ -286,7 +283,7 @@ export default async function ImportarPage({
             </button>
           </form>
 
-          <section className="rounded-3xl border border-sand-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-950 lg:p-8">
+          <section className="rounded-3xl border border-sand-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950 lg:p-6">
             <div className="flex items-start gap-3">
               <div className="rounded-2xl bg-emerald-50 p-3 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-200">
                 <FileSpreadsheet className="h-6 w-6" />
@@ -294,35 +291,12 @@ export default async function ImportarPage({
               <div>
                 <h2 className="text-xl font-semibold text-slate-950 dark:text-white">Importar por Excel ou CSV</h2>
                 <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
-                  Exporte sua planilha como CSV ou copie direto do Excel/Google Sheets e cole abaixo.
+                  Copie as linhas do Excel, Google Sheets, LibreOffice ou CSV e cole direto no campo abaixo.
                 </p>
               </div>
             </div>
 
-            <form action={importListingsFromCsv} className="mt-6 grid gap-5 lg:grid-cols-[260px_1fr_190px] lg:items-end">
-              <div className="rounded-2xl border border-dashed border-ocean-200 bg-ocean-50/60 p-6 text-center text-sm text-ocean-900 dark:border-ocean-900 dark:bg-ocean-950/30 dark:text-ocean-100">
-                <Upload className="mx-auto h-8 w-8" />
-                <p className="mt-3 font-semibold">Planilha copiada</p>
-                <p className="mt-1 text-xs leading-5">Cole os dados exportados no campo ao lado.</p>
-              </div>
-              <div className="min-w-0">
-                <label className="block text-sm font-semibold text-slate-800 dark:text-slate-100" htmlFor="csv">
-                  Cole os dados da planilha
-                </label>
-                <textarea
-                  id="csv"
-                  name="csv"
-                  required
-                  rows={12}
-                  placeholder={CSV_EXAMPLE}
-                  className="mt-2 w-full rounded-2xl border border-sand-200 bg-white px-4 py-3 font-mono text-xs text-slate-800 outline-none transition focus:border-ocean-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
-                />
-              </div>
-              <button type="submit" disabled={!hasActiveProfessionalPlan} className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-emerald-700 px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-800 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-600">
-                <Upload className="h-4 w-4" />
-                Importar planilha
-              </button>
-            </form>
+            <SpreadsheetImportForm action={importListingsFromCsv} disabled={!hasActiveProfessionalPlan} />
           </section>
         </section>
 

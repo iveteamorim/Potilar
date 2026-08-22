@@ -44,6 +44,58 @@ function getListingDurationDays(transaction?: string | null) {
   return transaction === 'Temporada' ? PLANS.listing.seasonalDurationDays : PLANS.listing.standardDurationDays;
 }
 
+function cleanPhone(value?: string | null) {
+  return String(value ?? '').replace(/\D/g, '');
+}
+
+function hasValidPhone(value?: string | null) {
+  const raw = String(value ?? '').trim();
+  const digits = cleanPhone(raw);
+  return raw.startsWith('+') && digits.length >= 8 && digits.length <= 15;
+}
+
+function hasBlockedContent(value?: string | null) {
+  const text = String(value ?? '').toLowerCase();
+  return [
+    'golpe',
+    'documento falso',
+    'sem contrato',
+    'aposta',
+    'cassino',
+    'conteudo adulto',
+    'conteúdo adulto'
+  ].some((term) => text.includes(term));
+}
+
+async function needsManualListingReview(supabase: ReturnType<typeof createAdminClient>, listing: any) {
+  const issues = [];
+  const images = Array.isArray(listing.images) ? listing.images : [];
+  const contactPhone = listing.contact_whatsapp || listing.contact_phone;
+  const price = Number(listing.price ?? 0);
+
+  if (!listing.title || String(listing.title).trim().length < 8) issues.push('titulo_curto');
+  if (!listing.description || String(listing.description).trim().length < 30) issues.push('descricao_curta');
+  if (!listing.location || String(listing.location).trim().length < 2) issues.push('cidade_ausente');
+  if (images.length < 6) issues.push('poucas_fotos');
+  if (!hasValidPhone(contactPhone) && !listing.contact_email) issues.push('contato_invalido');
+  if (!Number.isFinite(price) || price <= 0 || price > 100000000) issues.push('preco_suspeito');
+  if (hasBlockedContent(`${listing.title}\n${listing.description}\n${(listing.features ?? []).join('\n')}`)) issues.push('conteudo_bloqueado');
+
+  const { count } = await supabase
+    .from('listings')
+    .select('id', { count: 'exact', head: true })
+    .eq('owner_id', listing.owner_id)
+    .eq('title', listing.title)
+    .eq('location', listing.location)
+    .eq('price', listing.price)
+    .neq('id', listing.id)
+    .in('status', ['pending', 'approved', 'paused']);
+
+  if ((count ?? 0) > 0) issues.push('possivel_duplicado');
+
+  return issues;
+}
+
 async function activateProfessionalProfile({
   planId,
   userId
@@ -217,7 +269,7 @@ async function confirmListingPayment({
   const supabase = createAdminClient();
   const { data: listing, error: listingError } = await supabase
     .from('listings')
-    .select('id,owner_id,transaction,status,featured_plan,listing_expires_at')
+    .select('id,owner_id,title,description,features,location,price,images,contact_phone,contact_whatsapp,contact_email,transaction,status,featured_plan,listing_expires_at')
     .eq('id', listingId)
     .maybeSingle();
 
@@ -255,6 +307,12 @@ async function confirmListingPayment({
       ? new Date(listing.listing_expires_at)
       : now;
   const days = product === 'listing_renewal' ? Number(renewalDays ?? PLANS.listing.seasonalRenewal60DurationDays) : getListingDurationDays(listing.transaction);
+  const reviewIssues = product === 'listing_renewal' ? [] : await needsManualListingReview(supabase, listing);
+  const nextStatus = product === 'listing_renewal'
+    ? listing.status
+    : reviewIssues.length > 0
+      ? 'pending'
+      : 'approved';
 
   const { error } = await supabase
     .from('listings')
@@ -263,7 +321,7 @@ async function confirmListingPayment({
       payment_confirmed_at: now.toISOString(),
       payment_proof_sent_at: null,
       listing_expires_at: addDays(baseDate, days).toISOString(),
-      status: listing.status === 'rejected' ? 'pending' : listing.status,
+      status: listing.status === 'rejected' ? 'pending' : nextStatus,
       updated_at: now.toISOString()
     })
     .eq('id', listingId);

@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { AlertTriangle, Box, CheckCircle2, Flag, Mail, MessageCircle, Phone, PlayCircle, ShieldCheck } from 'lucide-react';
+import { Bath, BedDouble, Box, Car, CheckCircle2, Flag, Lock, Mail, MapPin, MessageCircle, Phone, PlayCircle, Ruler, ShieldCheck } from 'lucide-react';
 import { BASE_URL } from '@/lib/config';
 import { notFound } from 'next/navigation';
 import PropertyMap from '@/components/PropertyMapLoader';
@@ -18,14 +18,60 @@ import { createClient } from '@/lib/supabase/server';
 import { fetchPublicListingDetail } from '@/lib/fetchApprovedListings';
 import { listingRowToProperty, PUBLIC_LISTING_SELECT_WITH_CONTACT } from '@/lib/listings';
 import { enrichPublicListings } from '@/lib/advertiserProfiles';
-import { formatListingDateLabel } from '@/lib/dateLabels';
 import { getCleanPropertyTitle } from '@/lib/displayTitle';
 import { usesResidentialLayoutFields } from '@/lib/propertyTypes';
+import { getCityPagePath } from '@/lib/cityPages';
+import { getCitySeoIntentPath, SEO_INTENT_PAGES } from '@/lib/seoIntentPages';
 
 const LISTING_SELECT = `owner_id,${PUBLIC_LISTING_SELECT_WITH_CONTACT}`;
+export const dynamic = 'force-dynamic';
 
 function cleanPhone(value?: string) {
   return value?.replace(/\D/g, '') ?? '';
+}
+
+function formatPublishedOn(value?: string) {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return new Intl.DateTimeFormat('pt-BR').format(date);
+}
+
+function formatMemberSince(value?: string | null) {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  const month = new Intl.DateTimeFormat('pt-BR', { month: 'short' }).format(date).replace('.', '');
+  return `Membro desde ${month}/${date.getFullYear()}`;
+}
+
+function getListingBreadcrumb(property: Property) {
+  const intentLabel =
+    property.transaction === 'Compra'
+      ? `${property.propertyType} para venda`
+      : property.transaction === 'Aluguel'
+        ? `${property.propertyType} para alugar`
+        : `${property.propertyType} para temporada`;
+  const intentPage = SEO_INTENT_PAGES.find(
+    (page) =>
+      (page.transaction === property.transaction && (!page.propertyType || page.propertyType === property.propertyType)) ||
+      (property.transaction === 'Temporada' && page.slug === 'imoveis-para-temporada')
+  );
+
+  return {
+    city: property.location,
+    intentLabel,
+    cityHref: getCityPagePath(property.location),
+    intentHref: intentPage ? getCitySeoIntentPath(property.location, intentPage.slug) : getCityPagePath(property.location)
+  };
+}
+
+function WhatsAppGlyph() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-5 w-5 fill-current" aria-hidden="true">
+      <path d="M12.04 2C6.58 2 2.15 6.4 2.15 11.83c0 1.74.46 3.44 1.33 4.95L2 22l5.38-1.41a10.02 10.02 0 0 0 4.66 1.18h.01c5.46 0 9.89-4.4 9.89-9.84C21.94 6.4 17.5 2 12.04 2zm5.76 14.18c-.24.68-1.4 1.25-1.93 1.33-.49.07-1.1.1-1.78-.11-.41-.13-.94-.31-1.62-.6-2.85-1.23-4.7-4.1-4.84-4.29-.14-.19-1.15-1.53-1.15-2.92 0-1.39.73-2.07.99-2.35.26-.28.56-.35.75-.35h.54c.17 0 .4-.07.63.48.24.56.81 1.97.88 2.12.07.14.12.31.02.5-.09.19-.14.31-.27.48-.14.17-.29.37-.41.5-.14.14-.28.29-.12.56.16.28.7 1.16 1.51 1.88 1.04.93 1.92 1.22 2.2 1.36.28.14.44.12.6-.07.16-.19.7-.81.89-1.09.19-.28.37-.23.63-.14.26.09 1.64.77 1.92.91.28.14.47.21.54.33.07.12.07.68-.17 1.36z" />
+    </svg>
+  );
 }
 
 function getListingCode(listingId: string) {
@@ -85,7 +131,7 @@ async function getAdvertiserProfile(ownerId?: string) {
     const supabase = createClient();
     let { data, error } = await supabase
       .from('profiles')
-      .select('public_slug,company_name,full_name,account_type,creci,creci_verified,profile_image_url')
+      .select('public_slug,company_name,full_name,account_type,creci,creci_verified,profile_image_url,created_at')
       .eq('id', ownerId)
       .in('account_type', ['corretor', 'imobiliaria'])
       .maybeSingle();
@@ -97,7 +143,7 @@ async function getAdvertiserProfile(ownerId?: string) {
         .eq('id', ownerId)
         .in('account_type', ['corretor', 'imobiliaria'])
         .maybeSingle();
-      data = fallback.data ? { ...fallback.data, creci_verified: false } : null;
+      data = fallback.data ? { ...fallback.data, creci_verified: false, created_at: null } : null;
     }
 
     if (!data?.public_slug) {
@@ -107,7 +153,7 @@ async function getAdvertiserProfile(ownerId?: string) {
         .eq('id', ownerId)
         .in('account_type', ['corretor', 'imobiliaria'])
         .maybeSingle();
-      data = minimal.data ? { ...minimal.data, company_name: null, creci_verified: false } : null;
+      data = minimal.data ? { ...minimal.data, company_name: null, creci_verified: false, created_at: null } : null;
     }
 
     if (!data?.public_slug) return null;
@@ -181,7 +227,17 @@ export default async function PropertyDetailPage({ params }: { params: { slug: s
   const displayTitle = getCleanPropertyTitle(property);
   const similar = advertiserListings.length > 0 ? advertiserListings : properties.filter((item) => item.id !== property.id).slice(0, 3);
   const contactPhone = property.contactPhone || property.contactWhatsapp;
-  const whatsappNumber = cleanPhone(property.contactWhatsapp);
+  const contactMethods =
+    property.contactMethods && property.contactMethods.length > 0
+      ? property.contactMethods
+      : [
+          property.contactWhatsapp ? 'whatsapp' : '',
+          property.contactPhone ? 'phone' : '',
+          property.contactEmail ? 'email' : ''
+        ].filter(Boolean);
+  const whatsappSource =
+    property.contactWhatsapp || (contactMethods.includes('whatsapp') ? property.contactPhone : undefined);
+  const whatsappNumber = cleanPhone(whatsappSource);
   const phoneNumber = cleanPhone(contactPhone);
   const contactName = getPublicFirstName(property.contactName) || 'Anunciante';
   const advertiserDisplayName = advertiserProfile?.company_name || advertiserProfile?.full_name || contactName;
@@ -194,11 +250,14 @@ export default async function PropertyDetailPage({ params }: { params: { slug: s
     .toUpperCase();
   const hasAdvertiserContact = Boolean(property.contactPhone || property.contactWhatsapp || property.contactEmail);
   const isSuperFeatured = property.isFeatured && property.featuredPlan === 'super_30_days';
-  const dateLabel = formatListingDateLabel(property.createdAt, property.updatedAt);
+  const publishedOn = formatPublishedOn(property.createdAt);
+  const memberSince = formatMemberSince((advertiserProfile as { created_at?: string | null } | null)?.created_at);
+  const breadcrumb = getListingBreadcrumb(property);
   const detailUrl = `${BASE_URL}/imoveis/${property.slug}`;
+  const whatsappMessage = `Ola, vi este imovel na PotiLar e tenho interesse: ${displayTitle}. Ainda esta disponivel? ${detailUrl}`;
   const whatsappHref =
-    property.contactWhatsapp && whatsappNumber
-      ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(`Olá, tenho interesse no anúncio ${getListingCode(property.id)}: ${displayTitle}`)}`
+    contactMethods.includes('whatsapp') && whatsappNumber
+      ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(whatsappMessage)}`
       : null;
   const reportHref = `/contato?assunto=${encodeURIComponent(`Denunciar anúncio ${getListingCode(property.id)}`)}&url=${encodeURIComponent(detailUrl)}`;
   const locationDetails = [property.neighborhood, property.community].filter(Boolean).join(' · ');
@@ -221,78 +280,101 @@ export default async function PropertyDetailPage({ params }: { params: { slug: s
     }
   };
 
-  const specItems = [
-    usesResidentialLayoutFields(property.propertyType) && property.bedrooms > 0 && `${property.bedrooms} quarto${property.bedrooms > 1 ? 's' : ''}`,
-    usesResidentialLayoutFields(property.propertyType) && property.bathrooms > 0 && `${property.bathrooms} banheiro${property.bathrooms > 1 ? 's' : ''}`,
-    property.parking > 0 && `${property.parking} vaga${property.parking > 1 ? 's' : ''}`,
-    property.areaSqm && `${property.areaSqm} m2`,
-    usesResidentialLayoutFields(property.propertyType) &&
-      property.condoFee &&
-      `Condomínio ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(property.condoFee)}`,
-    usesResidentialLayoutFields(property.propertyType) && property.condoIncluded && 'Condomínio incluso',
-    usesResidentialLayoutFields(property.propertyType) && property.isPetFriendly && 'Aceita pet',
-    usesResidentialLayoutFields(property.propertyType) && property.isFurnished && 'Mobiliado'
-  ].filter(Boolean) as string[];
+  const specIcons = [
+    usesResidentialLayoutFields(property.propertyType) && property.bedrooms > 0 && {
+      Icon: BedDouble,
+      label: `${property.bedrooms} quarto${property.bedrooms > 1 ? 's' : ''}`
+    },
+    usesResidentialLayoutFields(property.propertyType) && property.bathrooms > 0 && {
+      Icon: Bath,
+      label: `${property.bathrooms} banheiro${property.bathrooms > 1 ? 's' : ''}`
+    },
+    property.parking > 0 && {
+      Icon: Car,
+      label: `${property.parking} vaga${property.parking > 1 ? 's' : ''}`
+    },
+    property.areaSqm && {
+      Icon: Ruler,
+      label: `${property.areaSqm} m²`
+    }
+  ].filter(Boolean) as Array<{ Icon: typeof BedDouble; label: string }>;
+  const condoLabel = usesResidentialLayoutFields(property.propertyType)
+    ? property.condoFee
+      ? `Condomínio ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(property.condoFee)}`
+      : 'Condomínio não informado'
+    : null;
+  const toolbarItemClass =
+    'inline-flex flex-col items-center gap-1.5 text-center text-[11px] font-semibold text-slate-600 transition hover:text-ocean-800 dark:text-slate-300';
+  const advertiserHref = advertiserProfile?.public_slug ? getPublicProfilePath(advertiserProfile.public_slug) : null;
   const contactCard = (
-    <div className="glass-card space-y-4 p-5">
-      <div>
-        <h3 className="text-base font-semibold text-slate-900 dark:text-white">
-          {hasAdvertiserContact ? 'Contato do anunciante' : 'Contato Potilar'}
-        </h3>
-        {advertiserProfile?.public_slug && (
-          <div className="mt-3 flex items-center gap-3">
-            <Link
-              href={getPublicProfilePath(advertiserProfile.public_slug)}
-              className="flex h-14 w-14 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl bg-slate-950 text-sm font-semibold text-white"
-              aria-label={`Ver página de ${advertiserDisplayName}`}
-            >
-              {advertiserProfile.profile_image_url ? (
-                <img
-                  src={advertiserProfile.profile_image_url}
-                  alt={advertiserDisplayName}
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                advertiserInitials || 'P'
-              )}
-            </Link>
-            <div className="min-w-0 text-sm text-slate-600 dark:text-slate-300">
-              <span>Anunciante:</span>{' '}
-              <Link
-                href={getPublicProfilePath(advertiserProfile.public_slug)}
-                className="font-semibold text-ocean-700 underline"
-              >
-                {advertiserDisplayName}
-              </Link>
-              {advertiserProfile.creci && advertiserProfile.creci_verified && (
-                <span className="mt-2 inline-flex items-center gap-1 rounded-full bg-ocean-50 px-2.5 py-1 text-[11px] font-semibold text-ocean-700">
-                  <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
-                  CRECI verificado
-                </span>
-              )}
-            </div>
+    <div className="space-y-5 rounded-2xl border border-sand-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+      <h3 className="text-lg font-bold text-ocean-950 dark:text-white">
+        {hasAdvertiserContact ? 'Contato do anunciante' : 'Contato Potilar'}
+      </h3>
+      <div className="flex items-center gap-3">
+        {advertiserHref ? (
+          <Link
+            href={advertiserHref}
+            className="flex h-14 w-14 flex-shrink-0 items-center justify-center overflow-hidden rounded-lg bg-slate-950 text-sm font-semibold text-white"
+            aria-label={`Ver página de ${advertiserDisplayName}`}
+          >
+            {advertiserProfile?.profile_image_url ? (
+              <img src={advertiserProfile.profile_image_url} alt={advertiserDisplayName} className="h-full w-full object-cover" />
+            ) : (
+              advertiserInitials || 'P'
+            )}
+          </Link>
+        ) : (
+          <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center overflow-hidden rounded-lg bg-slate-950 text-sm font-semibold text-white">
+            {advertiserInitials || 'P'}
           </div>
         )}
-        {!advertiserProfile?.public_slug && (
-          <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">{contactName}</p>
-        )}
+        <div className="min-w-0">
+          {advertiserHref ? (
+            <Link href={advertiserHref} className="block text-base font-bold text-ocean-950 hover:underline dark:text-white">
+              {advertiserDisplayName}
+            </Link>
+          ) : (
+            <p className="text-base font-bold text-ocean-950 dark:text-white">{contactName}</p>
+          )}
+          <p className="mt-1 inline-flex items-center gap-1 text-sm font-semibold text-agreste-600">
+            <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
+            Anunciante verificado
+          </p>
+          {memberSince && <p className="mt-1 text-xs font-medium text-slate-500">{memberSince}</p>}
+        </div>
       </div>
-      <div className="grid gap-3 sm:grid-cols-3">
-        {property.contactWhatsapp && whatsappNumber && whatsappHref && (
+
+      <div className="grid gap-3">
+        {whatsappHref && (
           <WhatsAppStatLink
             listingId={property.id}
             href={whatsappHref}
-            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-green-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-green-600/20"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#25D366] px-4 py-3.5 text-sm font-bold text-white transition hover:bg-[#1ebe57]"
           >
-            <MessageCircle className="h-4 w-4" aria-hidden="true" />
+            <WhatsAppGlyph />
             WhatsApp
           </WhatsAppStatLink>
         )}
-        {property.contactPhone && phoneNumber && (
-          <a
-            href={`tel:+${phoneNumber}`}
-            className="inline-flex items-center justify-center gap-2 rounded-2xl border border-ocean-200 px-4 py-3 text-sm font-semibold text-ocean-700 dark:border-slate-700 dark:text-slate-200"
+        {property.ownerId && (
+          <ListingMessageButton
+            listingId={property.id}
+            ownerId={property.ownerId}
+            title={displayTitle}
+            buttonClassName="inline-flex w-full items-center justify-center gap-2 rounded-xl border-2 border-ocean-700 px-4 py-3.5 text-sm font-bold text-ocean-800 transition hover:bg-ocean-50 dark:border-ocean-300 dark:text-ocean-100"
+          />
+        )}
+        {!hasAdvertiserContact && !property.ownerId && (
+          <Link
+            href="/contato"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-ocean-800 px-4 py-3.5 text-sm font-bold text-white"
           >
+            <MessageCircle className="h-4 w-4" aria-hidden="true" />
+            Falar pelo formulario
+          </Link>
+        )}
+        {property.contactPhone && phoneNumber && (
+          <a href={`tel:+${phoneNumber}`} className="inline-flex items-center justify-center gap-2 text-sm font-semibold text-ocean-700">
             <Phone className="h-4 w-4" aria-hidden="true" />
             Telefone
           </a>
@@ -300,41 +382,34 @@ export default async function PropertyDetailPage({ params }: { params: { slug: s
         {property.contactEmail && (
           <a
             href={`mailto:${property.contactEmail}?subject=${encodeURIComponent(`Interesse no anúncio ${property.title}`)}`}
-            className="inline-flex items-center justify-center gap-2 rounded-2xl border border-ocean-200 px-4 py-3 text-sm font-semibold text-ocean-700 dark:border-slate-700 dark:text-slate-200"
+            className="inline-flex items-center justify-center gap-2 text-sm font-semibold text-ocean-700"
           >
             <Mail className="h-4 w-4" aria-hidden="true" />
             Email
           </a>
         )}
-        {property.ownerId && (
-          <ListingMessageButton listingId={property.id} ownerId={property.ownerId} title={displayTitle} />
-        )}
-        {!hasAdvertiserContact && (
-          <Link
-            href="/contato"
-            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-ocean-700 px-4 py-3 text-sm font-semibold text-white"
-          >
-            <MessageCircle className="h-4 w-4" aria-hidden="true" />
-            Falar pelo formulario
-          </Link>
-        )}
       </div>
-      <div className="grid grid-cols-2 gap-2 border-t border-sand-100 pt-4 text-xs dark:border-slate-800">
-        <ShareButtons title={displayTitle} url={detailUrl} compact />
-        <a
-          href={reportHref}
-          className="inline-flex items-center justify-center gap-2 rounded-full border border-red-200 px-3 py-2 text-center font-semibold text-red-700 transition hover:bg-red-50 dark:border-red-900/60 dark:text-red-300 dark:hover:bg-red-950/30"
-        >
-          <Flag className="h-4 w-4" aria-hidden="true" />
+
+      <div className="grid grid-cols-4 gap-2 border-t border-sand-200 pt-4 dark:border-slate-800">
+        <ShareButtons title={displayTitle} url={detailUrl} toolbar />
+        <a href="/seguranca" className={toolbarItemClass}>
+          <ShieldCheck className="h-5 w-5" aria-hidden="true" />
+          Dicas de segurança
+        </a>
+        <a href={reportHref} className={`${toolbarItemClass} text-red-600 hover:text-red-700`}>
+          <Flag className="h-5 w-5" aria-hidden="true" />
           Denunciar anúncio
         </a>
-        <a
-          href="/seguranca"
-          className="inline-flex items-center justify-center gap-2 rounded-full border border-ocean-200 px-3 py-2 text-center font-semibold text-ocean-700 transition hover:bg-ocean-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
-        >
-          <ShieldCheck className="h-4 w-4" aria-hidden="true" />
-          Dicas de seguranca
-        </a>
+      </div>
+
+      <div className="flex gap-3 rounded-xl border border-agreste-200 bg-agreste-50 p-4 dark:border-agreste-800 dark:bg-agreste-950/30">
+        <Lock className="mt-0.5 h-5 w-5 flex-shrink-0 text-agreste-600" aria-hidden="true" />
+        <div>
+          <p className="text-sm font-bold text-agreste-800 dark:text-agreste-100">Negocie com segurança</p>
+          <p className="mt-1 text-xs leading-5 text-agreste-700 dark:text-agreste-200">
+            Nunca faça pagamentos antes de visitar o imóvel e confirmar os dados.
+          </p>
+        </div>
       </div>
     </div>
   );
@@ -347,68 +422,77 @@ export default async function PropertyDetailPage({ params }: { params: { slug: s
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <div className="mx-auto max-w-6xl">
-        <div className="grid gap-7 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start">
+        <nav className="mb-5 flex flex-wrap items-center gap-1 text-sm text-slate-500">
+          <Link href="/" className="hover:text-ocean-800">Início</Link>
+          <span>›</span>
+          <Link href="/imoveis" className="hover:text-ocean-800">Rio Grande do Norte</Link>
+          <span>›</span>
+          <Link href={breadcrumb.cityHref} className="hover:text-ocean-800">{breadcrumb.city}</Link>
+          <span>›</span>
+          <Link href={breadcrumb.intentHref} className="font-semibold text-slate-700 hover:text-ocean-800 dark:text-slate-200">
+            {breadcrumb.intentLabel}
+          </Link>
+        </nav>
+        <div className="grid gap-7 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start">
           <div className="space-y-7">
             <PropertyGallery images={property.images} />
         <div className="space-y-3">
-          <FavoriteButton propertyId={property.id} title={displayTitle} variant="inline" />
-          <div className="flex flex-wrap gap-2">
-              <span className="inline-flex items-center gap-1 rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-700">
-                <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
-                Anuncio revisado pela Potilar
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="rounded-md bg-green-100 px-2.5 py-1 text-xs font-bold text-green-800">
+              Publicado
+            </span>
+            {publishedOn && <span className="text-sm text-slate-500">Publicado em {publishedOn}</span>}
+            {property.isFeatured && (
+              <span className={`rounded-md px-2.5 py-1 text-xs font-semibold text-white ${isSuperFeatured ? 'bg-violet-600' : 'bg-sun-500'}`}>
+                {isSuperFeatured ? 'Super destaque' : 'Destaque'}
               </span>
-              <span className="rounded-full bg-sun-500 px-3 py-1 text-xs font-semibold text-white">
-                {property.transaction}
-              </span>
-              <span className="rounded-full border border-sand-200 px-3 py-1 text-xs font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">
-                {property.propertyType}
-              </span>
-              {property.isFeatured && (
-                <span className={`rounded-full px-3 py-1 text-xs font-semibold text-white ${isSuperFeatured ? 'bg-violet-600 shadow-md shadow-violet-500/30' : 'bg-sun-500'}`}>
-                  {isSuperFeatured ? 'Super destaque' : 'Destaque'}
-                </span>
-              )}
-            </div>
-            <h1 className="text-2xl font-semibold leading-tight text-slate-900 dark:text-white sm:text-3xl">{displayTitle}</h1>
-            <p className="text-sm text-slate-600 dark:text-slate-300">
-              {property.location} - {property.transaction} - {property.propertyType}
-            </p>
-            {locationDetails && (
-              <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">
-                {locationDetails}
-              </p>
-            )}
-            {dateLabel && (
-              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-                {dateLabel}
-              </p>
-            )}
-            {property.addressExtra && (
-              <p className="text-sm font-semibold text-slate-600 dark:text-slate-300">
-                Referencia: {property.addressExtra}
-              </p>
-            )}
-            <p className="text-3xl font-semibold text-ocean-700">
-              {new Intl.NumberFormat('pt-BR', {
-                style: 'currency',
-                currency: 'BRL',
-                maximumFractionDigits: 0
-              }).format(property.price)}
-              {property.transaction === 'Temporada' && property.pricePeriod ? `/${property.pricePeriod}` : ''}
-            </p>
-            {specItems.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {specItems.map((item) => (
-                  <span
-                    key={item}
-                    className="rounded-full border border-sand-200 px-3 py-1 text-xs font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200"
-                  >
-                    {item}
-                  </span>
-                ))}
-              </div>
             )}
           </div>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-8">
+            <div className="min-w-0">
+              <h1 className="font-display text-[1.6rem] leading-snug text-ocean-950 dark:text-white sm:text-[1.9rem]">
+                {displayTitle}
+              </h1>
+              <p className="mt-1.5 inline-flex items-center gap-2 text-sm text-slate-500">
+                <MapPin className="h-4 w-4" aria-hidden="true" />
+                {property.location}, RN
+                {locationDetails ? ` · ${locationDetails}` : ''}
+              </p>
+            </div>
+            <div className="shrink-0 sm:text-right">
+              <div className="flex items-center gap-3 sm:justify-end">
+                <p className="text-[1.35rem] font-bold leading-none text-ocean-950 dark:text-white sm:text-[1.65rem]">
+                  {new Intl.NumberFormat('pt-BR', {
+                    style: 'currency',
+                    currency: 'BRL',
+                    maximumFractionDigits: 0
+                  }).format(property.price)}
+                  {property.transaction === 'Temporada' && property.pricePeriod ? (
+                    <span className="text-sm font-medium text-slate-400"> / {property.pricePeriod}</span>
+                  ) : null}
+                  {property.transaction === 'Aluguel' ? <span className="text-sm font-medium text-slate-400"> / mês</span> : null}
+                </p>
+                <FavoriteButton propertyId={property.id} title={displayTitle} variant="icon" />
+              </div>
+              {condoLabel && <p className="mt-1.5 text-sm text-slate-400">{condoLabel}</p>}
+            </div>
+          </div>
+          {specIcons.length > 0 && (
+            <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-slate-600 dark:text-slate-300">
+              {specIcons.map((item) => (
+                <span key={item.label} className="inline-flex items-center gap-2">
+                  <item.Icon className="h-4 w-4 text-slate-500" aria-hidden="true" />
+                  {item.label}
+                </span>
+              ))}
+            </div>
+          )}
+          {property.addressExtra && (
+            <p className="text-sm font-semibold text-slate-600 dark:text-slate-300">
+              Referencia: {property.addressExtra}
+            </p>
+          )}
+        </div>
         <ListingPrecoJustoSection property={property} />
         <section className="space-y-4">
           <p className="text-sm leading-6 text-slate-600 dark:text-slate-300">{property.description}</p>
@@ -449,13 +533,6 @@ export default async function PropertyDetailPage({ params }: { params: { slug: s
                 Ver tour virtual 3D
               </a>
             )}
-          </div>
-          <div className="flex gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-100">
-            <AlertTriangle className="mt-0.5 h-5 w-5 flex-shrink-0" aria-hidden="true" />
-            <p>
-              Evite pagamentos antecipados sem visitar o imóvel e confirmar os dados do anunciante.
-              A Potilar revisa anúncios, mas a negociação deve ser feita com cuidado.
-            </p>
           </div>
         </section>
         <section className="space-y-4">

@@ -4,17 +4,9 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { isValidContactPhone, normalizeContactPhone } from '@/lib/contactPhone';
 import { getHighlightPrice, type FeaturedPlanId } from '@/lib/plans';
 import { slugify } from '@/lib/slugify';
-
-function cleanPhone(value: string) {
-  return value.replace(/\D/g, '');
-}
-
-function isValidBrazilMobilePhone(value: string) {
-  const digits = cleanPhone(value);
-  return digits.length === 11 && digits[2] === '9';
-}
 
 function parseLanguages(value: string) {
   return value
@@ -80,33 +72,105 @@ export async function updateProfessionalProfile(formData: FormData) {
 export async function updateListingContact(formData: FormData) {
   const id = String(formData.get('id') ?? '');
   const contactName = String(formData.get('contact_name') ?? '').trim();
-  const contactPhone = String(formData.get('contact_phone') ?? '').trim();
+  const contactPhone = normalizeContactPhone(String(formData.get('contact_phone') ?? ''));
   const contactEmail = String(formData.get('contact_email') ?? '').trim();
-  const methods = formData.getAll('contact_methods').map(String);
+  const methods = formData.getAll('contact_methods').map(String).filter(Boolean);
 
   if (!id || methods.length === 0) {
     redirect('/mi-cuenta?contact_error=missing');
   }
 
-  if ((methods.includes('phone') || methods.includes('whatsapp')) && !isValidBrazilMobilePhone(contactPhone)) {
+  if ((methods.includes('phone') || methods.includes('whatsapp')) && !isValidContactPhone(contactPhone)) {
     redirect('/mi-cuenta?contact_error=phone');
   }
 
+  if (methods.includes('email') && !contactEmail) {
+    redirect('/mi-cuenta?contact_error=email');
+  }
+
+  const expectedPhone = methods.includes('phone') ? contactPhone : null;
+  const expectedWhatsapp = methods.includes('whatsapp') ? contactPhone : null;
+  const expectedEmail = methods.includes('email') ? contactEmail : null;
+  const contactPayload = {
+    contact_name: contactName || null,
+    contact_phone: expectedPhone,
+    contact_whatsapp: expectedWhatsapp,
+    contact_email: expectedEmail,
+    contact_methods: methods,
+    updated_at: new Date().toISOString()
+  };
+
   const supabase = createClient();
+  const { data: before } = await supabase
+    .from('listings')
+    .select('status,title,location,slug,payment_status')
+    .eq('id', id)
+    .maybeSingle();
+  const keepApproved = before?.status === 'approved';
+
+  if (before?.payment_status === 'pix_pending') {
+    redirect('/mi-cuenta?listing_error=payment_pending');
+  }
+
   const { error } = await supabase.rpc('update_listing_contact', {
     listing_id: id,
-    new_contact_name: contactName || null,
-    new_contact_phone: methods.includes('phone') ? contactPhone : null,
-    new_contact_whatsapp: methods.includes('whatsapp') ? contactPhone : null,
-    new_contact_email: methods.includes('email') ? contactEmail : null,
-    new_contact_methods: methods
+    new_contact_name: contactPayload.contact_name,
+    new_contact_phone: contactPayload.contact_phone,
+    new_contact_whatsapp: contactPayload.contact_whatsapp,
+    new_contact_email: contactPayload.contact_email,
+    new_contact_methods: contactPayload.contact_methods
   });
 
   if (error) {
     redirect(`/mi-cuenta?contact_error=${encodeURIComponent(error.message)}`);
   }
 
+  // Ensure the new number is persisted and listing stays public if it was approved.
+  // Older RPC versions force status=pending on any contact edit.
+  const ensurePayload = {
+    ...contactPayload,
+    ...(keepApproved ? { status: 'approved' as const } : {})
+  };
+
+  const { data: savedContact } = await supabase
+    .from('listings')
+    .select('contact_phone,contact_whatsapp,contact_email,status')
+    .eq('id', id)
+    .maybeSingle();
+
+  const contactWasSaved =
+    (savedContact?.contact_phone ?? null) === expectedPhone &&
+    (savedContact?.contact_whatsapp ?? null) === expectedWhatsapp &&
+    (savedContact?.contact_email ?? null) === expectedEmail;
+  const statusOk = !keepApproved || savedContact?.status === 'approved';
+
+  if (!contactWasSaved || !statusOk) {
+    const directUpdate = await supabase.from('listings').update(ensurePayload).eq('id', id);
+
+    if (directUpdate.error) {
+      try {
+        const admin = createAdminClient();
+        const adminUpdate = await admin.from('listings').update(ensurePayload).eq('id', id);
+
+        if (adminUpdate.error) {
+          redirect(`/mi-cuenta?contact_error=${encodeURIComponent(adminUpdate.error.message)}`);
+        }
+      } catch {
+        redirect(`/mi-cuenta?contact_error=${encodeURIComponent(directUpdate.error.message)}`);
+      }
+    }
+  }
+
+  const listing = before;
+  if (listing?.title && listing?.location) {
+    revalidatePath(`/imoveis/${slugify(`${listing.title}-${listing.location}-${id}`)}`);
+  }
+  if (listing?.slug) {
+    revalidatePath(`/imoveis/${listing.slug}`);
+  }
   revalidatePath('/mi-cuenta');
+  revalidatePath('/imoveis');
+  revalidatePath('/');
   redirect('/mi-cuenta?contact_success=1');
 }
 
@@ -119,6 +183,16 @@ export async function setMainImage(formData: FormData) {
   }
 
   const supabase = createClient();
+  const { data: listing } = await supabase
+    .from('listings')
+    .select('payment_status')
+    .eq('id', id)
+    .maybeSingle();
+
+  if (listing?.payment_status === 'pix_pending') {
+    redirect('/mi-cuenta?listing_error=payment_pending');
+  }
+
   const { error } = await supabase.rpc('set_listing_main_image', {
     listing_id: id,
     image_url: imageUrl
@@ -143,6 +217,16 @@ export async function requestListingHighlight(formData: FormData) {
   }
 
   const supabase = createClient();
+  const { data: listing } = await supabase
+    .from('listings')
+    .select('status,payment_status')
+    .eq('id', id)
+    .maybeSingle();
+
+  if (listing?.payment_status === 'pix_pending' || listing?.status !== 'approved') {
+    redirect('/mi-cuenta?highlight_error=listing_not_public');
+  }
+
   const paymentAmount = getHighlightPrice(plan as FeaturedPlanId);
 
   const { error } = await supabase.rpc('request_listing_highlight', {
@@ -240,6 +324,17 @@ export async function updateOwnListingStatus(formData: FormData) {
   }
 
   const rpcName = action === 'pause' ? 'owner_pause_listing' : 'owner_reactivate_listing';
+  const { data: listing } = await supabase
+    .from('listings')
+    .select('payment_status')
+    .eq('id', id)
+    .eq('owner_id', user.id)
+    .maybeSingle();
+
+  if (listing?.payment_status === 'pix_pending') {
+    redirect('/mi-cuenta?listing_error=payment_pending');
+  }
+
   const { error } = await supabase.rpc(rpcName, { listing_id: id });
 
   if (error) {
