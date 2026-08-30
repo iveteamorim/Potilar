@@ -12,7 +12,7 @@ const accountTabs = [
   { key: 'favoritos', label: 'Favoritos', shortLabel: 'Favoritos', href: '/mi-cuenta/favoritos', Icon: Heart },
   { key: 'alertas', label: 'Alertas', shortLabel: 'Alertas', href: '/mi-cuenta/alertas', Icon: Bell },
   { key: 'perfil', label: 'Dados da conta', shortLabel: 'Conta', href: '/mi-cuenta/perfil', Icon: User },
-  { key: 'pagamentos', label: 'Pagamentos', shortLabel: 'Pagamentos', href: '/mi-cuenta/creditos', Icon: CreditCard }
+  { key: 'pagamentos', label: 'Pagamentos', shortLabel: 'Pagamentos', href: '/mi-cuenta/pagamentos', Icon: CreditCard }
 ] as const;
 
 export default function AccountTabs({ active }: AccountTabsProps) {
