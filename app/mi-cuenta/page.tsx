@@ -2,7 +2,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { AlertTriangle, BarChart3, Bath, BedDouble, Bell, Car, Check, Clock3, CreditCard, ExternalLink, Eye, FileSpreadsheet, Globe2, Heart, Home, MessageCircle, MoreVertical, Pencil, Plus, Ruler, Search, Settings, Share2, Sparkles, Trash2, User } from 'lucide-react';
+import { AlertTriangle, BarChart3, Bath, BedDouble, Bell, Car, Check, Clock3, CreditCard, ExternalLink, Eye, FileSpreadsheet, Globe2, Heart, Home, MessageCircle, MoreVertical, Pencil, Plus, Ruler, Search, Settings, Share2, ShieldCheck, Sparkles, Trash2, User } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { SUPABASE_URL } from '@/lib/supabase/config';
@@ -168,6 +168,25 @@ function getSupabaseProjectRef() {
   } catch {
     return 'unknown';
   }
+}
+
+function EmptyListingsIllustration() {
+  return (
+    <svg viewBox="0 0 160 160" className="mx-auto h-28 w-28" aria-hidden="true">
+      <circle cx="80" cy="80" r="78" fill="#e8f1fb" />
+      <ellipse cx="48" cy="58" rx="22" ry="12" fill="#fff" />
+      <ellipse cx="118" cy="50" rx="18" ry="10" fill="#fff" />
+      <path d="M38 118c8-22 22-34 42-34s34 12 42 34" fill="#d7ead8" />
+      <path d="M46 108h68v18H46z" fill="#f4f7fb" />
+      <path d="M52 108V86h56v22" fill="#fff" />
+      <path d="M46 88l34-28 34 28" fill="#1d4f91" />
+      <rect x="72" y="98" width="16" height="28" rx="2" fill="#1d4f91" />
+      <rect x="58" y="94" width="14" height="12" rx="1.5" fill="#9ec3ea" />
+      <rect x="88" y="94" width="14" height="12" rx="1.5" fill="#9ec3ea" />
+      <circle cx="124" cy="112" r="10" fill="#3f8f4b" />
+      <circle cx="136" cy="116" r="8" fill="#4aa057" />
+    </svg>
+  );
 }
 
 export default async function MinhaContaPage({
@@ -687,11 +706,11 @@ export default async function MinhaContaPage({
   }
 
   return (
-    <main className="section-padding">
-      <div className="mx-auto max-w-6xl space-y-8">
+    <main className="section-padding max-sm:py-8">
+      <div className="mx-auto max-w-6xl space-y-8 max-sm:space-y-5">
         <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-start">
           <div className="min-w-0">
-            <h1 className="text-4xl font-bold leading-tight text-ocean-950 dark:text-white">
+            <h1 className="font-display text-[2rem] leading-tight text-ocean-950 dark:text-white sm:text-4xl sm:font-bold">
               Minha conta
             </h1>
             {isProfessional && (
@@ -699,7 +718,7 @@ export default async function MinhaContaPage({
                 Painel {professionalLabel}
               </p>
             )}
-            <p className="mt-3 max-w-2xl text-base leading-7 text-slate-500 dark:text-slate-300">
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500 dark:text-slate-300 sm:mt-3 sm:text-base sm:leading-7">
               {isProfessional
                 ? 'Gerencie sua carteira, página profissional, contatos e anúncios publicados.'
                 : 'Salve favoritos, acompanhe alertas de busca e gerencie seus anúncios publicados.'}
@@ -1010,21 +1029,48 @@ export default async function MinhaContaPage({
             );
           })}
           {(!listings || listings.length === 0) && (
-            <div className="glass-card p-8 text-center">
-              <p className="text-base font-semibold text-slate-900 dark:text-white">Nenhum anúncio ainda</p>
-              <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-                {isLaunchPromoActive()
-                  ? 'Publique seu primeiro anúncio grátis.'
-                  : 'Publique seu primeiro anúncio gratuito.'}
-              </p>
-              <Link href="/anunciar" className="mt-5 inline-flex rounded-2xl bg-ocean-600 px-5 py-3 text-sm font-semibold text-white">
-                Anunciar imóvel
-              </Link>
-            </div>
+            <>
+              <div className="rounded-2xl border border-sand-200 bg-white px-5 py-10 text-center shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:hidden">
+                <EmptyListingsIllustration />
+                <p className="mt-5 text-lg font-bold text-ocean-950 dark:text-white">Nenhum anúncio ainda</p>
+                <p className="mx-auto mt-2 max-w-xs text-sm leading-6 text-slate-500 dark:text-slate-300">
+                  Publique seu primeiro imóvel gratuitamente e comece a receber contatos.
+                </p>
+                <Link
+                  href="/anunciar"
+                  className="mt-6 inline-flex w-full max-w-xs items-center justify-center gap-2 rounded-xl bg-ocean-800 px-5 py-3.5 text-sm font-bold text-white"
+                >
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white/15">
+                    <Plus className="h-4 w-4" aria-hidden="true" />
+                  </span>
+                  Anunciar imóvel
+                </Link>
+              </div>
+              <div className="glass-card hidden p-8 text-center sm:block">
+                <p className="text-base font-semibold text-slate-900 dark:text-white">Nenhum anúncio ainda</p>
+                <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+                  {isLaunchPromoActive()
+                    ? 'Publique seu primeiro anúncio grátis.'
+                    : 'Publique seu primeiro anúncio gratuito.'}
+                </p>
+                <Link href="/anunciar" className="mt-5 inline-flex rounded-2xl bg-ocean-600 px-5 py-3 text-sm font-semibold text-white">
+                  Anunciar imóvel
+                </Link>
+              </div>
+            </>
           )}
         </div>
 
-        <p className="border-t border-sand-200 pt-5 text-xs leading-5 text-slate-500 dark:border-slate-800 dark:text-slate-400">
+        <div className="flex items-start gap-3 rounded-2xl bg-[#eef4fb] px-4 py-4 dark:bg-slate-900 sm:hidden">
+          <ShieldCheck className="mt-0.5 h-6 w-6 shrink-0 text-ocean-700" aria-hidden="true" />
+          <div>
+            <p className="text-sm font-bold text-ocean-950 dark:text-white">Seguro e confiável</p>
+            <p className="mt-1 text-sm leading-5 text-slate-600 dark:text-slate-300">
+              Seus dados estão protegidos e seus anúncios passam por verificações automáticas.
+            </p>
+          </div>
+        </div>
+        <p className="hidden border-t border-sand-200 pt-5 text-xs leading-5 text-slate-500 dark:border-slate-800 dark:text-slate-400 sm:block">
           Anúncios enviados normalmente são analisados em até 24 horas.
         </p>
       </div>
