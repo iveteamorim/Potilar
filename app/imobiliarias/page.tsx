@@ -3,12 +3,17 @@ import Link from 'next/link';
 import {
   ArrowRight,
   Building2,
+  CalendarDays,
   Check,
   Gift,
   Info,
+  Lock,
   MapPin,
   Megaphone,
-  ShieldCheck
+  ShieldCheck,
+  Sparkles,
+  Star,
+  UserRound
 } from 'lucide-react';
 import ProfessionalPlanCheckoutButton from '@/components/ProfessionalPlanCheckoutButton';
 import { PLANS, formatPlanPrice, type ProfessionalPlanId } from '@/lib/plans';
@@ -51,50 +56,101 @@ const faqItems = [
 
 const planHighlights = [
   {
+    id: 'corretor' as ProfessionalPlanId,
     name: 'Corretor',
-    price: formatPlanPrice(PLANS.professional.corretor.price, { perMonth: true }),
+    Icon: UserRound,
+    monthlyPrice: PLANS.professional.corretor.price,
     limit: PLANS.professional.corretor.listingLimit,
-    aiCredits: PLANS.professional.corretor.aiCredits,
     activationFee: PLANS.professional.portfolioTrial.activationFees.corretor,
-    promotionKit: true,
-    features: ['Perfil profissional', 'Gestão dos anúncios', 'Contato direto', 'Estatísticas dos anúncios']
+    featured: false,
+    theme: 'blue' as const,
+    features: [
+      `Até ${PLANS.professional.corretor.listingLimit} imóveis ativos`,
+      'Kit de divulgação profissional',
+      'Perfil profissional',
+      'Gestão dos anúncios',
+      'Contato direto',
+      'Estatísticas dos anúncios'
+    ]
   },
   {
+    id: 'imobiliaria' as ProfessionalPlanId,
     name: 'Imobiliária',
-    price: formatPlanPrice(PLANS.professional.imobiliaria.price, { perMonth: true }),
+    Icon: Building2,
+    monthlyPrice: PLANS.professional.imobiliaria.price,
     limit: PLANS.professional.imobiliaria.listingLimit,
-    aiCredits: PLANS.professional.imobiliaria.aiCredits,
     activationFee: PLANS.professional.portfolioTrial.activationFees.imobiliaria,
     featured: true,
-    promotionKit: true,
-    features: ['Tudo do Corretor', 'Logo da empresa', 'Página própria', 'Gestão centralizada']
+    theme: 'green' as const,
+    features: [
+      `Até ${PLANS.professional.imobiliaria.listingLimit} imóveis ativos`,
+      'Kit de divulgação profissional',
+      'Tudo do plano Corretor',
+      'Logo da empresa',
+      'Página própria',
+      'Gestão centralizada'
+    ]
   },
   {
+    id: 'plus' as ProfessionalPlanId,
     name: 'Imobiliária Plus',
-    price: formatPlanPrice(PLANS.professional.plus.price, { perMonth: true }),
+    Icon: Sparkles,
+    monthlyPrice: PLANS.professional.plus.price,
     limit: PLANS.professional.plus.listingLimit,
-    aiCredits: PLANS.professional.plus.aiCredits,
     activationFee: PLANS.professional.portfolioTrial.activationFees.plus,
-    promotionKit: true,
-    features: ['Tudo da Imobiliária', 'Página destacada', '3 destaques incluídos', 'Suporte prioritário']
+    featured: false,
+    theme: 'purple' as const,
+    features: [
+      `Até ${PLANS.professional.plus.listingLimit} imóveis ativos`,
+      'Kit de divulgação profissional',
+      'Tudo da Imobiliária',
+      'Página destacada',
+      '3 destaques incluídos',
+      'Suporte prioritário'
+    ]
   }
 ];
 
-function CheckItem({ children }: { children: string }) {
+const planThemes = {
+  blue: {
+    card: 'border border-ocean-300',
+    icon: 'bg-ocean-50 text-ocean-700',
+    label: 'text-ocean-600',
+    price: 'text-ocean-700',
+    trial: 'bg-ocean-50 text-ocean-800',
+    check: 'text-ocean-600',
+    button:
+      'inline-flex w-full items-center justify-center gap-2 rounded-xl bg-ocean-700 px-5 py-3.5 text-sm font-bold text-white transition hover:bg-ocean-800 disabled:cursor-not-allowed disabled:opacity-60'
+  },
+  green: {
+    card: 'border-2 border-green-500',
+    icon: 'bg-green-50 text-green-700',
+    label: 'text-green-600',
+    price: 'text-green-600',
+    trial: 'bg-green-50 text-green-800',
+    check: 'text-green-600',
+    button:
+      'inline-flex w-full items-center justify-center gap-2 rounded-xl bg-green-600 px-5 py-3.5 text-sm font-bold text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-60'
+  },
+  purple: {
+    card: 'border border-violet-300',
+    icon: 'bg-violet-50 text-violet-700',
+    label: 'text-violet-600',
+    price: 'text-violet-700',
+    trial: 'bg-violet-50 text-violet-800',
+    check: 'text-violet-600',
+    button:
+      'inline-flex w-full items-center justify-center gap-2 rounded-xl bg-violet-700 px-5 py-3.5 text-sm font-bold text-white transition hover:bg-violet-800 disabled:cursor-not-allowed disabled:opacity-60'
+  }
+};
+
+function CheckItem({ children, className }: { children: string; className: string }) {
   return (
-    <li className="flex items-start gap-3 text-sm leading-6 text-slate-600 dark:text-slate-300">
-      <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-ocean-50 text-ocean-700">
-        <Check className="h-3.5 w-3.5" />
-      </span>
+    <li className="flex items-start gap-2.5 text-sm leading-6 text-slate-700">
+      <Check className={`mt-0.5 h-4 w-4 shrink-0 ${className}`} aria-hidden="true" />
       <span>{children}</span>
     </li>
   );
-}
-
-function getPlanAction(planName: string): { id: ProfessionalPlanId; cta: string } {
-  if (planName === 'Corretor') return { id: 'corretor', cta: 'Começar agora' };
-  if (planName.includes('Plus')) return { id: 'plus', cta: 'Começar agora' };
-  return { id: 'imobiliaria', cta: 'Começar agora' };
 }
 
 export default function ImobiliariasPage() {
@@ -176,78 +232,110 @@ export default function ImobiliariasPage() {
           </div>
         </section>
 
-        <section id="planos-profissionais" className="rounded-[2rem] border border-ocean-900 bg-ocean-900 p-6 text-white shadow-soft md:p-8">
-          <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
-            <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.22em] text-ocean-100">Planos profissionais</p>
-              <h2 className="mt-4 text-3xl font-semibold text-white">Planos</h2>
+        <section id="planos-profissionais" className="rounded-[2rem] bg-ocean-900 p-5 text-white shadow-soft sm:p-6 md:p-8">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div className="min-w-0">
+              <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+                <h2 className="font-display text-4xl text-white md:text-5xl">Planos</h2>
+                <div className="inline-flex max-w-xl flex-wrap items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 ring-1 ring-white/10">
+                  <span className="inline-flex items-center rounded-full bg-agreste-200 px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[0.14em] text-agreste-800">
+                    Oferta de lançamento
+                  </span>
+                  <span className="text-sm font-medium text-white">
+                    Ative agora e comece a mensalidade somente após {portfolioTrial.freeDays} dias.
+                  </span>
+                </div>
+              </div>
+              <p className="mt-3 text-sm leading-6 text-ocean-50 sm:text-base">
+                Escolha o plano ideal para sua atuação e comece a vender mais.
+              </p>
             </div>
-            <Link href="/planos" className="inline-flex items-center gap-2 text-sm font-semibold text-white">
-              Ver detalhes
+            <Link href="/planos" className="inline-flex shrink-0 items-center gap-2 text-sm font-semibold text-ocean-200 hover:text-white">
+              Ver detalhes dos planos
               <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
-          <div className="mt-8 grid gap-5 lg:grid-cols-3">
-            {planHighlights.map((plan) => (
-              <article
-                key={plan.name}
-                className={`relative rounded-3xl border p-6 ${
-                  plan.featured
-                    ? 'border-sun-300 bg-white text-slate-950 shadow-xl'
-                    : 'border-white/30 bg-white text-slate-950 shadow-sm'
-                }`}
-              >
-                {plan.featured ? (
-                  <span className="absolute right-5 top-5 rounded-full bg-sun-500 px-3 py-1 text-xs font-bold text-white">
-                    Mais popular
-                  </span>
-                ) : null}
-                <h3 className="text-2xl font-semibold text-slate-950">{plan.name}</h3>
-                <p className="mt-4 text-3xl font-semibold text-ocean-800">{plan.price}</p>
-                <p className="mt-3 rounded-2xl border border-ocean-100 bg-ocean-50 px-4 py-3 text-sm font-extrabold text-ocean-900">
-                  Ativacao da carteira: {formatPlanPrice(plan.activationFee)}
-                </p>
-                <p className="mt-2 text-sm font-semibold text-slate-500">
-                  Mensalidade so comeca apos {portfolioTrial.freeDays} dias.
-                </p>
-                <p className="mt-3 rounded-2xl bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm">
-                  Até {plan.limit} imóveis ativos
-                </p>
-                {plan.promotionKit ? (
-                  <div className="mt-3 rounded-2xl border border-ocean-100 bg-ocean-50 px-4 py-3 text-ocean-900">
-                    <div className="flex items-center justify-between gap-3">
-                      <span className="text-sm font-extrabold">Kit de divulgação profissional</span>
-                      <button
-                        type="button"
-                        className="group relative inline-flex rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ocean-500"
-                        aria-label="O que inclui o kit de divulgação profissional"
-                      >
-                        <Info className="h-4 w-4" aria-hidden="true" />
-                        <span className="pointer-events-none absolute right-0 top-6 z-20 w-72 rounded-xl bg-slate-950 px-3 py-2 text-left text-xs font-semibold leading-5 text-white opacity-0 shadow-soft transition group-hover:opacity-100 group-focus-within:opacity-100">
-                          <span className="mb-1 block">Kit de divulgação profissional</span>
-                          <span className="mb-1 block font-medium">Incluído no plano.</span>
-                          <span className="block">• IA para melhorar anúncios</span>
-                          <span className="block">• QR Code exclusivo para cada imóvel</span>
-                          <span className="block">• Cartazes para impressão</span>
-                          <span className="block">• Materiais para redes sociais</span>
-                          <span className="block">• Conteúdos prontos para compartilhar</span>
-                        </span>
-                      </button>
+
+          <div className="mt-8 grid gap-5 lg:grid-cols-3 lg:items-start">
+            {planHighlights.map((plan) => {
+              const theme = planThemes[plan.theme];
+              return (
+                <article
+                  key={plan.name}
+                  className={`relative rounded-3xl bg-white p-6 text-slate-950 shadow-sm ${theme.card} ${plan.featured ? 'lg:-mt-2 lg:pb-7' : ''}`}
+                >
+                  {plan.featured ? (
+                    <span className="absolute -top-3 right-5 inline-flex items-center gap-1 rounded-full bg-green-700 px-3 py-1 text-[10px] font-extrabold uppercase tracking-[0.12em] text-white">
+                      <Star className="h-3 w-3 fill-current" aria-hidden="true" />
+                      Mais popular
+                    </span>
+                  ) : null}
+
+                  <div className="flex items-center gap-3">
+                    <span className={`grid h-11 w-11 place-items-center rounded-full ${theme.icon}`}>
+                      <plan.Icon className="h-5 w-5" aria-hidden="true" />
+                    </span>
+                    <h3 className="text-xl font-bold text-slate-950">{plan.name}</h3>
+                  </div>
+
+                  <p className={`mt-5 text-[11px] font-extrabold uppercase tracking-[0.16em] ${theme.label}`}>
+                    Pague agora (ativação)
+                  </p>
+                  <p className={`mt-1 text-[2.15rem] font-extrabold leading-none ${theme.price}`}>
+                    {formatPlanPrice(plan.activationFee)}
+                  </p>
+                  <p className={`mt-3 inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-semibold ${theme.trial}`}>
+                    <CalendarDays className="h-4 w-4" aria-hidden="true" />
+                    {portfolioTrial.freeDays} dias de acesso completo
+                  </p>
+
+                  <div className="mt-5 rounded-xl bg-slate-50 px-4 py-3">
+                    <div className="flex items-end justify-between gap-3">
+                      <div>
+                        <p className={`text-[11px] font-extrabold uppercase tracking-[0.16em] ${theme.label}`}>
+                          Depois disso
+                        </p>
+                        <p className="mt-1 text-lg font-bold text-slate-950">
+                          {formatPlanPrice(plan.monthlyPrice)}
+                          <span className="text-sm font-semibold text-slate-500">/mês</span>
+                        </p>
+                      </div>
+                      <p className="pb-1 text-right text-[11px] leading-4 text-slate-400">
+                        Cobrança mensal automática
+                      </p>
                     </div>
                   </div>
-                ) : null}
-                <ul className="mt-5 space-y-3">
-                  {plan.features.map((feature) => (
-                    <CheckItem key={feature}>{feature}</CheckItem>
-                  ))}
-                </ul>
-                <div className="mt-7">
-                  <ProfessionalPlanCheckoutButton planId={getPlanAction(plan.name).id} fallbackHref={contactHref}>
-                    {getPlanAction(plan.name).cta}
-                  </ProfessionalPlanCheckoutButton>
-                </div>
-              </article>
-            ))}
+
+                  <ul className="mt-5 space-y-2.5">
+                    {plan.features.map((feature) => (
+                      <CheckItem key={feature} className={theme.check}>
+                        {feature}
+                      </CheckItem>
+                    ))}
+                  </ul>
+
+                  <div className="mt-6">
+                    <ProfessionalPlanCheckoutButton
+                      planId={plan.id}
+                      fallbackHref={contactHref}
+                      className={theme.button}
+                      showRepeatIcon={false}
+                    >
+                      {`Ativar por ${formatPlanPrice(plan.activationFee)}`}
+                    </ProfessionalPlanCheckoutButton>
+                  </div>
+                  <p className="mt-3 flex items-center justify-center gap-1.5 text-xs text-slate-400">
+                    <Lock className="h-3.5 w-3.5" aria-hidden="true" />
+                    Pagamento 100% seguro
+                  </p>
+                </article>
+              );
+            })}
+          </div>
+
+          <div className="mt-6 flex items-start gap-3 rounded-2xl bg-white/10 px-4 py-3 text-sm leading-6 text-ocean-50 ring-1 ring-white/10">
+            <Info className="mt-0.5 h-4 w-4 shrink-0 text-ocean-200" aria-hidden="true" />
+            <p>Sem fidelidade. Cancele quando quiser. Sua carteira continua ativa até o fim do período pago.</p>
           </div>
         </section>
 

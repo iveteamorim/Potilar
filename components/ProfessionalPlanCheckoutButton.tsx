@@ -8,9 +8,17 @@ type Props = {
   planId: ProfessionalPlanId;
   children: string;
   fallbackHref: string;
+  className?: string;
+  showRepeatIcon?: boolean;
 };
 
-export default function ProfessionalPlanCheckoutButton({ planId, children, fallbackHref }: Props) {
+export default function ProfessionalPlanCheckoutButton({
+  planId,
+  children,
+  fallbackHref,
+  className,
+  showRepeatIcon = true
+}: Props) {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
 
@@ -52,9 +60,12 @@ export default function ProfessionalPlanCheckoutButton({ planId, children, fallb
         type="button"
         onClick={handleClick}
         disabled={loading}
-        className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-ocean-700 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-ocean-800 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-60"
+        className={
+          className ??
+          'inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-ocean-700 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-ocean-800 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-60'
+        }
       >
-        <Repeat className="h-4 w-4" />
+        {showRepeatIcon ? <Repeat className="h-4 w-4" /> : null}
         {loading ? 'Abrindo ativacao...' : children}
         <ArrowRight className="h-4 w-4" />
       </button>
