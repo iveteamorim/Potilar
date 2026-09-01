@@ -1,5 +1,12 @@
 export type FeaturedPlanId = '7_days' | '15_days' | '30_days';
 export type ProfessionalPlanId = 'corretor' | 'imobiliaria' | 'plus';
+export type ProfessionalBillingMode = 'launch_offer' | 'standard_subscription';
+
+export const DEFAULT_PROFESSIONAL_BILLING_MODE: ProfessionalBillingMode = 'launch_offer';
+
+export function resolveProfessionalBillingMode(value?: string | null): ProfessionalBillingMode {
+  return value === 'standard_subscription' ? 'standard_subscription' : DEFAULT_PROFESSIONAL_BILLING_MODE;
+}
 
 export const PLANS = {
   listing: {
@@ -34,9 +41,9 @@ export const PLANS = {
       freeDays: 60,
       activationName: 'Ativacao de Carteira Profissional',
       activationFees: {
-        corretor: 79.96,
-        imobiliaria: 139.96,
-        plus: 239.96
+        corretor: 79,
+        imobiliaria: 199,
+        plus: 299
       },
       minBrokerListings: 5,
       minAgencyListings: 15,

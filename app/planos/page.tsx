@@ -63,7 +63,7 @@ const professionalPlans = [
     limit: PLANS.professional.corretor.listingLimit,
     aiCredits: PLANS.professional.corretor.aiCredits,
     activationFee: PLANS.professional.portfolioTrial.activationFees.corretor,
-    cta: 'Ativar carteira',
+    cta: 'Começar agora',
     promotionKit: true,
     features: ['Perfil profissional', 'Gestão dos anúncios', 'Contato direto', 'Estatísticas dos anúncios']
   },
@@ -75,7 +75,7 @@ const professionalPlans = [
     limit: PLANS.professional.imobiliaria.listingLimit,
     aiCredits: PLANS.professional.imobiliaria.aiCredits,
     activationFee: PLANS.professional.portfolioTrial.activationFees.imobiliaria,
-    cta: 'Ativar carteira',
+    cta: 'Começar agora',
     popular: true,
     promotionKit: true,
     features: ['Logo da empresa', 'Página própria', 'Gestão centralizada']
@@ -88,7 +88,7 @@ const professionalPlans = [
     limit: PLANS.professional.plus.listingLimit,
     aiCredits: PLANS.professional.plus.aiCredits,
     activationFee: PLANS.professional.portfolioTrial.activationFees.plus,
-    cta: 'Ativar carteira',
+    cta: 'Começar agora',
     promotionKit: true,
     features: ['Página destacada', '3 destaques incluídos', 'Suporte prioritário']
   }
@@ -222,7 +222,7 @@ export default function PlanosPage() {
                 Campanha para carteiras
               </p>
               <h2 className="mt-4 text-3xl font-semibold text-slate-950 dark:text-white">
-                Pague apenas a ativacao agora. A mensalidade comeca em {portfolioTrial.freeDays} dias.
+                Pague a ativacao da carteira hoje. A mensalidade comeca em {portfolioTrial.freeDays} dias.
               </h2>
               <p className="mt-3 text-sm leading-7 text-slate-700 dark:text-slate-200">
                 Corretores e imobiliarias que trouxerem uma carteira real para a Potilar pagam a {portfolioTrial.activationName}
@@ -334,10 +334,10 @@ export default function PlanosPage() {
                 <p className="mt-3 min-h-12 text-sm leading-6 text-slate-600 dark:text-slate-300">{plan.description}</p>
                 <p className="mt-5 text-4xl font-semibold text-ocean-800">{plan.price}</p>
                 <p className="mt-3 rounded-2xl border border-ocean-100 bg-ocean-50 px-4 py-3 text-sm font-extrabold text-ocean-900 dark:border-ocean-900/60 dark:bg-ocean-950/40 dark:text-ocean-100">
-                  Ativacao agora: {formatPlanPrice(plan.activationFee)}
+                  Ativacao da carteira: {formatPlanPrice(plan.activationFee)}
                 </p>
                 <p className="mt-2 text-sm font-semibold text-slate-500 dark:text-slate-300">
-                  Mensalidade somente apos {portfolioTrial.freeDays} dias com carteira qualificada.
+                  Mensalidade so comeca apos {portfolioTrial.freeDays} dias.
                 </p>
                 <p className="mt-3 rounded-2xl bg-sand-50 px-4 py-3 text-sm font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-200">
                   Até {plan.limit} imóveis ativos

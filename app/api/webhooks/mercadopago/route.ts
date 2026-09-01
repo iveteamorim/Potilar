@@ -162,6 +162,7 @@ async function syncProfessionalSubscription({
 
   const now = new Date().toISOString();
   const status = mapPreapprovalStatus(preapproval.status);
+  const billingMode = preapproval.metadata?.billing_mode === 'launch_offer' ? 'launch_offer' : 'standard_subscription';
   await activeResult.supabase.from('professional_plan_subscriptions').upsert(
     {
       user_id: userId,
@@ -170,7 +171,13 @@ async function syncProfessionalSubscription({
       provider: 'mercadopago',
       provider_subscription_id: String(preapproval.id),
       price: activeResult.selectedPlan.price,
+      billing_mode: billingMode,
+      monthly_price: activeResult.selectedPlan.price,
+      subscription_status: status,
+      subscription_started_at: status === 'active' ? now : null,
       metadata: {
+        product: 'professional_plan',
+        billing_mode: billingMode,
         preapproval_status: preapproval.status,
         reason: preapproval.reason,
         payer_email: preapproval.payer_email
@@ -210,6 +217,8 @@ async function activateProfessionalPlan({
 
   const selectedPlan = activeResult.selectedPlan;
   const supabase = activeResult.supabase;
+  const now = new Date();
+  const billingMode = payment.metadata?.billing_mode === 'launch_offer' ? 'launch_offer' : 'standard_subscription';
 
   await supabase.from('professional_plan_subscriptions').upsert(
     {
@@ -220,14 +229,22 @@ async function activateProfessionalPlan({
       provider_payment_id: String(payment.id),
       provider_subscription_id: subscriptionId ? String(subscriptionId) : undefined,
       price: selectedPlan.price,
-      current_period_started_at: new Date().toISOString(),
-      current_period_ends_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      billing_mode: billingMode,
+      monthly_price: selectedPlan.price,
+      subscription_status: 'active',
+      subscription_started_at: now.toISOString(),
+      current_period_started_at: now.toISOString(),
+      current_period_ends_at: addDays(now, 30).toISOString(),
       metadata: {
+        product: 'professional_plan',
+        billing_mode: billingMode,
         payment_method: payment.payment_method_id,
         status: payment.status,
+        monthly_price: selectedPlan.price,
+        subscription_started_at: now.toISOString(),
         subscription_id: subscriptionId ?? null
       },
-      updated_at: new Date().toISOString()
+      updated_at: now.toISOString()
     },
     { onConflict: 'user_id' }
   );
@@ -251,6 +268,88 @@ async function activateProfessionalPlan({
   }
 
   return { ok: true, publicSlug: activeResult.publicSlug };
+}
+
+async function activateProfessionalPortfolioTrial({
+  payment,
+  planId,
+  userId
+}: {
+  payment: any;
+  planId: ProfessionalPlanId;
+  userId: string;
+}) {
+  const activeResult = await activateProfessionalProfile({ planId, userId });
+
+  if ('error' in activeResult) {
+    return activeResult;
+  }
+
+  const selectedPlan = activeResult.selectedPlan;
+  const supabase = activeResult.supabase;
+  const now = new Date();
+  const trialEndsAt = addDays(now, PLANS.professional.portfolioTrial.freeDays);
+  const activationFee = PLANS.professional.portfolioTrial.activationFees[planId];
+
+  await supabase.from('professional_plan_subscriptions').upsert(
+    {
+      user_id: userId,
+      plan_id: planId,
+      status: 'active',
+      provider: 'mercadopago',
+      provider_payment_id: String(payment.id),
+      provider_subscription_id: null,
+      price: activationFee,
+      billing_mode: 'launch_offer',
+      activation_fee: activationFee,
+      monthly_price: selectedPlan.price,
+      subscription_status: 'not_started',
+      launch_offer_started_at: now.toISOString(),
+      launch_offer_ends_at: trialEndsAt.toISOString(),
+      subscription_started_at: null,
+      current_period_started_at: now.toISOString(),
+      current_period_ends_at: trialEndsAt.toISOString(),
+      metadata: {
+        product: 'professional_activation',
+        billing_mode: 'launch_offer',
+        activation_name: PLANS.professional.portfolioTrial.activationName,
+        activation_fee: activationFee,
+        monthly_price: selectedPlan.price,
+        trial_days: PLANS.professional.portfolioTrial.freeDays,
+        launch_offer_started_at: now.toISOString(),
+        launch_offer_ends_at: trialEndsAt.toISOString(),
+        subscription_started_at: null,
+        trial_ends_at: trialEndsAt.toISOString(),
+        payment_method: payment.payment_method_id,
+        status: payment.status
+      },
+      updated_at: now.toISOString()
+    },
+    { onConflict: 'user_id' }
+  );
+
+  const { error: creditsError } = await supabase.rpc('grant_ai_credits', {
+    p_user_id: userId,
+    p_amount: selectedPlan.aiCredits,
+    p_description: `${selectedPlan.label} - creditos de IA da ativacao`,
+    p_payment_provider: 'mercadopago',
+    p_payment_id: String(payment.id),
+    p_metadata: {
+      plan_id: planId,
+      product: 'professional_activation',
+      billing_mode: 'launch_offer',
+      included_credits: selectedPlan.aiCredits,
+      activation_fee: activationFee,
+      monthly_price: selectedPlan.price,
+      trial_days: PLANS.professional.portfolioTrial.freeDays
+    }
+  });
+
+  if (creditsError) {
+    return { error: creditsError.message, status: 500 };
+  }
+
+  return { ok: true, publicSlug: activeResult.publicSlug, trialEndsAt: trialEndsAt.toISOString() };
 }
 
 async function confirmListingPayment({
@@ -424,6 +523,26 @@ export async function POST(request: Request) {
     product = product ?? preapprovalReference?.product;
     userId = userId ?? preapprovalReference?.userId;
     planId = planId ?? preapprovalReference?.packageId;
+  }
+
+  if (product === 'professional_activation') {
+    const selectedPlan = getProfessionalPlan(planId);
+
+    if (!userId || !selectedPlan) {
+      return NextResponse.json({ error: 'Ativacao sem usuario ou plano valido.' }, { status: 400 });
+    }
+
+    const result = await activateProfessionalPortfolioTrial({
+      payment,
+      userId,
+      planId: selectedPlan.id as ProfessionalPlanId
+    });
+
+    if ('error' in result) {
+      return NextResponse.json({ error: result.error }, { status: result.status });
+    }
+
+    return NextResponse.json({ ok: true, publicSlug: result.publicSlug });
   }
 
   if (product === 'professional_plan') {

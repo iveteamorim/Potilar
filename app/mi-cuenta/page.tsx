@@ -206,6 +206,7 @@ export default async function MinhaContaPage({
     listing_reactivated?: string;
     profile_error?: string;
     profile_success?: string;
+    plano?: string;
     subscription_cancelled?: string;
     subscription_error?: string;
     account_delete_error?: string;
@@ -519,6 +520,24 @@ export default async function MinhaContaPage({
             {searchParams?.subscription_cancelled && (
               <AccountNotice>
                 Assinatura cancelada. A conta voltou para particular e a página profissional saiu do plano ativo.
+              </AccountNotice>
+            )}
+
+            {searchParams?.plano === 'ativacao_sucesso' && (
+              <AccountNotice>
+                Ativacao recebida. Sua carteira profissional fica liberada por 60 dias antes da primeira mensalidade.
+              </AccountNotice>
+            )}
+
+            {searchParams?.plano === 'ativacao_pendente' && (
+              <AccountNotice>
+                Ativacao pendente. Assim que o Mercado Pago confirmar, liberamos sua carteira profissional.
+              </AccountNotice>
+            )}
+
+            {searchParams?.plano === 'erro' && (
+              <AccountNotice tone="error">
+                Nao foi possivel concluir a ativacao. Voce pode tentar novamente em Planos.
               </AccountNotice>
             )}
 

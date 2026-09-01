@@ -22,25 +22,25 @@ export default function ProfessionalPlanCheckoutButton({ planId, children, fallb
       const response = await fetch('/api/professional-plans/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ planId, billingMode: 'automatic' })
+        body: JSON.stringify({ planId })
       });
       const payload = await response.json();
 
       if (response.status === 401) {
         const accountType = planId === 'corretor' ? 'corretor' : 'imobiliaria';
-        const next = `/planos?plan=${encodeURIComponent(planId)}&billing=automatic#planos`;
-        window.location.href = `/login?mode=signup&account=${accountType}&plan=${encodeURIComponent(planId)}&billing=automatic&next=${encodeURIComponent(next)}`;
+        const next = `/planos?plan=${encodeURIComponent(planId)}#planos`;
+        window.location.href = `/login?mode=signup&account=${accountType}&plan=${encodeURIComponent(planId)}&next=${encodeURIComponent(next)}`;
         return;
       }
 
       if (!response.ok || !payload.initPoint) {
-        setMessage(payload.error ?? 'Não foi possível iniciar a assinatura agora.');
+        setMessage(payload.error ?? 'Nao foi possivel iniciar a ativacao agora.');
         return;
       }
 
       window.location.href = payload.initPoint;
     } catch {
-      setMessage('Não foi possível iniciar a assinatura agora.');
+      setMessage('Nao foi possivel iniciar a ativacao agora.');
     } finally {
       setLoading(false);
     }
@@ -55,7 +55,7 @@ export default function ProfessionalPlanCheckoutButton({ planId, children, fallb
         className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-ocean-700 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-ocean-800 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-60"
       >
         <Repeat className="h-4 w-4" />
-        {loading ? 'Abrindo assinatura...' : children}
+        {loading ? 'Abrindo ativacao...' : children}
         <ArrowRight className="h-4 w-4" />
       </button>
       {message && (

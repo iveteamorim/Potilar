@@ -92,9 +92,9 @@ function CheckItem({ children }: { children: string }) {
 }
 
 function getPlanAction(planName: string): { id: ProfessionalPlanId; cta: string } {
-  if (planName === 'Corretor') return { id: 'corretor', cta: 'Ativar carteira' };
-  if (planName.includes('Plus')) return { id: 'plus', cta: 'Ativar carteira' };
-  return { id: 'imobiliaria', cta: 'Ativar carteira' };
+  if (planName === 'Corretor') return { id: 'corretor', cta: 'Começar agora' };
+  if (planName.includes('Plus')) return { id: 'plus', cta: 'Começar agora' };
+  return { id: 'imobiliaria', cta: 'Começar agora' };
 }
 
 export default function ImobiliariasPage() {
@@ -114,7 +114,7 @@ export default function ImobiliariasPage() {
             <div className="mt-5 inline-flex max-w-xl items-start gap-3 rounded-2xl bg-white/10 px-4 py-3 text-left text-sm font-semibold leading-6 text-white ring-1 ring-white/15">
               <Gift className="mt-0.5 h-5 w-5 shrink-0 text-sun-300" aria-hidden="true" />
               <span>
-                Pague apenas a ativacao agora. A mensalidade do plano comeca em {portfolioTrial.freeDays} dias.
+                Pague a ativacao da carteira hoje. A mensalidade do plano comeca em {portfolioTrial.freeDays} dias.
               </span>
             </div>
             <div className="mt-6 flex flex-col gap-3 sm:flex-row">
@@ -205,10 +205,10 @@ export default function ImobiliariasPage() {
                 <h3 className="text-2xl font-semibold text-slate-950">{plan.name}</h3>
                 <p className="mt-4 text-3xl font-semibold text-ocean-800">{plan.price}</p>
                 <p className="mt-3 rounded-2xl border border-ocean-100 bg-ocean-50 px-4 py-3 text-sm font-extrabold text-ocean-900">
-                  Ativacao agora: {formatPlanPrice(plan.activationFee)}
+                  Ativacao da carteira: {formatPlanPrice(plan.activationFee)}
                 </p>
                 <p className="mt-2 text-sm font-semibold text-slate-500">
-                  Mensalidade somente apos {portfolioTrial.freeDays} dias.
+                  Mensalidade so comeca apos {portfolioTrial.freeDays} dias.
                 </p>
                 <p className="mt-3 rounded-2xl bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm">
                   Até {plan.limit} imóveis ativos
