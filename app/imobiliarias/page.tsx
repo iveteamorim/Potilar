@@ -4,6 +4,7 @@ import {
   ArrowRight,
   Building2,
   Check,
+  Gift,
   Info,
   MapPin,
   Megaphone,
@@ -23,6 +24,7 @@ export const metadata: Metadata = {
 
 const contactHref = '/contato';
 const advertiseHref = '/anunciar';
+const portfolioTrial = PLANS.professional.portfolioTrial;
 
 const benefits = [
   { title: 'Página própria', text: 'Uma vitrine profissional para reunir sua marca e seus imóveis em um só lugar.', Icon: Building2 },
@@ -53,6 +55,7 @@ const planHighlights = [
     price: formatPlanPrice(PLANS.professional.corretor.price, { perMonth: true }),
     limit: PLANS.professional.corretor.listingLimit,
     aiCredits: PLANS.professional.corretor.aiCredits,
+    activationFee: PLANS.professional.portfolioTrial.activationFees.corretor,
     promotionKit: true,
     features: ['Perfil profissional', 'Gestão dos anúncios', 'Contato direto', 'Estatísticas dos anúncios']
   },
@@ -61,6 +64,7 @@ const planHighlights = [
     price: formatPlanPrice(PLANS.professional.imobiliaria.price, { perMonth: true }),
     limit: PLANS.professional.imobiliaria.listingLimit,
     aiCredits: PLANS.professional.imobiliaria.aiCredits,
+    activationFee: PLANS.professional.portfolioTrial.activationFees.imobiliaria,
     featured: true,
     promotionKit: true,
     features: ['Tudo do Corretor', 'Logo da empresa', 'Página própria', 'Gestão centralizada']
@@ -70,6 +74,7 @@ const planHighlights = [
     price: formatPlanPrice(PLANS.professional.plus.price, { perMonth: true }),
     limit: PLANS.professional.plus.listingLimit,
     aiCredits: PLANS.professional.plus.aiCredits,
+    activationFee: PLANS.professional.portfolioTrial.activationFees.plus,
     promotionKit: true,
     features: ['Tudo da Imobiliária', 'Página destacada', '3 destaques incluídos', 'Suporte prioritário']
   }
@@ -87,9 +92,9 @@ function CheckItem({ children }: { children: string }) {
 }
 
 function getPlanAction(planName: string): { id: ProfessionalPlanId; cta: string } {
-  if (planName === 'Corretor') return { id: 'corretor', cta: 'Assinar Corretor' };
-  if (planName.includes('Plus')) return { id: 'plus', cta: 'Assinar Plus' };
-  return { id: 'imobiliaria', cta: 'Assinar Imobiliária' };
+  if (planName === 'Corretor') return { id: 'corretor', cta: 'Ativar carteira' };
+  if (planName.includes('Plus')) return { id: 'plus', cta: 'Ativar carteira' };
+  return { id: 'imobiliaria', cta: 'Ativar carteira' };
 }
 
 export default function ImobiliariasPage() {
@@ -106,6 +111,12 @@ export default function ImobiliariasPage() {
             <p className="mt-5 max-w-2xl text-base leading-7 text-ocean-50 md:text-lg">
               Organize sua carteira, divulgue seus imóveis e fortaleça sua marca em um portal feito para o RN.
             </p>
+            <div className="mt-5 inline-flex max-w-xl items-start gap-3 rounded-2xl bg-white/10 px-4 py-3 text-left text-sm font-semibold leading-6 text-white ring-1 ring-white/15">
+              <Gift className="mt-0.5 h-5 w-5 shrink-0 text-sun-300" aria-hidden="true" />
+              <span>
+                Pague apenas a ativacao agora. A mensalidade do plano comeca em {portfolioTrial.freeDays} dias.
+              </span>
+            </div>
             <div className="mt-6 flex flex-col gap-3 sm:flex-row">
               <Link
                 href="#planos-profissionais"
@@ -124,6 +135,26 @@ export default function ImobiliariasPage() {
                 </div>
               ))}
             </div>
+          </div>
+        </section>
+
+        <section className="rounded-[2rem] border border-sun-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900 md:p-8">
+          <div className="grid gap-6 lg:grid-cols-[1fr_auto] lg:items-center">
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-[0.22em] text-ocean-600">Oferta de lancamento</p>
+              <h2 className="mt-4 text-3xl font-semibold text-slate-950 dark:text-white">
+                Mensalidade em {portfolioTrial.freeDays} dias para quem trouxer carteira real.
+              </h2>
+              <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-600 dark:text-slate-300">
+                Na campanha, voce paga a {portfolioTrial.activationName} agora e comeca a mensalidade depois de {portfolioTrial.freeDays} dias.
+                Corretores precisam de pelo menos {portfolioTrial.minBrokerListings} imoveis completos; imobiliarias, pelo menos {portfolioTrial.minAgencyListings}.
+                Os anuncios precisam ter fotos, preco, cidade e contato valido.
+              </p>
+            </div>
+            <Link href="/mi-cuenta/importar" className="inline-flex items-center justify-center gap-2 rounded-2xl bg-ocean-700 px-5 py-3 text-sm font-semibold text-white">
+              Importar carteira
+              <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            </Link>
           </div>
         </section>
 
@@ -173,6 +204,12 @@ export default function ImobiliariasPage() {
                 ) : null}
                 <h3 className="text-2xl font-semibold text-slate-950">{plan.name}</h3>
                 <p className="mt-4 text-3xl font-semibold text-ocean-800">{plan.price}</p>
+                <p className="mt-3 rounded-2xl border border-ocean-100 bg-ocean-50 px-4 py-3 text-sm font-extrabold text-ocean-900">
+                  Ativacao agora: {formatPlanPrice(plan.activationFee)}
+                </p>
+                <p className="mt-2 text-sm font-semibold text-slate-500">
+                  Mensalidade somente apos {portfolioTrial.freeDays} dias.
+                </p>
                 <p className="mt-3 rounded-2xl bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm">
                   Até {plan.limit} imóveis ativos
                 </p>

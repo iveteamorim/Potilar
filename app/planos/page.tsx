@@ -6,6 +6,7 @@ import {
   Building2,
   Check,
   CheckCircle2,
+  Gift,
   Info,
   LayoutDashboard,
   MapPin,
@@ -27,6 +28,7 @@ export const metadata: Metadata = {
 };
 
 const contactHref = '/contato';
+const portfolioTrial = PLANS.professional.portfolioTrial;
 
 const benefits = [
   { title: 'Contato direto', text: 'Interessados falam com você pelo canal escolhido no anúncio.', Icon: MessageCircle },
@@ -60,7 +62,8 @@ const professionalPlans = [
     description: 'Para profissionais independentes com carteira enxuta.',
     limit: PLANS.professional.corretor.listingLimit,
     aiCredits: PLANS.professional.corretor.aiCredits,
-    cta: 'Assinar Corretor',
+    activationFee: PLANS.professional.portfolioTrial.activationFees.corretor,
+    cta: 'Ativar carteira',
     promotionKit: true,
     features: ['Perfil profissional', 'Gestão dos anúncios', 'Contato direto', 'Estatísticas dos anúncios']
   },
@@ -71,7 +74,8 @@ const professionalPlans = [
     description: 'Para equipes que precisam divulgar mais imóveis com marca própria.',
     limit: PLANS.professional.imobiliaria.listingLimit,
     aiCredits: PLANS.professional.imobiliaria.aiCredits,
-    cta: 'Assinar Imobiliária',
+    activationFee: PLANS.professional.portfolioTrial.activationFees.imobiliaria,
+    cta: 'Ativar carteira',
     popular: true,
     promotionKit: true,
     features: ['Logo da empresa', 'Página própria', 'Gestão centralizada']
@@ -83,7 +87,8 @@ const professionalPlans = [
     description: 'Para operações maiores que querem volume, destaque e prioridade.',
     limit: PLANS.professional.plus.listingLimit,
     aiCredits: PLANS.professional.plus.aiCredits,
-    cta: 'Assinar Plus',
+    activationFee: PLANS.professional.portfolioTrial.activationFees.plus,
+    cta: 'Ativar carteira',
     promotionKit: true,
     features: ['Página destacada', '3 destaques incluídos', 'Suporte prioritário']
   }
@@ -209,6 +214,44 @@ export default function PlanosPage() {
           </div>
         </section>
 
+        <section className="rounded-[2rem] border border-ocean-200 bg-ocean-50 p-6 shadow-sm dark:border-ocean-900/60 dark:bg-ocean-950/40 md:p-8">
+          <div className="grid gap-6 lg:grid-cols-[1fr_auto] lg:items-center">
+            <div className="max-w-3xl">
+              <p className="inline-flex items-center gap-2 text-sm font-extrabold uppercase tracking-[0.18em] text-ocean-700 dark:text-ocean-100">
+                <Gift className="h-4 w-4" aria-hidden="true" />
+                Campanha para carteiras
+              </p>
+              <h2 className="mt-4 text-3xl font-semibold text-slate-950 dark:text-white">
+                Pague apenas a ativacao agora. A mensalidade comeca em {portfolioTrial.freeDays} dias.
+              </h2>
+              <p className="mt-3 text-sm leading-7 text-slate-700 dark:text-slate-200">
+                Corretores e imobiliarias que trouxerem uma carteira real para a Potilar pagam a {portfolioTrial.activationName}
+                hoje e ficam {portfolioTrial.freeDays} dias sem mensalidade. A oferta e liberada apos revisao dos anuncios publicados.
+              </p>
+            </div>
+            <div className="grid gap-3 text-sm font-semibold text-slate-700 dark:text-slate-200 sm:grid-cols-3 lg:min-w-[420px] lg:grid-cols-1">
+              <div className="rounded-2xl bg-white px-4 py-3 shadow-sm dark:bg-slate-900">
+                Corretor: minimo {portfolioTrial.minBrokerListings} imoveis completos
+              </div>
+              <div className="rounded-2xl bg-white px-4 py-3 shadow-sm dark:bg-slate-900">
+                Imobiliaria: minimo {portfolioTrial.minAgencyListings} imoveis completos
+              </div>
+              <div className="rounded-2xl bg-white px-4 py-3 shadow-sm dark:bg-slate-900">
+                Fotos, preco, cidade e contato validos
+              </div>
+            </div>
+          </div>
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+            <Link href="/mi-cuenta/importar" className="inline-flex items-center justify-center gap-2 rounded-2xl bg-ocean-700 px-5 py-3 text-sm font-semibold text-white">
+              Importar carteira
+              <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            </Link>
+            <Link href={contactHref} className="inline-flex items-center justify-center rounded-2xl border border-ocean-200 bg-white px-5 py-3 text-sm font-semibold text-ocean-800 dark:border-ocean-800 dark:bg-slate-900 dark:text-ocean-100">
+              Falar com a Potilar
+            </Link>
+          </div>
+        </section>
+
         <section>
           <div className="max-w-2xl">
             <p className="text-sm font-semibold uppercase tracking-[0.22em] text-ocean-600">Por que anunciar na Potilar?</p>
@@ -290,6 +333,12 @@ export default function PlanosPage() {
                 <h3 className="text-2xl font-semibold text-slate-950 dark:text-white">{plan.name}</h3>
                 <p className="mt-3 min-h-12 text-sm leading-6 text-slate-600 dark:text-slate-300">{plan.description}</p>
                 <p className="mt-5 text-4xl font-semibold text-ocean-800">{plan.price}</p>
+                <p className="mt-3 rounded-2xl border border-ocean-100 bg-ocean-50 px-4 py-3 text-sm font-extrabold text-ocean-900 dark:border-ocean-900/60 dark:bg-ocean-950/40 dark:text-ocean-100">
+                  Ativacao agora: {formatPlanPrice(plan.activationFee)}
+                </p>
+                <p className="mt-2 text-sm font-semibold text-slate-500 dark:text-slate-300">
+                  Mensalidade somente apos {portfolioTrial.freeDays} dias com carteira qualificada.
+                </p>
                 <p className="mt-3 rounded-2xl bg-sand-50 px-4 py-3 text-sm font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-200">
                   Até {plan.limit} imóveis ativos
                 </p>

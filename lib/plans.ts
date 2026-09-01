@@ -29,10 +29,33 @@ export const PLANS = {
     '30_days': { label: 'Destaque 30 dias', days: 30, price: 24.9 }
   } satisfies Record<FeaturedPlanId, { label: string; days: number; price: number }>,
   professional: {
+    portfolioTrial: {
+      freeMonths: 2,
+      freeDays: 60,
+      activationName: 'Ativacao de Carteira Profissional',
+      activationFees: {
+        corretor: 79.96,
+        imobiliaria: 139.96,
+        plus: 239.96
+      },
+      minBrokerListings: 5,
+      minAgencyListings: 15,
+      validUntilLabel: 'campanha de lancamento'
+    },
     corretor: { label: 'Plano Corretor', price: 199.9, listingLimit: 10, aiCredits: 5 },
     imobiliaria: { label: 'Plano Imobiliaria', price: 349.9, listingLimit: 30, aiCredits: 15 },
     plus: { label: 'Plano Imobiliaria Plus', price: 599.9, listingLimit: 75, aiCredits: 30 }
-  } satisfies Record<ProfessionalPlanId, { label: string; price: number; listingLimit: number; aiCredits: number }>
+  } satisfies Record<ProfessionalPlanId, { label: string; price: number; listingLimit: number; aiCredits: number }> & {
+    portfolioTrial: {
+      freeMonths: number;
+      freeDays: number;
+      activationName: string;
+      activationFees: Record<ProfessionalPlanId, number>;
+      minBrokerListings: number;
+      minAgencyListings: number;
+      validUntilLabel: string;
+    };
+  }
 } as const;
 
 export function isLaunchPromoActive(now = new Date()) {
