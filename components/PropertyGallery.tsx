@@ -19,7 +19,7 @@ export default function PropertyGallery({ images }: { images: string[] }) {
   }
 
   return (
-    <div className="grid gap-2">
+    <div className="grid min-w-0 gap-2">
       <button type="button" onClick={() => setIsOpen(true)} className="group text-left" aria-label="Abrir galeria de fotos">
         <motion.div
           key={safeImages[active]}
@@ -34,7 +34,7 @@ export default function PropertyGallery({ images }: { images: string[] }) {
         </motion.div>
       </button>
 
-      <div className="flex items-end gap-3">
+      <div className="flex min-w-0 items-end gap-3">
         <div className="flex min-w-0 flex-1 gap-2 overflow-auto">
           {safeImages.map((image, index) => (
             <button

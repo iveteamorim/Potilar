@@ -434,7 +434,7 @@ export default async function PropertyDetailPage({ params }: { params: { slug: s
           </Link>
         </nav>
         <div className="grid gap-7 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start">
-          <div className="space-y-7">
+          <div className="min-w-0 overflow-x-clip space-y-7">
             <PropertyGallery images={property.images} />
         <div className="space-y-3">
           <div className="flex flex-wrap items-center gap-3">
@@ -579,7 +579,7 @@ export default async function PropertyDetailPage({ params }: { params: { slug: s
           </div>
         </section>
           </div>
-          <aside className="hidden lg:sticky lg:top-24 lg:block">
+          <aside className="hidden min-w-0 lg:sticky lg:top-24 lg:block">
             {contactCard}
           </aside>
         </div>
