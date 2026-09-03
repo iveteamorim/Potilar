@@ -123,7 +123,7 @@ export async function POST(request: Request) {
         {
           id: `activation-${planId}`,
           title: `Potilar - ${portfolioTrial.activationName}`,
-          description: `${selectedPlan.label}: ativacao da carteira hoje e mensalidade somente apos ${portfolioTrial.freeDays} dias.`,
+          description: `${selectedPlan.label}: ativacao da carteira hoje e primeira mensalidade somente em ${portfolioTrial.freeDays} dias.`,
           quantity: 1,
           currency_id: 'BRL',
           unit_price: activationFee

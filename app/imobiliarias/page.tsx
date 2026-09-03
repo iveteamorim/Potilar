@@ -170,7 +170,7 @@ export default function ImobiliariasPage() {
             <div className="mt-5 inline-flex max-w-xl items-start gap-3 rounded-2xl bg-white/10 px-4 py-3 text-left text-sm font-semibold leading-6 text-white ring-1 ring-white/15">
               <Gift className="mt-0.5 h-5 w-5 shrink-0 text-sun-300" aria-hidden="true" />
               <span>
-                Pague a ativacao da carteira hoje. A mensalidade do plano comeca em {portfolioTrial.freeDays} dias.
+                Ative sua carteira agora. A primeira mensalidade começa somente em {portfolioTrial.freeDays} dias.
               </span>
             </div>
             <div className="mt-6 flex flex-col gap-3 sm:flex-row">
@@ -195,23 +195,36 @@ export default function ImobiliariasPage() {
         </section>
 
         <section className="rounded-[2rem] border border-sun-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900 md:p-8">
-          <div className="grid gap-6 lg:grid-cols-[1fr_auto] lg:items-center">
-            <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.22em] text-ocean-600">Oferta de lancamento</p>
-              <h2 className="mt-4 text-3xl font-semibold text-slate-950 dark:text-white">
-                Mensalidade em {portfolioTrial.freeDays} dias para quem trouxer carteira real.
+          <p className="text-sm font-semibold uppercase tracking-[0.22em] text-ocean-600">Oferta de lançamento</p>
+          <div className="mt-4 grid gap-6 lg:grid-cols-[1fr_auto] lg:items-end">
+            <div className="max-w-3xl">
+              <h2 className="text-3xl font-semibold text-slate-950 dark:text-white">
+                Ative sua carteira agora.
               </h2>
-              <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-600 dark:text-slate-300">
-                Na campanha, voce paga a {portfolioTrial.activationName} agora e comeca a mensalidade depois de {portfolioTrial.freeDays} dias.
-                Corretores precisam de pelo menos {portfolioTrial.minBrokerListings} imoveis completos; imobiliarias, pelo menos {portfolioTrial.minAgencyListings}.
-                Os anuncios precisam ter fotos, preco, cidade e contato valido.
+              <p className="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300">
+                Ative sua presença profissional na PotiLar agora, publique sua carteira e a primeira mensalidade começa somente em {portfolioTrial.freeDays} dias.
               </p>
+              <ul className="mt-4 space-y-1.5 text-sm leading-6 text-slate-600 dark:text-slate-300">
+                <li>
+                  <span className="font-semibold text-slate-800 dark:text-slate-100">Corretor:</span> publique pelo menos {portfolioTrial.minBrokerListings} imóveis completos.
+                </li>
+                <li>
+                  <span className="font-semibold text-slate-800 dark:text-slate-100">Imobiliária:</span> publique pelo menos {portfolioTrial.minAgencyListings} imóveis completos.
+                </li>
+                <li>Os imóveis devem conter fotos, preço, cidade e contato válido.</li>
+              </ul>
             </div>
-            <Link href="/mi-cuenta/importar" className="inline-flex items-center justify-center gap-2 rounded-2xl bg-ocean-700 px-5 py-3 text-sm font-semibold text-white">
-              Importar carteira
+            <Link
+              href="#planos-profissionais"
+              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-ocean-700 px-5 py-3 text-sm font-semibold text-white"
+            >
+              Ativar minha carteira
               <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </Link>
           </div>
+          <p className="mt-5 text-xs leading-5 text-slate-500 dark:text-slate-400">
+            Oferta válida para novas ativações participantes da campanha.
+          </p>
         </section>
 
         <section>
@@ -242,7 +255,7 @@ export default function ImobiliariasPage() {
                     Oferta de lançamento
                   </span>
                   <span className="text-sm font-medium text-white">
-                    Ative agora e comece a mensalidade somente após {portfolioTrial.freeDays} dias.
+                    Ative sua carteira agora. A primeira mensalidade começa somente em {portfolioTrial.freeDays} dias.
                   </span>
                 </div>
               </div>
@@ -286,7 +299,7 @@ export default function ImobiliariasPage() {
                   </p>
                   <p className={`mt-3 inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-semibold ${theme.trial}`}>
                     <CalendarDays className="h-4 w-4" aria-hidden="true" />
-                    {portfolioTrial.freeDays} dias de acesso completo
+                    {portfolioTrial.freeDays} dias antes da primeira mensalidade
                   </p>
 
                   <div className="mt-5 rounded-xl bg-slate-50 px-4 py-3">

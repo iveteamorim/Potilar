@@ -525,7 +525,7 @@ export default async function MinhaContaPage({
 
             {searchParams?.plano === 'ativacao_sucesso' && (
               <AccountNotice>
-                Ativacao recebida. Sua carteira profissional fica liberada por 60 dias antes da primeira mensalidade.
+                Ativacao recebida. Sua carteira profissional fica liberada por 30 dias antes da primeira mensalidade.
               </AccountNotice>
             )}
 

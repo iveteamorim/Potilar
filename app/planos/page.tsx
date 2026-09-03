@@ -222,11 +222,11 @@ export default function PlanosPage() {
                 Campanha para carteiras
               </p>
               <h2 className="mt-4 text-3xl font-semibold text-slate-950 dark:text-white">
-                Pague a ativacao da carteira hoje. A mensalidade comeca em {portfolioTrial.freeDays} dias.
+                Ative sua carteira agora. A primeira mensalidade começa somente em {portfolioTrial.freeDays} dias.
               </h2>
               <p className="mt-3 text-sm leading-7 text-slate-700 dark:text-slate-200">
                 Corretores e imobiliarias que trouxerem uma carteira real para a Potilar pagam a {portfolioTrial.activationName}
-                hoje e ficam {portfolioTrial.freeDays} dias sem mensalidade. A oferta e liberada apos revisao dos anuncios publicados.
+                hoje. A primeira mensalidade começa somente em {portfolioTrial.freeDays} dias, apos revisao dos anuncios publicados.
               </p>
             </div>
             <div className="grid gap-3 text-sm font-semibold text-slate-700 dark:text-slate-200 sm:grid-cols-3 lg:min-w-[420px] lg:grid-cols-1">
@@ -337,7 +337,7 @@ export default function PlanosPage() {
                   Ativacao da carteira: {formatPlanPrice(plan.activationFee)}
                 </p>
                 <p className="mt-2 text-sm font-semibold text-slate-500 dark:text-slate-300">
-                  Mensalidade so comeca apos {portfolioTrial.freeDays} dias.
+                  Primeira mensalidade somente em {portfolioTrial.freeDays} dias.
                 </p>
                 <p className="mt-3 rounded-2xl bg-sand-50 px-4 py-3 text-sm font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-200">
                   Até {plan.limit} imóveis ativos
