@@ -185,6 +185,24 @@ const CITY_COORDINATES: Record<string, [number, number]> = {
 
 const DEFAULT_COORDINATES: [number, number] = [-5.7945, -35.211];
 
+const RN_LAT_LNG_BOUNDS = {
+  minLat: -7.05,
+  maxLat: -4.65,
+  minLng: -38.85,
+  maxLng: -34.7
+};
+
+export function isLatLngInsideRn(lat: number, lng: number) {
+  return (
+    Number.isFinite(lat) &&
+    Number.isFinite(lng) &&
+    lat >= RN_LAT_LNG_BOUNDS.minLat &&
+    lat <= RN_LAT_LNG_BOUNDS.maxLat &&
+    lng >= RN_LAT_LNG_BOUNDS.minLng &&
+    lng <= RN_LAT_LNG_BOUNDS.maxLng
+  );
+}
+
 const NEIGHBORHOOD_COORDINATES: Array<{
   city: string;
   names: string[];

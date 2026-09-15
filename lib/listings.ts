@@ -1,6 +1,6 @@
 import type { Property } from '@/data/properties';
 import { isActiveFeaturedListing } from './listingLifecycle';
-import { isDefaultListingCoordinate, isKnownCityCenterCoordinate, resolveListingCoordinates } from './locationCoordinates';
+import { isDefaultListingCoordinate, isKnownCityCenterCoordinate, isLatLngInsideRn, resolveListingCoordinates } from './locationCoordinates';
 import { formatPlaceName } from './textFormat';
 import { normalizeListingImageUrls } from './imageUrls';
 
@@ -90,9 +90,9 @@ export function listingRowToProperty(row: ListingRow): Property {
   );
   const storedIsDefaultNatal = isDefaultListingCoordinate(row.lat, row.lng);
   const resolvedIsDefaultNatal = isDefaultListingCoordinate(resolvedFromAddress[0], resolvedFromAddress[1]);
+  const storedInsideRn = isLatLngInsideRn(row.lat, row.lng);
   const hasPreciseStoredCoordinates =
-    Number.isFinite(row.lat) &&
-    Number.isFinite(row.lng) &&
+    storedInsideRn &&
     !isKnownCityCenterCoordinate(row.lat, row.lng) &&
     !(storedIsDefaultNatal && !resolvedIsDefaultNatal);
   const [resolvedLat, resolvedLng] = hasPreciseStoredCoordinates ? [row.lat, row.lng] : resolvedFromAddress;
