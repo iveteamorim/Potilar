@@ -2,6 +2,7 @@ import HeroSearch from '@/components/HeroSearch';
 import FeaturedCarousel from '@/components/FeaturedCarousel';
 import PropertyMap from '@/components/PropertyMapLoader';
 import MobilePropertyMapToggle from '@/components/MobilePropertyMapToggle';
+import { Filter, Heart, Home, KeyRound, LayoutGrid, MapPin, Palmtree, ShieldCheck } from 'lucide-react';
 import type { Metadata } from 'next';
 import { createClient } from '@/lib/supabase/server';
 import { fetchApprovedListingRows } from '@/lib/fetchApprovedListings';
@@ -187,7 +188,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="section-padding bg-white dark:bg-slate-950">
+      <section className="bg-white px-4 pb-5 pt-12 dark:bg-slate-950 sm:px-6 sm:pb-6 sm:pt-16 lg:px-8 lg:pb-8 lg:pt-20">
         <div className="mx-auto max-w-6xl">
           <div className="flex items-center justify-between">
             <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">Imóveis em destaque</h2>
@@ -206,10 +207,27 @@ export default async function HomePage() {
               Nenhum imóvel publicado ainda.
             </div>
           )}
+          <div className="mt-4 rounded-2xl border border-slate-200 bg-[#f1f4f8] px-5 py-4 dark:border-slate-800 dark:bg-slate-900 sm:px-7">
+            <div className="grid gap-5 sm:grid-cols-3 sm:gap-8">
+              {[
+                { title: 'Imóveis verificados', text: 'Mais segurança para você', Icon: Home },
+                { title: 'Contato direto', text: 'Fale direto com o anunciante', Icon: ShieldCheck },
+                { title: 'Imóveis em todo o RN', text: 'Das praias ao interior', Icon: MapPin }
+              ].map(({ title, text, Icon }) => (
+                <div key={title} className="flex items-center gap-3">
+                  <Icon className="h-9 w-9 shrink-0 text-ocean-800 dark:text-ocean-200" strokeWidth={1.75} aria-hidden="true" />
+                  <div className="min-w-0">
+                    <p className="text-[15px] font-bold leading-tight text-ocean-900 dark:text-sand-50">{title}</p>
+                    <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">{text}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 
-      <section className="bg-white px-4 pb-4 pt-10 dark:bg-slate-950 sm:px-6 sm:py-16 lg:px-8 lg:py-24">
+      <section className="bg-white px-4 pb-4 pt-6 dark:bg-slate-950 sm:px-6 sm:pb-16 sm:pt-8 lg:px-8 lg:pb-24 lg:pt-10">
         <div className="mx-auto grid max-w-6xl items-center gap-0 lg:grid-cols-[1.25fr_0.75fr]">
           <div className="overflow-hidden border border-sand-200 bg-sand-100 dark:border-slate-800 dark:bg-slate-900">
             <img
@@ -246,31 +264,70 @@ export default async function HomePage() {
               Veja os anúncios publicados no Rio Grande do Norte e use a localização para comparar cidades, bairros e
               oportunidades com mais clareza.
             </p>
-            <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4 lg:flex lg:flex-wrap">
+            <div className="mt-6 flex flex-wrap items-center gap-2.5">
+              <Link
+                href="/imoveis#mapa"
+                className="inline-flex h-10 items-center gap-2 rounded-full bg-[#10243e] px-[18px] text-[13px] font-semibold text-white"
+              >
+                <LayoutGrid className="h-3.5 w-3.5" strokeWidth={2.25} aria-hidden="true" />
+                Todos
+              </Link>
               <Link
                 href="/imoveis?transaction=Compra#mapa"
-                className="inline-flex h-14 min-w-32 items-center justify-center rounded-full border border-ocean-700 bg-white px-5 text-sm font-semibold text-ocean-700 shadow-soft transition hover:border-ocean-900 hover:text-ocean-900 dark:border-ocean-300 dark:bg-slate-950 dark:text-ocean-200 md:border-0 md:bg-sun-500 md:text-white md:hover:bg-sun-600"
+                className="inline-flex h-10 items-center gap-2 rounded-full border border-[#d7dee8] bg-white px-[18px] text-[13px] font-semibold text-[#10243e] dark:border-slate-700 dark:bg-slate-900 dark:text-sand-50"
               >
+                <Home className="h-3.5 w-3.5 text-[#ef8f1f]" strokeWidth={2.25} aria-hidden="true" />
                 Comprar
               </Link>
               <Link
                 href="/imoveis?transaction=Aluguel#mapa"
-                className="inline-flex h-14 min-w-32 items-center justify-center rounded-full border border-ocean-700 bg-white px-5 text-sm font-semibold text-ocean-700 shadow-soft transition hover:border-ocean-900 hover:text-ocean-900 dark:border-ocean-300 dark:bg-slate-950 dark:text-ocean-200"
+                className="inline-flex h-10 items-center gap-2 rounded-full border border-[#d7dee8] bg-white px-[18px] text-[13px] font-semibold text-[#10243e] dark:border-slate-700 dark:bg-slate-900 dark:text-sand-50"
               >
+                <KeyRound className="h-3.5 w-3.5 text-[#2bb8c7]" strokeWidth={2.25} aria-hidden="true" />
                 Alugar
               </Link>
               <Link
                 href="/imoveis?transaction=Temporada#mapa"
-                className="inline-flex h-14 min-w-32 items-center justify-center rounded-full border border-ocean-700 bg-white px-5 text-sm font-semibold text-ocean-700 shadow-soft transition hover:border-ocean-900 hover:text-ocean-900 dark:border-ocean-300 dark:bg-slate-950 dark:text-ocean-200"
+                className="inline-flex h-10 items-center gap-2 rounded-full border border-[#d7dee8] bg-white px-[18px] text-[13px] font-semibold text-[#10243e] dark:border-slate-700 dark:bg-slate-900 dark:text-sand-50"
               >
+                <Palmtree className="h-3.5 w-3.5 text-[#7a9a7a]" strokeWidth={2.25} aria-hidden="true" />
                 Temporada
               </Link>
-              <Link
-                href="/imoveis#mapa"
-                className="inline-flex h-14 min-w-32 items-center justify-center rounded-full border border-ocean-700 bg-white px-5 text-sm font-semibold text-ocean-700 shadow-soft transition hover:border-ocean-900 hover:text-ocean-900 dark:border-ocean-300 dark:bg-slate-950 dark:text-ocean-200"
-              >
-                Todos
-              </Link>
+            </div>
+            <div className="mt-8 grid grid-cols-3 gap-4">
+              {[
+                {
+                  title: 'Explore por localização',
+                  text: 'Veja imóveis no mapa e nas proximidades.',
+                  Icon: MapPin,
+                  wrap: 'bg-[#e7f4fb]',
+                  icon: 'text-[#3aa3d9]'
+                },
+                {
+                  title: 'Compare oportunidades',
+                  text: 'Encontre o imóvel ideal mais rápido.',
+                  Icon: Filter,
+                  wrap: 'bg-[#eaf6ec]',
+                  icon: 'text-[#4f853a]'
+                },
+                {
+                  title: 'Salve seus favoritos',
+                  text: 'Guarde imóveis que você gosta.',
+                  Icon: Heart,
+                  wrap: 'bg-[#fff3dc]',
+                  icon: 'text-[#ef8f1f]'
+                }
+              ].map(({ title, text, Icon, wrap, icon }) => (
+                <div key={title} className="flex items-start gap-2.5">
+                  <span className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${wrap}`}>
+                    <Icon className={`h-4 w-4 ${icon}`} strokeWidth={2} aria-hidden="true" />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-[13px] font-bold leading-tight text-[#10243e] dark:text-sand-50">{title}</p>
+                    <p className="mt-0.5 text-[12px] leading-snug text-slate-500 dark:text-slate-400">{text}</p>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
           <div className="hidden md:block">
