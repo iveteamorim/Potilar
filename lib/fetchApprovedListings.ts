@@ -1,5 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { getPublicListingExpiryFilterIso } from '@/lib/listingLifecycle';
+import { getPublicListingExpiryFilterIso, isListingExpired } from '@/lib/listingLifecycle';
 import { enrichFeaturedListingRows } from '@/lib/listingFeaturedFields';
 import { PUBLIC_LISTING_SELECT, PUBLIC_LISTING_SELECT_WITH_CONTACT } from '@/lib/listings';
 
@@ -52,8 +52,31 @@ type FetchOptions = {
   select?: string;
 };
 
+function mergeListingRows(tableRows: Record<string, unknown>[], rpcRows: Record<string, unknown>[]) {
+  const byId = new Map<string, Record<string, unknown>>();
+
+  for (const row of tableRows) {
+    const id = String(row.id ?? '');
+    if (id) byId.set(id, row);
+  }
+
+  for (const row of rpcRows) {
+    const id = String(row.id ?? '');
+    if (!id) continue;
+    const existing = byId.get(id);
+    byId.set(id, existing ? { ...existing, ...row } : row);
+  }
+
+  return Array.from(byId.values()).sort((a, b) => {
+    const aTime = new Date(String(a.created_at ?? '')).getTime();
+    const bTime = new Date(String(b.created_at ?? '')).getTime();
+    return (Number.isFinite(bTime) ? bTime : 0) - (Number.isFinite(aTime) ? aTime : 0);
+  });
+}
+
 export async function fetchApprovedListingRows(supabase: SupabaseClient, options: FetchOptions = {}) {
   const withContact = options.withContact !== false;
+  const hideExpired = options.hideExpired !== false;
   const extendedSelect =
     options.select ?? (withContact ? PUBLIC_LISTING_SELECT_WITH_CONTACT : PUBLIC_LISTING_SELECT);
   const greenLegacySelect = options.select ?? (withContact ? `${PUBLIC_LISTING_SELECT_GREEN_LEGACY},contact_name,contact_phone,contact_whatsapp,contact_email,contact_methods` : PUBLIC_LISTING_SELECT_GREEN_LEGACY);
@@ -62,11 +85,10 @@ export async function fetchApprovedListingRows(supabase: SupabaseClient, options
     options.withContact === false &&
     !options.ownerId &&
     !options.listingIds?.length &&
-    !options.hideExpired &&
     !options.select;
 
-  async function runQuery(select: string, includeExpiryFilter = true) {
-    let query = supabase.from('listings').select(select).eq('status', 'approved');
+  async function runQuery(client: SupabaseClient, select: string, includeExpiryFilter = true) {
+    let query = client.from('listings').select(select).eq('status', 'approved');
 
     if (options.ownerId) {
       query = query.eq('owner_id', options.ownerId);
@@ -76,7 +98,7 @@ export async function fetchApprovedListingRows(supabase: SupabaseClient, options
       query = query.in('id', options.listingIds);
     }
 
-    if (options.hideExpired && includeExpiryFilter) {
+    if (hideExpired && includeExpiryFilter) {
       const nowIso = getPublicListingExpiryFilterIso();
       query = query.or(`listing_expires_at.is.null,listing_expires_at.gt.${nowIso}`);
     }
@@ -84,48 +106,71 @@ export async function fetchApprovedListingRows(supabase: SupabaseClient, options
     return query.order('created_at', { ascending: false });
   }
 
+  async function loadTableRows(client: SupabaseClient) {
+    let { data, error } = await runQuery(client, extendedSelect);
+
+    if (error && isMissingColumnError(error.message)) {
+      const fallback = await runQuery(client, greenLegacySelect, false);
+      data = fallback.data;
+      error = fallback.error;
+    }
+
+    if (error && isMissingColumnError(error.message)) {
+      const fallback = await runQuery(client, legacySelect, false);
+      data = fallback.data;
+      error = fallback.error;
+    }
+
+    return { data, error };
+  }
+
+  let rpcRows: Record<string, unknown>[] = [];
+
   if (canUsePublicRpc) {
     const rpcResult = await supabase.rpc('get_public_approved_listings');
 
     if (!rpcResult.error && (rpcResult.data?.length ?? 0) > 0) {
-      const mapped = (rpcResult.data ?? []).map((listing: Record<string, unknown>) =>
+      rpcRows = (rpcResult.data ?? []).map((listing: Record<string, unknown>) =>
         mapPublicRpcListingRow(listing)
       );
-
-      return enrichFeaturedListingRows(supabase, mapped);
-    }
-
-    if (rpcResult.error) {
+    } else if (rpcResult.error) {
       console.error('[Potilar] RPC publica falhou, tentando tabela:', rpcResult.error.message);
     }
   }
 
-  let { data, error } = await runQuery(extendedSelect);
+  let { data, error } = await loadTableRows(supabase);
 
-  if (error && isMissingColumnError(error.message)) {
-    const fallback = await runQuery(greenLegacySelect, false);
-    data = fallback.data;
-    error = fallback.error;
-  }
-
-  if (error && isMissingColumnError(error.message)) {
-    const fallback = await runQuery(legacySelect, false);
-    data = fallback.data;
-    error = fallback.error;
+  if (error) {
+    try {
+      const { createAdminClient } = await import('@/lib/supabase/admin');
+      const adminResult = await loadTableRows(createAdminClient());
+      data = adminResult.data;
+      error = adminResult.error;
+    } catch {
+      // Service role unavailable in this environment.
+    }
   }
 
   if (error) {
     console.error('[Potilar] Erro ao carregar anuncios:', error.message);
+    if (rpcRows.length > 0) {
+      return enrichFeaturedListingRows(supabase, rpcRows as EnrichableListingRow[]);
+    }
     return [];
   }
 
-  const rows = data ?? [];
+  const tableRows = (data ?? []) as unknown as Record<string, unknown>[];
+  let rows = mergeListingRows(tableRows, rpcRows);
 
-  if (rows.length > 0) {
-    return enrichFeaturedListingRows(supabase, rows as unknown as EnrichableListingRow[]);
+  if (hideExpired) {
+    rows = rows.filter((row) => !isListingExpired(typeof row.listing_expires_at === 'string' ? row.listing_expires_at : null));
   }
 
-  if (canUsePublicRpc && rows.length === 0) {
+  if (rows.length > 0) {
+    return enrichFeaturedListingRows(supabase, rows as EnrichableListingRow[]);
+  }
+
+  if (canUsePublicRpc && rpcRows.length === 0) {
     const rpcRetry = await supabase.rpc('get_public_approved_listings');
     if (!rpcRetry.error && (rpcRetry.data?.length ?? 0) > 0) {
       return enrichFeaturedListingRows(supabase, (rpcRetry.data ?? []) as unknown as EnrichableListingRow[]);
@@ -301,8 +346,8 @@ export async function fetchPublicListingDetail(
   const greenLegacyDetailSelect = `owner_id,${greenLegacySelect}`;
   const legacyDetailSelect = `owner_id,${legacySelect}`;
 
-  async function queryDetail(select: string, field: 'slug' | 'id', value: string) {
-    return supabase
+  async function queryDetail(select: string, field: 'slug' | 'id', value: string, client: SupabaseClient = supabase) {
+    return client
       .from('listings')
       .select(select)
       .eq(field, value)

@@ -8,6 +8,21 @@ grant insert, update, delete on public.listings to authenticated;
 
 grant select, insert, update on public.profiles to authenticated;
 
+-- Admin listings policy must not apply to anon: it reads profiles, and anon
+-- has no GRANT on that table, which blocked ALL public listing SELECTs.
+drop policy if exists "Admins can view all listings" on public.listings;
+create policy "Admins can view all listings"
+on public.listings
+for select
+to authenticated
+using (
+  exists (
+    select 1 from public.profiles
+    where profiles.id = auth.uid()
+    and profiles.role = 'admin'
+  )
+);
+
 -- Ensure service_role keeps full access (bypasses RLS when key is correct).
 grant all on table public.listings to service_role;
 grant all on table public.profiles to service_role;

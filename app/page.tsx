@@ -35,7 +35,7 @@ export const metadata: Metadata = {
 type PublicListingRow = {
   id: string;
   owner_id?: string | null;
-  slug: string;
+  slug?: string | null;
   title: string;
   property_type: Property['propertyType'];
   transaction: Property['transaction'];

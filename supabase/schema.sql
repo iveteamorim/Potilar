@@ -214,6 +214,7 @@ using (status = 'approved' or auth.uid() = owner_id);
 
 create policy "Admins can view all listings"
 on public.listings for select
+to authenticated
 using (
   exists (
     select 1 from public.profiles

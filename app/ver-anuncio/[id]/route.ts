@@ -44,12 +44,24 @@ export async function GET(_request: Request, { params }: { params: { id: string 
         ).data
       : allPublic.data;
 
-    const listing = lookupData?.find((item: { id: string; slug?: string | null }) =>
+    let listing = lookupData?.find((item: { id: string; slug?: string | null }) =>
       String(item.id).toLowerCase().replace(/-/g, '').startsWith(normalizedId.replace(/-/g, ''))
     );
 
-    if (listing?.slug) {
-      return NextResponse.redirect(new URL(`/imoveis/${listing.slug}`, _request.url));
+    if (!listing && UUID_PATTERN.test(id)) {
+      const byTable = await supabase
+        .from('listings')
+        .select('id, slug')
+        .eq('id', normalizedId)
+        .eq('status', 'approved')
+        .maybeSingle();
+      if (byTable.data) {
+        listing = byTable.data;
+      }
+    }
+
+    if (listing?.id || listing?.slug) {
+      return NextResponse.redirect(new URL(`/imoveis/${listing.slug || listing.id}`, _request.url));
     }
   } catch {
     // Fall through to slug fallback.

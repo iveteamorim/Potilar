@@ -203,6 +203,13 @@ export function isLatLngInsideRn(lat: number, lng: number) {
   );
 }
 
+/** ~km between two points; used to detect a pin saved in the wrong city. */
+export function distanceKm(lat1: number, lng1: number, lat2: number, lng2: number) {
+  const dLat = (lat1 - lat2) * 111;
+  const dLng = (lng1 - lng2) * 111 * Math.cos((lat1 * Math.PI) / 180);
+  return Math.hypot(dLat, dLng);
+}
+
 const NEIGHBORHOOD_COORDINATES: Array<{
   city: string;
   names: string[];

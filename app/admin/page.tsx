@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { getPaymentCode } from '@/lib/pix';
 import { PLANS } from '@/lib/plans';
-import { setMainImage, grantHighlight, updateCreciVerification, updateHighlightStatus, updateListingPaymentStatus, updateListingStatus } from './actions';
+import { ensureApprovedListingExpiries, setMainImage, grantHighlight, updateCreciVerification, updateHighlightStatus, updateListingPaymentStatus, updateListingStatus } from './actions';
 import LogoutButton from '@/components/LogoutButton';
 
 export const metadata: Metadata = {
@@ -108,6 +108,12 @@ export default async function AdminPage({
       featured_expires_at: null,
       referral_code: null
     }));
+  } else if (listings?.length) {
+    try {
+      listings = await ensureApprovedListingExpiries(listings);
+    } catch {
+      // Keep the admin list even if expiry backfill fails.
+    }
   }
 
   const ownerIds = Array.from(new Set((listings ?? []).map((listing) => listing.owner_id).filter(Boolean)));

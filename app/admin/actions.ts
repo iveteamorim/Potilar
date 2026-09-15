@@ -40,16 +40,25 @@ export async function updateListingStatus(formData: FormData) {
 
     const supabase = await ensureAdmin();
 
+    let listingForExpiry: {
+      is_paid: boolean | null;
+      payment_status: string | null;
+      listing_expires_at: string | null;
+      transaction: string | null;
+    } | null = null;
+
     if (status === 'approved') {
       const { data: listing, error: listingError } = await supabase
         .from('listings')
-        .select('is_paid,payment_status')
+        .select('is_paid,payment_status,listing_expires_at,transaction')
         .eq('id', id)
         .single();
 
       if (listingError || !listing) {
         throw new Error(listingError?.message ?? 'Anúncio não encontrado');
       }
+
+      listingForExpiry = listing;
 
       if (listing.is_paid && listing.payment_status !== 'confirmed') {
         throw new Error('Confirme o pagamento do anúncio antes de aprovar.');
@@ -74,6 +83,24 @@ export async function updateListingStatus(formData: FormData) {
       }
     }
 
+    if (status === 'approved' && listingForExpiry) {
+      const now = new Date();
+      const currentExpiry = listingForExpiry.listing_expires_at
+        ? new Date(listingForExpiry.listing_expires_at)
+        : null;
+      const expiryOk = Boolean(currentExpiry && currentExpiry.getTime() > now.getTime());
+
+      if (!expiryOk) {
+        await supabase
+          .from('listings')
+          .update({
+            listing_expires_at: addDays(now, getListingDurationDays(listingForExpiry.transaction)).toISOString(),
+            updated_at: now.toISOString()
+          })
+          .eq('id', id);
+      }
+    }
+
     revalidatePath('/admin');
     revalidatePath('/imoveis');
     revalidatePath('/');
@@ -83,6 +110,54 @@ export async function updateListingStatus(formData: FormData) {
   }
 
   redirect('/admin?success=1');
+}
+
+export async function ensureApprovedListingExpiries<
+  T extends { id: string; status?: string | null; transaction?: string | null; listing_expires_at?: string | null }
+>(listings: T[]) {
+  const missing = listings.filter((listing) => listing.status === 'approved' && listing.id && !listing.listing_expires_at);
+  if (missing.length === 0) return listings;
+
+  const supabase = await ensureAdmin();
+  const now = new Date();
+  const expiresAtById = new Map(
+    missing.map((listing) => [listing.id, addDays(now, getListingDurationDays(listing.transaction)).toISOString()])
+  );
+
+  try {
+    const updates = await Promise.all(
+      missing.map((listing) =>
+        supabase
+          .from('listings')
+          .update({
+            listing_expires_at: expiresAtById.get(listing.id),
+            updated_at: now.toISOString()
+          })
+          .eq('id', listing.id)
+          .eq('status', 'approved')
+          .is('listing_expires_at', null)
+      )
+    );
+
+    if (updates.some((result) => result.error)) {
+      console.error(
+        '[Potilar] Falha ao preencher listing_expires_at:',
+        updates.find((result) => result.error)?.error?.message
+      );
+      return listings;
+    }
+  } catch (error) {
+    console.error('[Potilar] Falha ao preencher listing_expires_at:', error);
+    return listings;
+  }
+
+  revalidatePath('/imoveis');
+  revalidatePath('/');
+
+  return listings.map((listing) => {
+    const listingExpiresAt = expiresAtById.get(listing.id);
+    return listingExpiresAt ? { ...listing, listing_expires_at: listingExpiresAt } : listing;
+  });
 }
 
 export async function setMainImage(formData: FormData) {

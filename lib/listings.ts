@@ -1,6 +1,6 @@
 import type { Property } from '@/data/properties';
 import { isActiveFeaturedListing } from './listingLifecycle';
-import { isDefaultListingCoordinate, isKnownCityCenterCoordinate, isLatLngInsideRn, resolveListingCoordinates } from './locationCoordinates';
+import { distanceKm, isDefaultListingCoordinate, isKnownCityCenterCoordinate, isLatLngInsideRn, resolveListingCoordinates } from './locationCoordinates';
 import { formatPlaceName } from './textFormat';
 import { normalizeListingImageUrls } from './imageUrls';
 
@@ -13,7 +13,7 @@ export const PUBLIC_LISTING_SELECT_WITH_CONTACT =
 export type ListingRow = {
   id: string;
   owner_id?: string | null;
-  slug: string;
+  slug?: string | null;
   title: string;
   property_type: Property['propertyType'];
   transaction: Property['transaction'];
@@ -73,6 +73,7 @@ export function applyAdvertiserFieldsFromListingRow(property: Property, row: Lis
 }
 
 export function listingRowToProperty(row: ListingRow): Property {
+  const slug = row.slug?.trim() || row.id;
   const baseLocation = row.location.split(',')[0] || row.location;
   const formattedLocation = formatPlaceName(baseLocation);
   const formattedNeighborhood = row.neighborhood ? formatPlaceName(row.neighborhood) : undefined;
@@ -91,8 +92,13 @@ export function listingRowToProperty(row: ListingRow): Property {
   const storedIsDefaultNatal = isDefaultListingCoordinate(row.lat, row.lng);
   const resolvedIsDefaultNatal = isDefaultListingCoordinate(resolvedFromAddress[0], resolvedFromAddress[1]);
   const storedInsideRn = isLatLngInsideRn(row.lat, row.lng);
+  const storedInWrongCity =
+    storedInsideRn &&
+    !resolvedIsDefaultNatal &&
+    distanceKm(row.lat, row.lng, resolvedFromAddress[0], resolvedFromAddress[1]) > 30;
   const hasPreciseStoredCoordinates =
     storedInsideRn &&
+    !storedInWrongCity &&
     !isKnownCityCenterCoordinate(row.lat, row.lng) &&
     !(storedIsDefaultNatal && !resolvedIsDefaultNatal);
   const [resolvedLat, resolvedLng] = hasPreciseStoredCoordinates ? [row.lat, row.lng] : resolvedFromAddress;
@@ -101,7 +107,7 @@ export function listingRowToProperty(row: ListingRow): Property {
     {
     id: row.id,
     ownerId: row.owner_id ?? undefined,
-    slug: row.slug,
+    slug,
     title: row.title,
     propertyType: row.property_type,
     transaction: row.transaction,
