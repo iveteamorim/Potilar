@@ -9,11 +9,13 @@ type Props = {
   listingId: string;
   kind: PaymentKind;
   label?: string;
+  enableCoupon?: boolean;
 };
 
-export default function ListingMercadoPagoButton({ listingId, kind, label = 'Pagar com Mercado Pago' }: Props) {
+export default function ListingMercadoPagoButton({ listingId, kind, label = 'Pagar com Mercado Pago', enableCoupon = false }: Props) {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
+  const [couponCode, setCouponCode] = useState('');
 
   async function handleClick() {
     setLoading(true);
@@ -23,7 +25,7 @@ export default function ListingMercadoPagoButton({ listingId, kind, label = 'Pag
       const response = await fetch('/api/listing-payments/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ listingId, kind })
+        body: JSON.stringify({ listingId, kind, couponCode: enableCoupon ? couponCode : '' })
       });
       const payload = await response.json();
 
@@ -46,7 +48,24 @@ export default function ListingMercadoPagoButton({ listingId, kind, label = 'Pag
   }
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
+      {enableCoupon && (
+        <div className="rounded-xl border border-sand-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-900">
+          <label htmlFor="listing-coupon" className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">
+            Cupom
+          </label>
+          <input
+            id="listing-coupon"
+            value={couponCode}
+            onChange={(event) => setCouponCode(event.target.value.toUpperCase())}
+            placeholder="POTILAR2"
+            className="mt-2 h-11 w-full rounded-lg border border-sand-200 px-3 text-sm font-semibold uppercase outline-none transition focus:border-ocean-500 focus:ring-2 focus:ring-ocean-100 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+          />
+          <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+            POTILAR2: 2o ou 3o anuncio por R$ 9,90. Valido para os 25 primeiros usos.
+          </p>
+        </div>
+      )}
       <button
         type="button"
         onClick={handleClick}

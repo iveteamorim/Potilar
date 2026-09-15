@@ -1,8 +1,17 @@
 import { NextResponse } from 'next/server';
 import { PLANS, getHighlightDurationDays, getHighlightLabel, getHighlightPrice, type FeaturedPlanId } from '@/lib/plans';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
+import { normalizeCouponCode, validateSecondListingCoupon } from '@/lib/listingCoupons';
 
 type PaymentKind = 'listing' | 'seasonal' | 'highlight' | 'renewal30' | 'renewal60';
+type ResolvedPayment = {
+  product: 'listing_highlight' | 'listing_renewal' | 'seasonal_listing' | 'listing_publication';
+  title: string;
+  amount: number;
+  description: string;
+  renewal_days?: number;
+};
 
 function getBaseUrl(request: Request) {
   const configured = process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_PROJECT_PRODUCTION_URL;
@@ -10,7 +19,7 @@ function getBaseUrl(request: Request) {
   return new URL(request.url).origin;
 }
 
-function resolvePayment(listing: any, kind: PaymentKind) {
+function resolvePayment(listing: any, kind: PaymentKind): ResolvedPayment | null {
   if (kind === 'highlight') {
     if (!listing.featured_plan || listing.featured_payment_status !== 'pix_pending') return null;
     if (!['7_days', '15_days', '30_days'].includes(listing.featured_plan)) return null;
@@ -66,6 +75,7 @@ export async function POST(request: Request) {
   const body = await request.json().catch(() => ({}));
   const listingId = String(body.listingId ?? '');
   const kind = String(body.kind ?? '') as PaymentKind;
+  const couponCode = normalizeCouponCode(body.couponCode);
 
   if (!listingId || !['listing', 'seasonal', 'highlight', 'renewal30', 'renewal60'].includes(kind)) {
     return NextResponse.json({ error: 'Pagamento invalido.' }, { status: 400 });
@@ -82,10 +92,33 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: listingError?.message ?? 'Anúncio não encontrado.' }, { status: 404 });
   }
 
-  const payment = resolvePayment(listing, kind);
+  let payment = resolvePayment(listing, kind);
 
   if (!payment || payment.amount <= 0) {
     return NextResponse.json({ error: 'Este pagamento não está pendente.' }, { status: 400 });
+  }
+
+  let appliedCoupon: { code: string; amountBefore: number; amountAfter: number } | null = null;
+  if (couponCode) {
+    if (kind !== 'listing') {
+      return NextResponse.json({ error: 'Cupom valido apenas para publicacao de anuncio comum.' }, { status: 400 });
+    }
+
+    const coupon = await validateSecondListingCoupon(createAdminClient(), listing, user.id, couponCode);
+    if (!coupon.ok) {
+      return NextResponse.json({ error: coupon.error }, { status: 400 });
+    }
+
+    appliedCoupon = {
+      code: coupon.code,
+      amountBefore: coupon.amountBefore,
+      amountAfter: coupon.amountAfter
+    };
+    payment = {
+      ...payment,
+      amount: coupon.amountAfter,
+      description: `${payment.description} Cupom ${coupon.code} aplicado.`
+    };
   }
 
   const accessToken = process.env.MERCADO_PAGO_ACCESS_TOKEN;
@@ -117,7 +150,10 @@ export async function POST(request: Request) {
         user_id: user.id,
         listing_id: listing.id,
         payment_kind: kind,
-        renewal_days: payment.renewal_days ?? null
+        renewal_days: payment.renewal_days ?? null,
+        coupon_code: appliedCoupon?.code ?? null,
+        coupon_amount_before: appliedCoupon?.amountBefore ?? null,
+        coupon_amount_after: appliedCoupon?.amountAfter ?? null
       },
       back_urls: {
         success: `${baseUrl}/mi-cuenta?pagamento=sucesso`,

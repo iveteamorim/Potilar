@@ -116,7 +116,12 @@ export default async function PagarPixPage({ params, searchParams }: Props) {
             <div className="mb-4 flex items-start gap-3 text-sm text-slate-600 dark:text-slate-300">
               <CreditCard className="mt-0.5 h-5 w-5 shrink-0 text-ocean-700" aria-hidden="true" />
             </div>
-            <ListingMercadoPagoButton listingId={listing.id} kind={payment.checkoutKind} label="Pagar agora" />
+            <ListingMercadoPagoButton
+              listingId={listing.id}
+              kind={payment.checkoutKind}
+              label="Pagar agora"
+              enableCoupon={payment.checkoutKind === 'listing'}
+            />
           </div>
         </section>
       </div>

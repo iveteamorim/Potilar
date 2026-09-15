@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getAiCreditPackage } from '@/lib/aiCredits';
 import { PLANS, getHighlightDurationDays, getProfessionalAccountType, getProfessionalPlan, type ProfessionalPlanId } from '@/lib/plans';
+import { isSecondListingCoupon } from '@/lib/listingCoupons';
 import { buildProfessionalProfileSlug } from '@/lib/publicProfile';
 import { createAdminClient } from '@/lib/supabase/admin';
 
@@ -427,6 +428,21 @@ async function confirmListingPayment({
 
   if (error) {
     return { error: error.message, status: 500 };
+  }
+
+  const couponCode = payment.metadata?.coupon_code;
+  if (product === 'listing_publication' && isSecondListingCoupon(couponCode)) {
+    await supabase.from('coupon_redemptions').upsert(
+      {
+        coupon_code: String(couponCode).toUpperCase(),
+        user_id: userId,
+        listing_id: listingId,
+        payment_id: String(payment.id),
+        amount_before: Number(payment.metadata?.coupon_amount_before ?? payment.transaction_amount ?? 0),
+        amount_after: Number(payment.metadata?.coupon_amount_after ?? payment.transaction_amount ?? 0)
+      },
+      { onConflict: 'coupon_code,listing_id' }
+    );
   }
 
   return { ok: true };

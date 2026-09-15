@@ -54,6 +54,23 @@ create table if not exists public.listings (
   updated_at timestamptz not null default now()
 );
 
+create table if not exists public.coupon_redemptions (
+  id uuid primary key default gen_random_uuid(),
+  coupon_code text not null,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  listing_id uuid not null references public.listings(id) on delete cascade,
+  payment_id text,
+  amount_before numeric(10,2) not null,
+  amount_after numeric(10,2) not null,
+  created_at timestamptz not null default now()
+);
+
+create unique index if not exists coupon_redemptions_coupon_listing_idx
+on public.coupon_redemptions (coupon_code, listing_id);
+
+create index if not exists coupon_redemptions_coupon_user_idx
+on public.coupon_redemptions (coupon_code, user_id);
+
 alter table public.listings add column if not exists is_paid boolean not null default false;
 alter table public.listings add column if not exists payment_status text not null default 'not_required';
 alter table public.listings add column if not exists payment_amount numeric(10,2);
