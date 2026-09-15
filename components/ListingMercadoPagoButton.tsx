@@ -58,7 +58,7 @@ export default function ListingMercadoPagoButton({ listingId, kind, label = 'Pag
             id="listing-coupon"
             value={couponCode}
             onChange={(event) => setCouponCode(event.target.value.toUpperCase())}
-            placeholder="POTILAR2"
+            placeholder="Digite seu cupom"
             className="mt-2 h-11 w-full rounded-lg border border-sand-200 px-3 text-sm font-semibold uppercase outline-none transition focus:border-ocean-500 focus:ring-2 focus:ring-ocean-100 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
           />
         </div>
