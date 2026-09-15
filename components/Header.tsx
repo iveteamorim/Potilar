@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Calculator, Menu, ShieldCheck, UserRound, X } from 'lucide-react';
+import { Calculator, Menu, Plus, ShieldCheck, UserRound, X } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Logo from './Logo';
@@ -30,6 +30,7 @@ export default function Header() {
   const isActive = (href: string) => (href === '/' ? pathname === '/' : pathname.startsWith(href));
   const closeMenu = () => setMenuOpen(false);
   const isParticularAccount = accountType === 'particular' && role !== 'admin';
+  const isPanelPage = pathname.startsWith('/mi-cuenta') || pathname.startsWith('/admin');
 
   useEffect(() => {
     let cancelled = false;
@@ -81,9 +82,14 @@ export default function Header() {
           )}
           <Link
             href="/anunciar"
-            className="hidden rounded-lg border-2 border-slate-900 px-5 py-2.5 text-xs font-bold text-slate-950 transition hover:bg-slate-950 hover:text-white dark:border-white dark:text-white dark:hover:bg-white dark:hover:text-slate-950 sm:inline-flex"
+            className={
+              isPanelPage
+                ? 'hidden items-center gap-2 rounded-full bg-[#2563eb] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#1d4ed8] sm:inline-flex'
+                : 'hidden rounded-lg border-2 border-slate-900 px-5 py-2.5 text-xs font-bold text-slate-950 transition hover:bg-slate-950 hover:text-white dark:border-white dark:text-white dark:hover:bg-white dark:hover:text-slate-950 sm:inline-flex'
+            }
           >
-            Anunciar grátis
+            {isPanelPage && <Plus className="h-4 w-4" strokeWidth={2.5} aria-hidden="true" />}
+            {isPanelPage ? 'Anunciar imovel' : 'Anunciar gratis'}
           </Link>
           <button
             type="button"
