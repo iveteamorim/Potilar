@@ -196,19 +196,30 @@ export default function FavoriteButton({
         type="button"
         onClick={toggleFavorite}
         aria-label={isFavorite ? `Remover ${title} dos favoritos` : `Salvar ${title} nos favoritos`}
-        className={`${
+        className={[
           variant === 'floating'
             ? floatingClassName ?? 'absolute bottom-3 right-3 z-20 h-10 w-10'
             : variant === 'icon'
-              ? 'h-11 w-11 border border-sand-300 bg-white text-slate-500 hover:border-red-300 hover:text-red-500 dark:border-slate-700 dark:bg-slate-900'
-              : 'h-11 px-4'
-        } flex items-center justify-center gap-2 rounded-full transition ${
-          variant !== 'icon' ? 'shadow-soft' : ''
-        } ${
-          isFavorite ? 'bg-red-500 text-white border-red-500' : variant === 'icon' ? '' : 'bg-white/95 text-slate-700 hover:text-red-500'
-        }`}
+              ? `${floatingClassName ?? 'h-11 w-11'} shrink-0 border bg-white ${
+                  isFavorite
+                    ? 'border-red-400 text-red-500 hover:border-red-500 hover:text-red-600'
+                    : 'border-slate-300 text-slate-800 hover:border-red-400 hover:text-red-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100'
+                }`
+              : 'h-11 px-4',
+          'flex items-center justify-center gap-2 rounded-full transition',
+          variant !== 'icon' ? 'shadow-soft' : '',
+          isFavorite && variant !== 'icon'
+            ? 'border-red-500 bg-red-500 text-white'
+            : variant === 'icon'
+              ? ''
+              : 'bg-white/95 text-slate-700 hover:text-red-500'
+        ].filter(Boolean).join(' ')}
       >
-        <Heart className={`h-5 w-5 ${isFavorite ? 'fill-current' : ''}`} aria-hidden="true" />
+        <Heart
+          className={`h-5 w-5 shrink-0 ${isFavorite ? 'fill-current' : 'fill-none'}`}
+          strokeWidth={2.25}
+          aria-hidden="true"
+        />
         {variant === 'inline' && <span className="text-sm font-semibold">{isFavorite ? 'Favorito' : 'Salvar favorito'}</span>}
       </button>
 

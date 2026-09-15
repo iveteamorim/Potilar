@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { formatContactPhoneInput } from '@/lib/contactPhone';
 import { buildPublicProfileSlug, getPublicProfilePath } from '@/lib/publicProfile';
 import { slugify } from '@/lib/slugify';
 
@@ -41,7 +42,7 @@ export default function ProfileEditorForm({
 
   const [name, setName] = useState(fullName);
   const [accountEmail, setAccountEmail] = useState(email);
-  const [accountPhone, setAccountPhone] = useState(phone);
+  const [accountPhone, setAccountPhone] = useState(phone ? formatContactPhoneInput(phone) : '');
   const [accountStatus, setAccountStatus] = useState('');
   const [accountLoading, setAccountLoading] = useState(false);
 
@@ -163,8 +164,10 @@ export default function ProfileEditorForm({
             <label className="text-sm font-semibold text-slate-700 dark:text-slate-200">Telefone</label>
             <input
               value={accountPhone}
-              onChange={(event) => setAccountPhone(event.target.value)}
-              placeholder="+55 84 99999-9999"
+              onChange={(event) => setAccountPhone(formatContactPhoneInput(event.target.value))}
+              placeholder="+55 84 96972-4141"
+              inputMode="tel"
+              maxLength={20}
               className="mt-2 w-full rounded-2xl border border-sand-200 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-900"
             />
           </div>

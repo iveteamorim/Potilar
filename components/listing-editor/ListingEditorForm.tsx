@@ -379,7 +379,7 @@ export default function ListingEditorForm({
         resolveListingCoordinates(formattedLocation, formattedNeighborhood, formattedCommunity, addressExtra);
       const cleanedPhone = normalizeContactPhone(contactPhone);
       if ((contactMethods.includes('phone') || contactMethods.includes('whatsapp')) && !isValidContactPhone(cleanedPhone)) {
-        throw new Error('Informe o telefone/WhatsApp com DDI (ex: +55 84 99999-9999 ou +34 687 153 601).');
+        throw new Error('Informe o telefone/WhatsApp com DDI (ex: +55 84 96972-4141, +55 84 3443-5655 ou +34 687 153 601).');
       }
       if (contactMethods.includes('email') && !contactEmail.trim()) {
         throw new Error('Informe um email valido ou desmarque a opcao Email.');
@@ -645,7 +645,7 @@ export default function ListingEditorForm({
           <input
             value={contactPhone}
             onChange={(event) => setContactPhone(formatContactPhoneInput(event.target.value))}
-            placeholder="+55 84 99999-9999"
+            placeholder="+55 84 96972-4141"
             inputMode="tel"
             maxLength={20}
             className="rounded-2xl border border-sand-200 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-900"
@@ -653,7 +653,7 @@ export default function ListingEditorForm({
           <input value={contactEmail} onChange={(event) => setContactEmail(event.target.value)} placeholder="Email" className="rounded-2xl border border-sand-200 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-900" />
         </div>
         <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-          Use DDI com +. Ex: +55 84… (Brasil) ou +34… (Espanha).
+          Use DDI com +. Ex: +55 84 96972-4141, +55 84 3443-5655 ou +34 687 153 601.
         </p>
         <div className="mt-3 flex flex-wrap gap-3">
           {[

@@ -177,7 +177,7 @@ export async function saveListingEditorChanges(payload: SaveListingEditorPayload
   if ((contactMethods.includes('phone') || contactMethods.includes('whatsapp')) && !isValidContactPhone(resolvedPhone)) {
     return {
       ok: false as const,
-      error: 'Informe o telefone/WhatsApp com DDI (ex: +55 47 99263-1299).'
+      error: 'Informe o telefone/WhatsApp com DDI (ex: +55 84 96972-4141 ou +55 84 3443-5655).'
     };
   }
 

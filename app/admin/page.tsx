@@ -50,7 +50,7 @@ function getHighlightLabel(plan?: string | null) {
   return 'Destaque';
 }
 
-function formatDocument(value?: string | null) {
+function formatDocument(value?: string | null, role?: string | null) {
   const digits = value?.replace(/\D/g, '') ?? '';
   if (digits.length === 11) {
     return digits.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
@@ -58,7 +58,8 @@ function formatDocument(value?: string | null) {
   if (digits.length === 14) {
     return digits.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
   }
-  return value || 'Não informado';
+  if (role === 'admin') return 'Dispensado (admin)';
+  return value || 'Pendente no perfil';
 }
 
 export default async function AdminPage({
@@ -110,29 +111,34 @@ export default async function AdminPage({
   }
 
   const ownerIds = Array.from(new Set((listings ?? []).map((listing) => listing.owner_id).filter(Boolean)));
-  let advertiserProfiles = new Map<string, { document: string | null; accountType: string | null; creci: string | null; creciVerified: boolean }>();
+  let advertiserProfiles = new Map<string, { document: string | null; accountType: string | null; creci: string | null; creciVerified: boolean; role: string | null; fullName: string | null; email: string | null; phone: string | null; createdAt: string | null }>();
   if (ownerIds.length > 0) {
     let { data: profileDocs, error: profileDocsError } = await supabase
       .from('profiles')
-      .select('id,advertiser_document,account_type,creci,creci_verified')
+      .select('id,full_name,email,phone,created_at,advertiser_document,account_type,creci,creci_verified,role')
       .in('id', ownerIds);
 
     if (profileDocsError) {
       const fallback = await supabase
         .from('profiles')
-        .select('id,advertiser_document,account_type,creci')
+        .select('id,full_name,email,phone,created_at,advertiser_document,account_type,creci,role')
         .in('id', ownerIds);
       profileDocs = fallback.data?.map((profile) => ({ ...profile, creci_verified: false })) ?? [];
     }
 
     advertiserProfiles = new Map(
-      ((profileDocs ?? []) as Array<{ id: string; advertiser_document: string | null; account_type: string | null; creci: string | null; creci_verified?: boolean | null }>).map((profile) => [
+      ((profileDocs ?? []) as Array<{ id: string; full_name?: string | null; email?: string | null; phone?: string | null; created_at?: string | null; advertiser_document: string | null; account_type: string | null; creci: string | null; creci_verified?: boolean | null; role?: string | null }>).map((profile) => [
         profile.id,
         {
+          fullName: profile.full_name ?? null,
+          email: profile.email ?? null,
+          phone: profile.phone ?? null,
+          createdAt: profile.created_at ?? null,
           document: profile.advertiser_document,
           accountType: profile.account_type,
           creci: profile.creci,
-          creciVerified: Boolean(profile.creci_verified)
+          creciVerified: Boolean(profile.creci_verified),
+          role: profile.role ?? null
         }
       ])
     );
@@ -405,10 +411,23 @@ export default async function AdminPage({
                       </p>
                       <div className="mt-2 flex flex-wrap gap-2">
                         <p className="inline-flex rounded-full border border-sand-200 px-3 py-1 text-xs font-semibold text-slate-600 dark:border-slate-700 dark:text-slate-300">
+                          Conta: {advertiserProfiles.get(listing.owner_id)?.fullName || advertiserProfiles.get(listing.owner_id)?.email || listing.owner_id}
+                        </p>
+                        {advertiserProfiles.get(listing.owner_id)?.email && (
+                          <p className="inline-flex rounded-full border border-sand-200 px-3 py-1 text-xs font-semibold text-slate-600 dark:border-slate-700 dark:text-slate-300">
+                            Email: {advertiserProfiles.get(listing.owner_id)?.email}
+                          </p>
+                        )}
+                        {advertiserProfiles.get(listing.owner_id)?.phone && (
+                          <p className="inline-flex rounded-full border border-sand-200 px-3 py-1 text-xs font-semibold text-slate-600 dark:border-slate-700 dark:text-slate-300">
+                            Telefone: {advertiserProfiles.get(listing.owner_id)?.phone}
+                          </p>
+                        )}
+                        <p className="inline-flex rounded-full border border-sand-200 px-3 py-1 text-xs font-semibold text-slate-600 dark:border-slate-700 dark:text-slate-300">
                           Tipo: {advertiserProfiles.get(listing.owner_id)?.accountType ?? 'particular'}
                         </p>
                         <p className="inline-flex rounded-full border border-sand-200 px-3 py-1 text-xs font-semibold text-slate-600 dark:border-slate-700 dark:text-slate-300">
-                          CPF/CNPJ: {formatDocument(advertiserProfiles.get(listing.owner_id)?.document)}
+                          CPF/CNPJ: {formatDocument(advertiserProfiles.get(listing.owner_id)?.document, advertiserProfiles.get(listing.owner_id)?.role)}
                         </p>
                         {advertiserProfiles.get(listing.owner_id)?.creci && (
                           <p className="inline-flex rounded-full border border-sand-200 px-3 py-1 text-xs font-semibold text-slate-600 dark:border-slate-700 dark:text-slate-300">
@@ -424,6 +443,14 @@ export default async function AdminPage({
                             }`}
                           >
                             {advertiserProfiles.get(listing.owner_id)?.creciVerified ? 'CRECI verificado' : 'CRECI pendente'}
+                          </p>
+                        )}
+                        <p className="inline-flex rounded-full border border-sand-200 px-3 py-1 text-xs font-semibold text-slate-600 dark:border-slate-700 dark:text-slate-300">
+                          ID conta: {listing.owner_id}
+                        </p>
+                        {advertiserProfiles.get(listing.owner_id)?.createdAt && (
+                          <p className="inline-flex rounded-full border border-sand-200 px-3 py-1 text-xs font-semibold text-slate-600 dark:border-slate-700 dark:text-slate-300">
+                            Conta criada: {formatDate(advertiserProfiles.get(listing.owner_id)?.createdAt)}
                           </p>
                         )}
                       </div>

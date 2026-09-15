@@ -33,7 +33,7 @@ export async function PATCH(request: Request) {
   }
 
   if (phone && !isValidContactPhone(phone)) {
-    return NextResponse.json({ error: 'Informe o telefone com DDI, por exemplo +55 84 99999-9999.' }, { status: 400 });
+    return NextResponse.json({ error: 'Informe o telefone com DDI, por exemplo +55 84 96972-4141 ou +55 84 3443-5655.' }, { status: 400 });
   }
 
   const { error: profileError } = await supabase

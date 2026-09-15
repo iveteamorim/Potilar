@@ -481,7 +481,7 @@ export default async function PropertyDetailPage({ params }: { params: { slug: s
             <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-slate-600 dark:text-slate-300">
               {specIcons.map((item) => (
                 <span key={item.label} className="inline-flex items-center gap-2">
-                  <item.Icon className="h-4 w-4 text-slate-500" aria-hidden="true" />
+                  <item.Icon className="h-4 w-4 text-ocean-600" aria-hidden="true" />
                   {item.label}
                 </span>
               ))}

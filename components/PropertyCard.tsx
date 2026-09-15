@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
-import { Bath, BedDouble, Box, Camera, Car, ChevronLeft, ChevronRight, CheckCircle2, Mail, MapPin, MessageCircle, Phone, PlayCircle, Ruler } from 'lucide-react';
+import { Bath, BedDouble, Box, Camera, Car, ChevronLeft, ChevronRight, CheckCircle2, Flag, Mail, MapPin, MessageCircle, Phone, PlayCircle, Ruler, Share2 } from 'lucide-react';
 import type { Property } from '@/data/properties';
 import { formatListingDateLabel } from '@/lib/dateLabels';
 import { getCleanPropertyTitle } from '@/lib/displayTitle';
@@ -14,6 +14,7 @@ import { showsDestaquePresentation } from '@/lib/legacyHomeFeatured';
 import { usesResidentialLayoutFields } from '@/lib/propertyTypes';
 import FavoriteButton from './FavoriteButton';
 import ListingMessageButton from './ListingMessageButton';
+import PropertyCardMoreMenu, { type PropertyCardMoreMenuItem } from './PropertyCardMoreMenu';
 
 function formatPrice(value: number) {
   return new Intl.NumberFormat('pt-BR', {
@@ -97,6 +98,10 @@ function cleanPhone(value?: string) {
   return value?.replace(/\D/g, '') ?? '';
 }
 
+function getListingReportCode(listingId: string) {
+  return `POT-${listingId.replace(/^user-/, '').slice(0, 8).toUpperCase()}`;
+}
+
 export default function PropertyCard({
   property,
   variant = 'grid',
@@ -148,42 +153,18 @@ export default function PropertyCard({
   const emailAddress = property.contactEmail?.trim();
   const detailUrl = `${BASE_URL}${getListingHref(property)}`;
   const whatsappMessage = `Ola, vi este imovel na PotiLar e tenho interesse: ${displayTitle}. Ainda esta disponivel? ${detailUrl}`;
-  const contactButtons = [
+  const whatsappHref =
     contactMethods.includes('whatsapp') && whatsappNumber
-      ? {
-          key: 'whatsapp',
-          href: `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(whatsappMessage)}`,
-          label: 'WhatsApp',
-          icon: MessageCircle,
-          className: 'bg-green-600 text-white',
-          external: true
-        }
-      : null,
-    contactMethods.includes('phone') && phoneNumber
-      ? {
-          key: 'phone',
-          href: `tel:+${phoneNumber}`,
-          label: 'Telefone',
-          icon: Phone,
-          className: 'border border-ocean-200 text-ocean-700 dark:border-slate-700 dark:text-slate-200',
-          external: false
-        }
-      : null,
+      ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(whatsappMessage)}`
+      : null;
+  const phoneHref = contactMethods.includes('phone') && phoneNumber ? `tel:+${phoneNumber}` : null;
+  const emailHref =
     contactMethods.includes('email') && emailAddress
-      ? {
-          key: 'email',
-          href: `mailto:${emailAddress}?subject=${encodeURIComponent(`Interesse no anúncio: ${displayTitle}`)}`,
-          label: 'Email',
-          icon: Mail,
-          className: 'border border-ocean-200 text-ocean-700 dark:border-slate-700 dark:text-slate-200',
-          external: false
-        }
-      : null
-  ].filter(Boolean);
+      ? `mailto:${emailAddress}?subject=${encodeURIComponent(`Interesse no anúncio: ${displayTitle}`)}`
+      : null;
+  const reportHref = `/contato?assunto=${encodeURIComponent(`Denunciar anúncio ${getListingReportCode(property.id)}`)}&url=${encodeURIComponent(detailUrl)}`;
   const hasPotilarChat = Boolean(property.ownerId) && !panelPreview;
-  const hasContactActions = !panelPreview && (hasPotilarChat || contactButtons.length > 0);
-  const contactActionCount = contactButtons.length + (hasPotilarChat ? 1 : 0);
-  const isDenseContactRow = contactActionCount >= 3;
+  const hasContactActions = !panelPreview && (hasPotilarChat || Boolean(whatsappHref || phoneHref || emailHref));
   const isHorizontal = variant === 'horizontal';
   const isCompact = variant === 'compact';
   const cardShellClassName = isHorizontal
@@ -195,10 +176,10 @@ export default function PropertyCard({
       ? 'relative aspect-[8/5] w-full shrink-0 overflow-hidden'
       : 'relative h-60 w-full overflow-hidden lg:h-64';
   const favoriteButtonClassName = isCompact
-    ? 'relative z-20 h-8 w-8 shadow-md'
+    ? 'h-8 w-8 shadow-md'
     : isHorizontal
-      ? 'relative z-20 h-9 w-9 shadow-md'
-      : 'relative z-20 h-10 w-10 shadow-md';
+      ? 'h-9 w-9 shadow-md'
+      : 'h-10 w-10 shadow-md';
   const listingIdForChat = property.id.startsWith('user-') ? property.id.replace(/^user-/, '') : property.id;
   const advertiserBrandSize = isCompact ? 'compact' : 'default';
   const bodyPaddingClassName = isHorizontal
@@ -225,13 +206,42 @@ export default function PropertyCard({
     : isCompact
       ? 'mt-auto min-h-[72px] border-t border-sand-100 pt-2 dark:border-slate-800'
       : 'mt-auto min-h-[142px] border-t border-sand-100 pt-4 dark:border-slate-800';
-  const contactButtonClassName = isHorizontal
-    ? isDenseContactRow
-      ? 'gap-1 px-1.5 py-1.5 text-[11px]'
-      : 'gap-1.5 px-2 py-1.5 text-xs'
-    : isDenseContactRow
-      ? 'gap-1 px-1.5 py-2 text-[11px]'
-      : 'gap-1.5 px-2.5 py-2 text-xs';
+  const contactButtonClassName = isCompact || isHorizontal
+    ? 'gap-1 px-1.5 py-1.5 text-[11px]'
+    : 'gap-1.5 px-2 py-2 text-xs';
+  const primaryContactClassName = isHorizontal
+    ? `inline-flex shrink-0 items-center justify-center whitespace-nowrap rounded-lg font-semibold ${contactButtonClassName}`
+    : `inline-flex min-w-0 flex-1 items-center justify-center whitespace-nowrap rounded-lg font-semibold ${contactButtonClassName}`;
+
+  async function shareListing() {
+    const shareText = `Olha este imóvel na Potilar: ${displayTitle}`;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: displayTitle, text: shareText, url: detailUrl });
+        return;
+      }
+    } catch {
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(detailUrl);
+    } catch {
+      window.open(`https://wa.me/?text=${encodeURIComponent(`${shareText} ${detailUrl}`)}`, '_blank', 'noopener,noreferrer');
+    }
+  }
+
+  const phoneInPrimary = Boolean(phoneHref && !whatsappHref);
+  const emailInPrimary = Boolean(emailHref && !whatsappHref && !phoneHref);
+  const moreMenuItems: PropertyCardMoreMenuItem[] = [
+    phoneHref && !phoneInPrimary
+      ? { key: 'phone', href: phoneHref, label: 'Ligar', icon: Phone }
+      : null,
+    emailHref && !emailInPrimary
+      ? { key: 'email', href: emailHref, label: 'Enviar e-mail', icon: Mail }
+      : null,
+    { key: 'share', label: 'Compartilhar anúncio', icon: Share2, onClick: () => void shareListing() },
+    { key: 'report', href: reportHref, label: 'Denunciar anúncio', icon: Flag }
+  ].filter(Boolean) as PropertyCardMoreMenuItem[];
 
   function showPreviousImage(event: React.MouseEvent<HTMLButtonElement>) {
     event.preventDefault();
@@ -245,68 +255,60 @@ export default function PropertyCard({
     setImageIndex((current) => (current + 1) % images.length);
   }
 
-  const contactButtonGrid = (
-    <div className={isDenseContactRow ? 'grid grid-cols-3 gap-1.5' : 'grid grid-cols-2 gap-1.5'}>
+  const contactRow = (
+    <div className="flex min-w-0 items-center gap-1.5">
       {hasPotilarChat && (
         <ListingMessageButton
           listingId={listingIdForChat}
           ownerId={property.ownerId!}
           title={displayTitle}
           label="Chat"
-          buttonClassName={`inline-flex w-full items-center justify-center rounded-lg border border-ocean-200 font-semibold text-ocean-700 transition hover:bg-ocean-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800 ${contactButtonClassName}`}
+          buttonClassName={`${primaryContactClassName} border border-ocean-200 bg-white text-ocean-700 transition hover:bg-ocean-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800`}
         />
       )}
-      {contactButtons.map((button) => {
-        if (!button) return null;
-        const Icon = button.icon;
-        const denseLabel =
-          button.key === 'whatsapp' ? 'Zap' : button.key === 'phone' ? 'Tel' : button.key === 'email' ? 'Email' : button.label;
-        return (
-          <a
-            key={button.key}
-            href={button.href}
-            target={button.external ? '_blank' : undefined}
-            rel={button.external ? 'noreferrer' : undefined}
-            className={`inline-flex w-full items-center justify-center rounded-lg font-semibold ${button.className} ${contactButtonClassName}`}
-          >
-            <Icon className={`${isHorizontal ? 'h-3.5 w-3.5' : 'h-4 w-4'}`} aria-hidden="true" />
-            {isDenseContactRow ? denseLabel : button.label}
-          </a>
-        );
-      })}
+      {whatsappHref ? (
+        <a
+          href={whatsappHref}
+          target="_blank"
+          rel="noreferrer"
+          className={`${primaryContactClassName} bg-green-600 text-white transition hover:bg-green-700`}
+        >
+          <MessageCircle className={`${isCompact || isHorizontal ? 'h-3.5 w-3.5' : 'h-4 w-4'}`} aria-hidden="true" />
+          WhatsApp
+        </a>
+      ) : phoneHref ? (
+        <a
+          href={phoneHref}
+          className={`${primaryContactClassName} border border-ocean-200 bg-white text-ocean-700 transition hover:bg-ocean-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800`}
+        >
+          <Phone className={`${isCompact || isHorizontal ? 'h-3.5 w-3.5' : 'h-4 w-4'}`} aria-hidden="true" />
+          Ligar
+        </a>
+      ) : emailHref ? (
+        <a
+          href={emailHref}
+          className={`${primaryContactClassName} border border-ocean-200 bg-white text-ocean-700 transition hover:bg-ocean-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800`}
+        >
+          <Mail className={`${isCompact || isHorizontal ? 'h-3.5 w-3.5' : 'h-4 w-4'}`} aria-hidden="true" />
+          Email
+        </a>
+      ) : null}
+      <PropertyCardMoreMenu items={moreMenuItems} compact={isCompact || isHorizontal} />
     </div>
   );
 
   const contactActions = hasContactActions ? (
-    isHorizontal ? (
-      <div className="mt-2 border-t border-sand-100 pt-2.5 pb-0 dark:border-slate-800">
-        <div className="flex items-center gap-2">
-          <div className="min-w-0 flex-1">{contactButtonGrid}</div>
-          <FavoriteButton
-            propertyId={property.id}
-            title={displayTitle}
-            variant="floating"
-            floatingClassName={favoriteButtonClassName}
-          />
-        </div>
-      </div>
-    ) : (
-      <div
-        className={
-          isCompact ? 'border-t border-sand-100 p-2.5 dark:border-slate-800' : 'border-t border-sand-100 p-4 dark:border-slate-800'
-        }
-      >
-        <div className={`${isCompact ? 'mb-2' : 'mb-2.5'} flex justify-end`}>
-          <FavoriteButton
-            propertyId={property.id}
-            title={displayTitle}
-            variant="floating"
-            floatingClassName={favoriteButtonClassName}
-          />
-        </div>
-        {contactButtonGrid}
-      </div>
-    )
+    <div
+      className={
+        isHorizontal
+          ? 'mt-2 border-t border-sand-100 pt-2.5 dark:border-slate-800'
+          : isCompact
+            ? 'border-t border-sand-100 p-2.5 dark:border-slate-800'
+            : 'border-t border-sand-100 p-4 dark:border-slate-800'
+      }
+    >
+      {contactRow}
+    </div>
   ) : null;
 
   const imageBlock = (
@@ -316,7 +318,17 @@ export default function PropertyCard({
         ) : (
           <Image src={image} alt={imageAlt} fill className="object-cover transition duration-500 group-hover:scale-105" />
         )}
-        <div className={`absolute left-3 top-3 flex flex-wrap items-center ${isCompact ? 'gap-1' : 'gap-2'}`}>
+        {!panelPreview && (
+          <div className="absolute right-2 top-2 z-20">
+            <FavoriteButton
+              propertyId={property.id}
+              title={displayTitle}
+              variant="icon"
+              floatingClassName={favoriteButtonClassName}
+            />
+          </div>
+        )}
+        <div className={`absolute left-3 top-3 flex flex-wrap items-center ${isCompact ? 'gap-1 pr-10' : 'gap-2 pr-12'}`}>
           <span className={`bg-sun-500 font-bold text-white ${isCompact ? 'px-2 py-0.5 text-[10px]' : 'px-3 py-1 text-xs'}`}>
             {property.transaction}
           </span>
@@ -463,15 +475,6 @@ export default function PropertyCard({
     </>
   );
 
-  const floatingFavorite = !hasContactActions && !panelPreview ? (
-    <FavoriteButton
-      propertyId={property.id}
-      title={displayTitle}
-      variant="floating"
-      floatingClassName="absolute bottom-3 right-3 z-20 h-10 w-10"
-    />
-  ) : null;
-
   if (isHorizontal) {
     const detailsColumn = (
       <div className={`flex flex-col ${bodyPaddingClassName} md:col-start-2`}>
@@ -488,7 +491,6 @@ export default function PropertyCard({
 
     return (
       <article className={cardShellClassName}>
-        {floatingFavorite}
         {imageBlock}
         {detailsColumn}
       </article>
@@ -498,7 +500,6 @@ export default function PropertyCard({
   if (isUserListing) {
     return (
       <article className={cardShellClassName}>
-        {floatingFavorite}
         {content}
         {contactActions}
       </article>
@@ -507,7 +508,6 @@ export default function PropertyCard({
 
   return (
     <article className={cardShellClassName}>
-      {floatingFavorite}
       <Link href={getListingHref(property)} className="flex h-full flex-col">
         {content}
       </Link>

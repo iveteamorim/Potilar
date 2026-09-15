@@ -6,6 +6,7 @@ import { Camera, ChevronDown, Eye, Sparkles, X } from 'lucide-react';
 import PrecoJustoRNAdvisor from '@/components/PrecoJustoRNAdvisor';
 import type { Property } from '@/data/properties';
 import { compressImage } from '@/lib/imageCompression';
+import { formatContactPhoneInput, isValidContactPhone, normalizeContactPhone } from '@/lib/contactPhone';
 import { createClient } from '@/lib/supabase/client';
 import { geocodeListingAddress } from '@/lib/geocodeListing';
 import { KNOWN_CITY_NAMES, normalizeKnownCityName, resolveListingCoordinates } from '@/lib/locationCoordinates';
@@ -81,15 +82,6 @@ function formatCpfDocument(value: string) {
     .replace(/\.(\d{3})(\d)/, '.$1-$2');
 }
 
-function formatContactPhone(value: string) {
-  return value.replace(/[^\d+ ()-]/g, '').slice(0, 20);
-}
-
-function isValidContactPhone(value: string) {
-  const digits = cleanDocument(value);
-  return value.trim().startsWith('+') && digits.length >= 8 && digits.length <= 15;
-}
-
 function hasRepeatedDigits(value: string) {
   return /^(\d)\1+$/.test(value);
 }
@@ -152,7 +144,7 @@ export default function AnunciarForm({
   const router = useRouter();
   const cityInputRef = useRef<HTMLInputElement>(null);
   const [ownerName, setOwnerName] = useState(defaultName);
-  const [ownerPhone, setOwnerPhone] = useState(defaultPhone);
+  const [ownerPhone, setOwnerPhone] = useState(defaultPhone ? normalizeContactPhone(defaultPhone) : '');
   const [ownerEmail, setOwnerEmail] = useState(defaultEmail);
   const [ownerDocument, setOwnerDocument] = useState(formatCpfDocument(defaultDocument));
   const [contactMethods, setContactMethods] = useState<string[]>(['whatsapp']);
@@ -520,7 +512,7 @@ export default function AnunciarForm({
     }
 
     if ((contactMethods.includes('phone') || contactMethods.includes('whatsapp')) && !isValidContactPhone(ownerPhone)) {
-      setStatus('Informe o telefone ou WhatsApp com DDI, DDD e numero. Exemplo: +55 47 99999-9999.');
+      setStatus('Informe DDD e número. Celular: 84 96972-4141. Fixo: 84 3443-5655.');
       return;
     }
 
@@ -776,16 +768,20 @@ export default function AnunciarForm({
                   type="tel"
                   inputMode="tel"
                   maxLength={20}
-                  placeholder="+55 47 99999-9999"
+                  placeholder="+55 84 96972-4141"
                   value={ownerPhone}
-                  onChange={(event) => setOwnerPhone(formatContactPhone(event.target.value))}
+                  onChange={(event) => setOwnerPhone(formatContactPhoneInput(event.target.value))}
                   className={`w-full rounded-2xl border bg-white px-4 py-3 text-sm dark:bg-slate-900 ${
                     ownerPhoneHasError
                       ? 'border-red-300 text-red-700 focus:border-red-500 focus:outline-none dark:border-red-800 dark:text-red-200'
                       : 'border-sand-200 dark:border-slate-700'
                   }`}
                 />
-                {ownerPhoneHasError && <p className="mt-2 text-xs font-semibold text-red-600">Use DDI, DDD e numero. Exemplo: +55 47 99999-9999.</p>}
+                {ownerPhoneHasError && (
+                  <p className="mt-2 text-xs font-semibold text-red-600">
+                    Informe DDD e número. Celular: 84 96972-4141. Fixo: 84 3443-5655.
+                  </p>
+                )}
               </div>
             </div>
 

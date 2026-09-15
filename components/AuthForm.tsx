@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Eye, EyeOff } from 'lucide-react';
 import { BASE_URL } from '@/lib/config';
+import { cleanPhoneDigits, formatContactPhoneInput, isValidContactPhone, normalizeContactPhone } from '@/lib/contactPhone';
 import type { ProfessionalPlanId } from '@/lib/plans';
 import { buildPublicProfileSlug } from '@/lib/publicProfile';
 import { createClient } from '@/lib/supabase/client';
@@ -29,15 +30,6 @@ function formatCnpj(value: string) {
     .replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3')
     .replace(/\.(\d{3})(\d)/, '.$1/$2')
     .replace(/(\d{4})(\d)/, '$1-$2');
-}
-
-function formatContactPhone(value: string) {
-  return value.replace(/[^\d+ ()-]/g, '').slice(0, 20);
-}
-
-function isValidContactPhone(value: string) {
-  const digits = cleanDocument(value);
-  return value.trim().startsWith('+') && digits.length >= 8 && digits.length <= 15;
 }
 
 function hasRepeatedDigits(value: string) {
@@ -314,7 +306,7 @@ export default function AuthForm() {
       }
 
       if (!isBuyerIntent && !isValidContactPhone(phone)) {
-        setMessage('Informe o WhatsApp com DDI, DDD e numero. Exemplo: +55 47 99999-9999.');
+        setMessage('Informe DDD e número. Celular: 84 96972-4141. Fixo: 84 3443-5655.');
         setLoading(false);
         return;
       }
@@ -339,7 +331,8 @@ export default function AuthForm() {
 
       const accountTypeToSave: AccountType = isBuyerIntent ? 'particular' : accountType;
       const advertiserDocument = isBuyerIntent ? null : accountType === 'imobiliaria' ? cleanDocument(cnpj) : cleanDocument(cpf);
-      const normalizedPhone = isBuyerIntent ? null : cleanDocument(phone);
+      const formattedPhone = isBuyerIntent ? null : normalizeContactPhone(phone);
+      const normalizedPhone = formattedPhone ? cleanPhoneDigits(formattedPhone) : null;
 
       if (!acceptedTerms) {
         setMessage('Aceite os Termos de Uso e a Politica de Privacidade para criar sua conta.');
@@ -370,7 +363,7 @@ export default function AuthForm() {
           emailRedirectTo: `${authOrigin}/auth/callback?next=${encodeURIComponent('/login?confirmed=1')}`,
           data: {
             full_name: fullName,
-            phone: normalizedPhone,
+            phone: formattedPhone,
             account_type: accountTypeToSave,
             advertiser_document: advertiserDocument,
             creci: isBuyerIntent ? null : creci.trim(),
@@ -390,7 +383,7 @@ export default function AuthForm() {
           id: data.user.id,
           email: normalizedEmail,
           full_name: fullName,
-          phone: normalizedPhone,
+          phone: formattedPhone,
           account_type: accountTypeToSave,
           advertiser_document: advertiserDocument,
           creci: isBuyerIntent ? null : creci.trim() || null,
@@ -528,8 +521,8 @@ export default function AuthForm() {
               <div>
                 <input
                   value={phone}
-                  onChange={(event) => setPhone(formatContactPhone(event.target.value))}
-                  placeholder="+55 47 99999-9999"
+                  onChange={(event) => setPhone(formatContactPhoneInput(event.target.value))}
+                  placeholder="+55 84 96972-4141"
                   inputMode="tel"
                   maxLength={20}
                   className={`w-full rounded-xl border bg-white px-4 py-2.5 text-sm dark:bg-slate-900 ${
@@ -540,7 +533,7 @@ export default function AuthForm() {
                 />
                 {phoneHasError && (
                   <p className="mt-2 text-xs font-semibold text-red-600 dark:text-red-300">
-                    Use DDI, DDD e numero. Exemplo: +55 47 99999-9999.
+                    Informe DDD e número. Celular: 84 96972-4141. Fixo: 84 3443-5655.
                   </p>
                 )}
               </div>

@@ -813,7 +813,7 @@ export default async function MinhaContaPage({
         {searchParams?.contact_error && (
           <AccountNotice tone="error">
             {searchParams.contact_error === 'phone'
-              ? 'Informe o telefone/WhatsApp com DDI (ex: +55 84 99999-9999 ou +34 687 153 601).'
+              ? 'Informe o telefone/WhatsApp com DDI (ex: +55 84 96972-4141, +55 84 3443-5655 ou +34 687 153 601).'
               : searchParams.contact_error === 'email'
                 ? 'Informe um email valido ou desmarque a opcao Email.'
                 : searchParams.contact_error === 'missing'
