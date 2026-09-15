@@ -61,9 +61,6 @@ export default function ListingMercadoPagoButton({ listingId, kind, label = 'Pag
             placeholder="POTILAR2"
             className="mt-2 h-11 w-full rounded-lg border border-sand-200 px-3 text-sm font-semibold uppercase outline-none transition focus:border-ocean-500 focus:ring-2 focus:ring-ocean-100 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
           />
-          <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-            POTILAR2: 2o ou 3o anuncio por R$ 9,90. Valido para os 25 primeiros usos.
-          </p>
         </div>
       )}
       <button
