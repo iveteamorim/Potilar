@@ -557,25 +557,17 @@ function resolveNeighborhoodCoordinates(
   locationText: string,
   searchTexts: string[]
 ): [number, number] | null {
-  const combined = normalize([locationText, ...searchTexts].filter(Boolean).join(' '));
+  const locationNorm = normalize(locationText);
+  if (!locationNorm) return null;
 
   for (const item of NEIGHBORHOOD_COORDINATES) {
     const cityNorm = normalize(item.city);
-    const hasCity = normalize(locationText).includes(cityNorm) || combined.includes(cityNorm);
-
-    if (!hasCity) continue;
+    if (!locationNorm.includes(cityNorm)) continue;
 
     const hasNeighborhood = item.names.some((name) =>
       searchTexts.some((text) => matchesNeighborhoodName(text, name))
     );
 
-    if (hasNeighborhood) {
-      return item.coordinates;
-    }
-  }
-
-  for (const item of NEIGHBORHOOD_COORDINATES) {
-    const hasNeighborhood = item.names.some((name) => matchesNeighborhoodName(combined, name));
     if (hasNeighborhood) {
       return item.coordinates;
     }
@@ -592,15 +584,6 @@ export function resolveListingCoordinates(...parts: Array<string | null | undefi
   const neighborhoodCoords = resolveNeighborhoodCoordinates(location, structuredParts);
   if (neighborhoodCoords) {
     return neighborhoodCoords;
-  }
-
-  for (const item of NEIGHBORHOOD_COORDINATES) {
-    const hasCity = fullText.includes(normalize(item.city));
-    const hasNeighborhood = item.names.some((name) => fullText.includes(normalize(name)));
-
-    if (hasCity && hasNeighborhood) {
-      return item.coordinates;
-    }
   }
 
   const cityCoords = resolveCityCoordinates(fullText, location.split(',')[0]?.trim() || location);
