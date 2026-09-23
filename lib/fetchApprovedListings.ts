@@ -64,7 +64,20 @@ function mergeListingRows(tableRows: Record<string, unknown>[], rpcRows: Record<
     const id = String(row.id ?? '');
     if (!id) continue;
     const existing = byId.get(id);
-    byId.set(id, existing ? { ...existing, ...row } : row);
+    if (!existing) {
+      byId.set(id, row);
+      continue;
+    }
+
+    byId.set(id, {
+      ...existing,
+      ...row,
+      featured_plan: row.featured_plan ?? existing.featured_plan,
+      featured_payment_status: row.featured_payment_status ?? existing.featured_payment_status,
+      featured_starts_at: row.featured_starts_at ?? existing.featured_starts_at,
+      featured_expires_at: row.featured_expires_at ?? existing.featured_expires_at,
+      listing_expires_at: row.listing_expires_at ?? existing.listing_expires_at
+    });
   }
 
   return Array.from(byId.values()).sort((a, b) => {

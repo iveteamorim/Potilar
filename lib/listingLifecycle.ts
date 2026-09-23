@@ -1,3 +1,5 @@
+import { getHighlightDurationDays } from '@/lib/plans';
+
 export function isListingExpired(listingExpiresAt?: string | null, now = Date.now()) {
   if (!listingExpiresAt) return false;
   const expiresAt = new Date(listingExpiresAt).getTime();
@@ -17,18 +19,29 @@ type FeaturedListingFields = {
   featured_expires_at?: string | null;
 };
 
-/** Destaque ativo somente com Pix confirmado e data de fim no futuro. */
+function getFeaturedExpiryMs(row: FeaturedListingFields) {
+  if (row.featured_expires_at) {
+    const expiresAt = new Date(row.featured_expires_at).getTime();
+    return Number.isFinite(expiresAt) ? expiresAt : null;
+  }
+
+  if (row.featured_starts_at) {
+    const startsAt = new Date(row.featured_starts_at).getTime();
+    if (!Number.isFinite(startsAt)) return null;
+    return startsAt + getHighlightDurationDays(row.featured_plan) * 24 * 60 * 60 * 1000;
+  }
+
+  return null;
+}
+
+/** Destaque ativo com Pix/cortesia confirmada. Sem data de fim, usa o prazo do plano. */
 export function isActiveFeaturedListing(row: FeaturedListingFields, now = Date.now()) {
   if (!row.featured_plan || row.featured_payment_status !== 'confirmed') {
     return false;
   }
 
-  if (!row.featured_expires_at) {
-    return false;
-  }
-
-  const expiresAt = new Date(row.featured_expires_at).getTime();
-  if (!Number.isFinite(expiresAt) || expiresAt <= now) {
+  const expiryMs = getFeaturedExpiryMs(row);
+  if (expiryMs !== null && expiryMs <= now) {
     return false;
   }
 
