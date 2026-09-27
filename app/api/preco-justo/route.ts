@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { buildPriceInsight, type PriceInsightInput } from '@/lib/priceIntelligence';
+import { getPrecoJustoAdvisorApiAuthRejection } from '@/lib/publicPriceSignal';
+import { createClient } from '@/lib/supabase/server';
 
 function extractOutputText(payload: any) {
   if (typeof payload?.output_text === 'string') return payload.output_text;
@@ -73,6 +75,15 @@ async function enhancePriceInsightWithOpenAI(insight: Awaited<ReturnType<typeof 
 
 export async function POST(request: Request) {
   try {
+    const supabase = createClient();
+    const {
+      data: { user }
+    } = await supabase.auth.getUser();
+    const unauthorized = getPrecoJustoAdvisorApiAuthRejection(user);
+    if (unauthorized) {
+      return NextResponse.json(unauthorized.body, { status: unauthorized.status });
+    }
+
     const body = (await request.json()) as PriceInsightInput & {
       price?: number;
       transaction?: string;
