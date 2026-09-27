@@ -15,6 +15,8 @@ import Link from 'next/link';
 import { getFreeListingLimit, getLaunchPromoDeadlineLabel, isLaunchPromoActive } from '@/lib/plans';
 import { POTILAR_DEFINITION } from '@/lib/siteIdentity';
 import agencyMatchImage from '@/components/ayudamosencontrarimobiliaria.jpg';
+import NewsShareButtons from '@/components/NewsShareButtons';
+import { BASE_URL } from '@/lib/config';
 import { dedupeNewsArticles, fallbackNewsArticles, formatNewsDate, getNewsImageUrl, sanitizeNewsArticle, withUniqueNewsImages, type NewsArticle } from '@/data/news';
 
 
@@ -369,8 +371,16 @@ export default async function HomePage() {
 
           <div className="mt-8 grid gap-6 md:grid-cols-3">
             {newsArticles.map((article) => (
-              <article key={article.slug} className="border border-sand-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+              <article key={article.slug} className="relative border border-sand-200 bg-white dark:border-slate-800 dark:bg-slate-900">
                 <img src={article.imageUrl} alt="" className="h-44 w-full object-cover" />
+                <NewsShareButtons
+                  slug={article.slug}
+                  title={article.title}
+                  url={`${BASE_URL}/noticias/${article.slug}`}
+                  surface="card"
+                  variant="icon"
+                  className="absolute right-2 top-2 z-10"
+                />
                 <div className="p-5">
                   {formatNewsDate(article.publishedAt) && (
                     <p className="mb-3 text-xs font-bold uppercase tracking-[0.16em] text-ocean-600">

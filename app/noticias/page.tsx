@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import NewsShareButtons from '@/components/NewsShareButtons';
+import { BASE_URL } from '@/lib/config';
 import { createClient } from '@/lib/supabase/server';
 import { dedupeNewsArticles, fallbackNewsArticles, formatNewsDate, getNewsImageUrl, sanitizeNewsArticle, withUniqueNewsImages, type NewsArticle } from '@/data/news';
 
@@ -63,6 +65,10 @@ async function getNewsArticles() {
   } catch {
     return fallbackNewsArticles;
   }
+}
+
+function getNewsPublicUrl(slug: string) {
+  return `${BASE_URL}/noticias/${slug}`;
 }
 
 function normalizeTopic(value: string) {
@@ -145,71 +151,96 @@ export default async function NewsPage({
         {isListView ? (
           <section className="grid gap-5 py-10">
             {visibleArticles.map((article) => (
-              <Link
-                key={article.slug}
-                href={`/noticias/${article.slug}`}
-                className="group grid gap-4 border border-sand-200 bg-white p-4 transition hover:-translate-y-0.5 hover:shadow-soft dark:border-slate-800 dark:bg-slate-900 sm:grid-cols-[220px_1fr]"
-              >
-                <img src={article.imageUrl} alt="" className="h-44 w-full object-cover sm:h-full" />
-                <div className="flex flex-col justify-between py-1">
-                  <div>
-                    <div className="text-xs font-bold uppercase tracking-[0.16em] text-ocean-600">
-                      {article.category}
-                      {formatNewsDate(article.publishedAt) ? ` · ${formatNewsDate(article.publishedAt)}` : ''}
+              <div key={article.slug} className="relative">
+                <Link
+                  href={`/noticias/${article.slug}`}
+                  className="group grid gap-4 border border-sand-200 bg-white p-4 transition hover:-translate-y-0.5 hover:shadow-soft dark:border-slate-800 dark:bg-slate-900 sm:grid-cols-[220px_1fr]"
+                >
+                  <img src={article.imageUrl} alt="" className="h-44 w-full object-cover sm:h-full" />
+                  <div className="flex flex-col justify-between py-1">
+                    <div>
+                      <div className="text-xs font-bold uppercase tracking-[0.16em] text-ocean-600">
+                        {article.category}
+                        {formatNewsDate(article.publishedAt) ? ` · ${formatNewsDate(article.publishedAt)}` : ''}
+                      </div>
+                      <h2 className="mt-3 text-2xl font-semibold leading-snug text-slate-950 group-hover:text-ocean-800 dark:text-white">
+                        {article.title}
+                      </h2>
+                      <p className="mt-3 text-sm leading-6 text-slate-600 dark:text-slate-300">{article.excerpt}</p>
                     </div>
-                    <h2 className="mt-3 text-2xl font-semibold leading-snug text-slate-950 group-hover:text-ocean-800 dark:text-white">
-                      {article.title}
-                    </h2>
-                    <p className="mt-3 text-sm leading-6 text-slate-600 dark:text-slate-300">{article.excerpt}</p>
+                    <span className="mt-4 text-sm font-bold text-ocean-700">Ler noticia</span>
                   </div>
-                  <span className="mt-4 text-sm font-bold text-ocean-700">Ler noticia</span>
-                </div>
-              </Link>
+                </Link>
+                <NewsShareButtons
+                  slug={article.slug}
+                  title={article.title}
+                  url={getNewsPublicUrl(article.slug)}
+                  surface="card"
+                  variant="icon"
+                  className="absolute right-3 top-3 z-10"
+                />
+              </div>
             ))}
           </section>
         ) : leadArticle ? (
           <section className="grid gap-8 py-10 lg:grid-cols-[1.35fr_0.65fr]">
-            <Link
-              href={`/noticias/${leadArticle.slug}`}
-              className="group grid overflow-hidden border border-sand-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-soft dark:border-slate-800 dark:bg-slate-900 lg:grid-cols-[0.95fr_1.05fr]"
-            >
-              <img src={leadArticle.imageUrl} alt="" className="h-72 w-full object-cover lg:h-full" />
-              <div className="flex min-h-[360px] flex-col justify-between p-6 sm:p-8">
-                <div>
-                  <div className="flex flex-wrap items-center gap-3 text-xs font-bold uppercase tracking-[0.16em] text-ocean-600">
-                    <span>{leadArticle.category}</span>
-                    {formatNewsDate(leadArticle.publishedAt) && (
-                      <>
-                        <span className="h-1 w-1 rounded-full bg-slate-300" />
-                        <span>{formatNewsDate(leadArticle.publishedAt)}</span>
-                      </>
-                    )}
+            <div className="relative">
+              <Link
+                href={`/noticias/${leadArticle.slug}`}
+                className="group grid overflow-hidden border border-sand-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-soft dark:border-slate-800 dark:bg-slate-900 lg:grid-cols-[0.95fr_1.05fr]"
+              >
+                <img src={leadArticle.imageUrl} alt="" className="h-72 w-full object-cover lg:h-full" />
+                <div className="flex min-h-[360px] flex-col justify-between p-6 sm:p-8">
+                  <div>
+                    <div className="flex flex-wrap items-center gap-3 text-xs font-bold uppercase tracking-[0.16em] text-ocean-600">
+                      <span>{leadArticle.category}</span>
+                      {formatNewsDate(leadArticle.publishedAt) && (
+                        <>
+                          <span className="h-1 w-1 rounded-full bg-slate-300" />
+                          <span>{formatNewsDate(leadArticle.publishedAt)}</span>
+                        </>
+                      )}
+                    </div>
+                    <h2 className="mt-4 text-3xl font-semibold leading-tight text-slate-950 group-hover:text-ocean-800 dark:text-white sm:text-4xl">
+                      {leadArticle.title}
+                    </h2>
+                    <p className="mt-4 text-base leading-7 text-slate-600 dark:text-slate-300">{leadArticle.excerpt}</p>
                   </div>
-                  <h2 className="mt-4 text-3xl font-semibold leading-tight text-slate-950 group-hover:text-ocean-800 dark:text-white sm:text-4xl">
-                    {leadArticle.title}
-                  </h2>
-                  <p className="mt-4 text-base leading-7 text-slate-600 dark:text-slate-300">{leadArticle.excerpt}</p>
+                  <span className="mt-6 inline-flex text-base font-bold text-ocean-700">Ler noticia</span>
                 </div>
-                <span className="mt-6 inline-flex text-base font-bold text-ocean-700">Ler noticia</span>
-              </div>
-            </Link>
+              </Link>
+              <NewsShareButtons
+                slug={leadArticle.slug}
+                title={leadArticle.title}
+                url={getNewsPublicUrl(leadArticle.slug)}
+                surface="card"
+                variant="icon"
+                className="absolute right-3 top-3 z-10"
+              />
+            </div>
 
             <aside className="space-y-4">
               <div className="border-b border-sand-200 pb-3 dark:border-slate-800">
                 <h2 className="text-xl font-semibold text-slate-950 dark:text-white">Ultimas atualizacoes</h2>
               </div>
               {sideArticles.map((article) => (
-                <Link
-                  key={article.slug}
-                  href={`/noticias/${article.slug}`}
-                  className="block border-b border-sand-200 pb-4 transition hover:text-ocean-800 dark:border-slate-800"
-                >
-                  <div className="text-xs font-bold uppercase tracking-[0.16em] text-ocean-600">
-                    {article.category}
-                    {formatNewsDate(article.publishedAt) ? ` · ${formatNewsDate(article.publishedAt)}` : ''}
-                  </div>
-                  <h3 className="mt-2 text-lg font-semibold leading-snug text-slate-950 dark:text-white">{article.title}</h3>
-                </Link>
+                <div key={article.slug} className="relative border-b border-sand-200 pb-4 dark:border-slate-800">
+                  <Link href={`/noticias/${article.slug}`} className="block pr-10 transition hover:text-ocean-800">
+                    <div className="text-xs font-bold uppercase tracking-[0.16em] text-ocean-600">
+                      {article.category}
+                      {formatNewsDate(article.publishedAt) ? ` · ${formatNewsDate(article.publishedAt)}` : ''}
+                    </div>
+                    <h3 className="mt-2 text-lg font-semibold leading-snug text-slate-950 dark:text-white">{article.title}</h3>
+                  </Link>
+                  <NewsShareButtons
+                    slug={article.slug}
+                    title={article.title}
+                    url={getNewsPublicUrl(article.slug)}
+                    surface="card"
+                    variant="icon"
+                    className="absolute right-0 top-0 z-10"
+                  />
+                </div>
               ))}
               <div className="border border-sand-200 bg-sand-50 p-5 dark:border-slate-800 dark:bg-slate-900">
                 <h2 className="text-sm font-bold uppercase tracking-[0.16em] text-slate-500">Temas</h2>
@@ -232,16 +263,26 @@ export default async function NewsPage({
         {!isListView && gridArticles.length > 0 && (
           <section className="grid gap-6 border-t border-sand-200 pt-8 dark:border-slate-800 md:grid-cols-3">
             {gridArticles.map((article) => (
-              <Link key={article.slug} href={`/noticias/${article.slug}`} className="group block">
-                <img src={article.imageUrl} alt="" className="h-44 w-full object-cover" />
-                <div className="mt-4 text-xs font-bold uppercase tracking-[0.16em] text-ocean-600">
-                  {article.category}
-                  {formatNewsDate(article.publishedAt) ? ` · ${formatNewsDate(article.publishedAt)}` : ''}
-                </div>
-                <h3 className="mt-2 text-xl font-semibold leading-snug text-slate-950 group-hover:text-ocean-800 dark:text-white">
-                  {article.title}
-                </h3>
-              </Link>
+              <div key={article.slug} className="relative">
+                <Link href={`/noticias/${article.slug}`} className="group block">
+                  <img src={article.imageUrl} alt="" className="h-44 w-full object-cover" />
+                  <div className="mt-4 text-xs font-bold uppercase tracking-[0.16em] text-ocean-600">
+                    {article.category}
+                    {formatNewsDate(article.publishedAt) ? ` · ${formatNewsDate(article.publishedAt)}` : ''}
+                  </div>
+                  <h3 className="mt-2 text-xl font-semibold leading-snug text-slate-950 group-hover:text-ocean-800 dark:text-white">
+                    {article.title}
+                  </h3>
+                </Link>
+                <NewsShareButtons
+                  slug={article.slug}
+                  title={article.title}
+                  url={getNewsPublicUrl(article.slug)}
+                  surface="card"
+                  variant="icon"
+                  className="absolute right-2 top-2 z-10"
+                />
+              </div>
             ))}
           </section>
         )}

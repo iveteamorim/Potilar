@@ -2,7 +2,10 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import NewsShareButtons from '@/components/NewsShareButtons';
+import NewsViewTracker from '@/components/NewsViewTracker';
 import { fallbackNewsArticles, formatNewsDate, getNewsImageUrl, sanitizeNewsArticle, type NewsArticle } from '@/data/news';
+import { parseNewsShareMarker } from '@/lib/newsAnalytics';
 
 type NewsRow = {
   slug: string;
@@ -112,10 +115,17 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   };
 }
 
-export default async function NewsArticlePage({ params }: { params: { slug: string } }) {
+export default async function NewsArticlePage({
+  params,
+  searchParams
+}: {
+  params: { slug: string };
+  searchParams?: { s?: string };
+}) {
   const article = await getArticle(params.slug);
   if (!article) return notFound();
   const articleUrl = `https://potilar.com.br/noticias/${article.slug}`;
+  const shareChannel = parseNewsShareMarker(searchParams?.s);
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'NewsArticle',
@@ -150,14 +160,17 @@ export default async function NewsArticlePage({ params }: { params: { slug: stri
         <Link href="/noticias" className="text-sm font-bold text-ocean-700">
           Potilar Noticias
         </Link>
-        <div className="mt-8 flex flex-wrap items-center gap-3 text-xs font-bold uppercase tracking-[0.18em] text-ocean-600">
-          <span>{article.category}</span>
-          {formatNewsDate(article.publishedAt) && (
-            <>
-              <span className="h-1 w-1 rounded-full bg-slate-300" />
-              <span>{formatNewsDate(article.publishedAt)}</span>
-            </>
-          )}
+        <div className="mt-8 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center gap-3 text-xs font-bold uppercase tracking-[0.18em] text-ocean-600">
+            <span>{article.category}</span>
+            {formatNewsDate(article.publishedAt) && (
+              <>
+                <span className="h-1 w-1 rounded-full bg-slate-300" />
+                <span>{formatNewsDate(article.publishedAt)}</span>
+              </>
+            )}
+          </div>
+          <NewsShareButtons slug={article.slug} title={article.title} url={articleUrl} surface="article" variant="action" />
         </div>
         <h1 className="mt-3 text-4xl font-semibold leading-tight text-slate-950 dark:text-white">{article.title}</h1>
         <p className="mt-5 text-lg leading-8 text-slate-600 dark:text-slate-300">{article.excerpt}</p>
@@ -193,6 +206,7 @@ export default async function NewsArticlePage({ params }: { params: { slug: stri
           </Link>
         </div>
       </article>
+      <NewsViewTracker slug={article.slug} shareChannel={shareChannel} />
     </main>
   );
 }

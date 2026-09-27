@@ -3,6 +3,13 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { getNewsImageUrl, sanitizeNewsCopy } from '@/data/news';
+import {
+  NEWS_SHARE_HELP_TEXT,
+  emptyNewsArticleMetrics,
+  metricsFromRpcRow,
+  type NewsArticleMetrics,
+  type NewsMetricsRpcRow
+} from '@/lib/newsAnalytics';
 import { generateNewsDrafts, updateNewsArticle, updateNewsStatus } from './actions';
 import SubmitButton from '@/components/SubmitButton';
 
@@ -55,6 +62,47 @@ function getStatusClass(status: string) {
   return 'bg-sun-50 text-slate-800 border-sun-200';
 }
 
+function formatMetric(value: number) {
+  return new Intl.NumberFormat('pt-BR').format(value);
+}
+
+function NewsAdminMetrics({ metrics }: { metrics: NewsArticleMetrics }) {
+  return (
+    <div className="mt-3 rounded-2xl border border-sand-100 bg-sand-50 px-3 py-3 dark:border-slate-800 dark:bg-slate-950">
+      <div className="grid grid-cols-2 gap-2 text-xs sm:grid-cols-3">
+        <p>
+          <span className="font-semibold text-slate-500">Visualizações</span>
+          <span className="mt-0.5 block text-sm font-bold text-slate-900 dark:text-white">{formatMetric(metrics.views)}</span>
+        </p>
+        <p>
+          <span className="font-semibold text-slate-500">Ações de compartilhamento</span>
+          <span className="mt-0.5 block text-sm font-bold text-slate-900 dark:text-white">{formatMetric(metrics.shareActions)}</span>
+        </p>
+        <p>
+          <span className="font-semibold text-slate-500">WhatsApp</span>
+          <span className="mt-0.5 block text-sm font-bold text-slate-900 dark:text-white">{formatMetric(metrics.shareWhatsapp)}</span>
+        </p>
+        <p>
+          <span className="font-semibold text-slate-500">Copiar link</span>
+          <span className="mt-0.5 block text-sm font-bold text-slate-900 dark:text-white">{formatMetric(metrics.shareCopy)}</span>
+        </p>
+        <p>
+          <span className="font-semibold text-slate-500">Share nativo</span>
+          <span className="mt-0.5 block text-sm font-bold text-slate-900 dark:text-white">{formatMetric(metrics.shareNative)}</span>
+        </p>
+        <p>
+          <span className="font-semibold text-slate-500">Visitas via compartilhamentos</span>
+          <span className="mt-0.5 block text-sm font-bold text-slate-900 dark:text-white">{formatMetric(metrics.visitsFromShare)}</span>
+        </p>
+      </div>
+      <p className="mt-2 text-[11px] font-semibold text-slate-500">
+        Retorno: WhatsApp {formatMetric(metrics.visitsFromWhatsapp)} · Copiar {formatMetric(metrics.visitsFromCopy)} ·
+        Nativo {formatMetric(metrics.visitsFromNative)}
+      </p>
+    </div>
+  );
+}
+
 export default async function AdminNewsPage({
   searchParams
 }: {
@@ -101,6 +149,16 @@ export default async function AdminNewsPage({
   );
   const latestGenerated = articles.find((article) => article.ai_generated)?.created_at ?? null;
   const latestPublished = articles.find((article) => article.status === 'published')?.published_at ?? null;
+  const articleIds = articles.map((article) => article.id);
+  const { data: metricsRows } =
+    articleIds.length > 0
+      ? await supabase.rpc('get_news_article_metrics', { p_article_ids: articleIds })
+      : { data: [] };
+  const metricsByArticleId = new Map<string, NewsArticleMetrics>(
+    ((metricsRows ?? []) as NewsMetricsRpcRow[])
+      .filter((row) => typeof row.article_id === 'string')
+      .map((row) => [row.article_id as string, metricsFromRpcRow(row)])
+  );
 
   return (
     <main className="section-padding">
@@ -181,6 +239,9 @@ export default async function AdminNewsPage({
             <p className="text-sm text-slate-600 dark:text-slate-300">
               Somente notícias com status Publicado aparecem em /noticias e na home.
             </p>
+            <p className="mt-2 text-xs text-slate-500" title={NEWS_SHARE_HELP_TEXT}>
+              {NEWS_SHARE_HELP_TEXT}
+            </p>
           </div>
           {articles.map((article) => (
             <article key={article.id} className="overflow-hidden border border-sand-200 bg-white dark:border-slate-800 dark:bg-slate-900">
@@ -207,6 +268,7 @@ export default async function AdminNewsPage({
                     <p>Atualizada: {formatDateTime(article.updated_at)}</p>
                     <p>Publicada: {formatDateTime(article.published_at)}</p>
                   </div>
+                  <NewsAdminMetrics metrics={metricsByArticleId.get(article.id) ?? emptyNewsArticleMetrics()} />
                   {article.source_url && (
                     <a href={article.source_url} target="_blank" rel="noreferrer" className="mt-3 inline-flex text-xs font-bold text-ocean-700">
                       Fonte: {article.source_name || article.source_url}
