@@ -6,7 +6,7 @@ import { useState } from 'react';
 import { Bath, BedDouble, Box, Camera, Car, ChevronLeft, ChevronRight, CheckCircle2, Flag, Mail, MapPin, MessageCircle, Phone, PlayCircle, Ruler, Share2 } from 'lucide-react';
 import type { Property } from '@/data/properties';
 import { formatListingDateLabel } from '@/lib/dateLabels';
-import { getCleanPropertyTitle } from '@/lib/displayTitle';
+import { formatPropertyCardTitle, getCleanPropertyTitle } from '@/lib/displayTitle';
 import { BASE_URL } from '@/lib/config';
 import { getListingHref } from '@/lib/listingUrls';
 import { getPublicProfilePath } from '@/lib/publicProfile';
@@ -118,6 +118,7 @@ export default function PropertyCard({
   const images = property.images.length > 0 ? property.images : ['/og-home.svg'];
   const image = images[imageIndex] ?? images[0];
   const displayTitle = getCleanPropertyTitle(property);
+  const cardTitle = formatPropertyCardTitle(displayTitle);
   const imageAlt = `Anuncio de ${property.propertyType.toLowerCase()} em ${property.location}: ${displayTitle}`;
   const isSuperFeatured = property.isFeatured && property.featuredPlan === 'super_30_days';
   const showVerifiedProfessional =
@@ -398,7 +399,7 @@ export default function PropertyCard({
           <div className="flex items-start justify-between gap-2.5">
             <div className="min-w-0 flex-1">
               <h3 className={`${titleClassName} line-clamp-2 font-semibold leading-snug text-ocean-700 dark:text-ocean-200`}>
-                {displayTitle}
+                {cardTitle}
               </h3>
               <p
                 className={`${isHorizontal ? 'mt-1 text-xs' : isCompact ? 'mt-1.5 text-xs' : 'mt-2 text-sm'} flex items-center gap-1.5 text-slate-500 dark:text-slate-400`}
