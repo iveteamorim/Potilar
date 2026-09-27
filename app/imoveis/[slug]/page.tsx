@@ -17,7 +17,7 @@ import { properties, type Property } from '@/data/properties';
 import { createClient } from '@/lib/supabase/server';
 import { fetchPublicListingDetail } from '@/lib/fetchApprovedListings';
 import { listingRowToProperty, PUBLIC_LISTING_SELECT_WITH_CONTACT } from '@/lib/listings';
-import { enrichPublicListings } from '@/lib/advertiserProfiles';
+import { enrichPublicListings, getAdvertiserContactProfile } from '@/lib/advertiserProfiles';
 import { getCleanPropertyTitle } from '@/lib/displayTitle';
 import { usesResidentialLayoutFields } from '@/lib/propertyTypes';
 import { getCityPagePath } from '@/lib/cityPages';
@@ -129,35 +129,15 @@ async function getAdvertiserProfile(ownerId?: string) {
 
   try {
     const supabase = createClient();
-    let { data, error } = await supabase
-      .from('profiles')
-      .select('public_slug,company_name,full_name,account_type,creci,creci_verified,profile_image_url,created_at')
-      .eq('id', ownerId)
-      .in('account_type', ['corretor', 'imobiliaria'])
-      .maybeSingle();
+    const profile = await getAdvertiserContactProfile(supabase, ownerId);
+    if (!profile) return null;
 
-    if (error) {
-      const fallback = await supabase
-        .from('profiles')
-        .select('public_slug,company_name,full_name,account_type,creci,profile_image_url')
-        .eq('id', ownerId)
-        .in('account_type', ['corretor', 'imobiliaria'])
-        .maybeSingle();
-      data = fallback.data ? { ...fallback.data, creci_verified: false, created_at: null } : null;
-    }
+    const { data } = await supabase.from('profiles').select('created_at').eq('id', ownerId).maybeSingle();
 
-    if (!data?.public_slug) {
-      const minimal = await supabase
-        .from('profiles')
-        .select('public_slug,full_name,account_type,creci,profile_image_url')
-        .eq('id', ownerId)
-        .in('account_type', ['corretor', 'imobiliaria'])
-        .maybeSingle();
-      data = minimal.data ? { ...minimal.data, company_name: null, creci_verified: false, created_at: null } : null;
-    }
-
-    if (!data?.public_slug) return null;
-    return data;
+    return {
+      ...profile,
+      created_at: data?.created_at ?? null
+    };
   } catch {
     return null;
   }
@@ -306,6 +286,12 @@ export default async function PropertyDetailPage({ params }: { params: { slug: s
   const toolbarItemClass =
     'inline-flex flex-col items-center gap-1.5 text-center text-[11px] font-semibold text-slate-600 transition hover:text-ocean-800 dark:text-slate-300';
   const advertiserHref = advertiserProfile?.public_slug ? getPublicProfilePath(advertiserProfile.public_slug) : null;
+  const advertiserImageUrl = advertiserProfile?.profile_image_url?.trim() || '';
+  const advertiserAvatar = advertiserImageUrl ? (
+    <img src={advertiserImageUrl} alt={advertiserDisplayName} className="h-full w-full object-cover" />
+  ) : (
+    advertiserInitials || 'P'
+  );
   const contactCard = (
     <div className="space-y-5 rounded-2xl border border-sand-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
       <h3 className="text-lg font-bold text-ocean-950 dark:text-white">
@@ -318,15 +304,11 @@ export default async function PropertyDetailPage({ params }: { params: { slug: s
             className="flex h-14 w-14 flex-shrink-0 items-center justify-center overflow-hidden rounded-lg bg-slate-950 text-sm font-semibold text-white"
             aria-label={`Ver página de ${advertiserDisplayName}`}
           >
-            {advertiserProfile?.profile_image_url ? (
-              <img src={advertiserProfile.profile_image_url} alt={advertiserDisplayName} className="h-full w-full object-cover" />
-            ) : (
-              advertiserInitials || 'P'
-            )}
+            {advertiserAvatar}
           </Link>
         ) : (
           <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center overflow-hidden rounded-lg bg-slate-950 text-sm font-semibold text-white">
-            {advertiserInitials || 'P'}
+            {advertiserAvatar}
           </div>
         )}
         <div className="min-w-0">

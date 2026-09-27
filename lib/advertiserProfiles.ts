@@ -80,6 +80,16 @@ async function loadAdvertiserProfileRows(supabase: SupabaseClient, ownerIds: str
   return [];
 }
 
+export async function getAdvertiserContactProfile(supabase: SupabaseClient, ownerId?: string) {
+  if (!ownerId) return null;
+
+  const profiles = await loadAdvertiserProfileRows(supabase, [ownerId]);
+  const profile = profiles.find((row) => row.id === ownerId);
+  if (!profile || !['corretor', 'imobiliaria'].includes(profile.account_type ?? '')) return null;
+
+  return profile;
+}
+
 export async function attachAdvertiserProfiles(supabase: SupabaseClient, properties: Property[]) {
   const withOwners = await attachListingOwnerIds(supabase, properties);
   const ownerIds = Array.from(new Set(withOwners.map((property) => property.ownerId).filter(Boolean))) as string[];
