@@ -55,6 +55,7 @@ function AdvertiserBrandMark({
 
   if (!property.advertiserImageUrl && !initials) return null;
 
+  const isAgency = property.advertiserAccountType === 'imobiliaria';
   const boxClassName =
     size === 'compact'
       ? 'h-11 w-14 text-[10px]'
@@ -63,17 +64,17 @@ function AdvertiserBrandMark({
         : 'h-14 w-20 text-xs';
 
   const mark = (
-    <div
-      className={`flex shrink-0 items-center justify-center overflow-hidden rounded-md border border-sand-200 bg-white font-bold text-ocean-800 shadow-sm dark:border-slate-700 dark:bg-white ${boxClassName}`}
-    >
+    <div className={`flex shrink-0 items-center justify-center ${isAgency ? '' : 'overflow-hidden'} ${boxClassName}`}>
       {property.advertiserImageUrl ? (
         <img
           src={property.advertiserImageUrl}
-          alt={displayName ? `Logo de ${displayName}` : 'Logo do profissional'}
-          className="h-full w-full object-cover"
+          alt={displayName ? (isAgency ? `Logo de ${displayName}` : `Foto de ${displayName}`) : 'Identidade do anunciante'}
+          className={isAgency ? 'max-h-full max-w-full object-contain' : 'h-full w-full object-cover'}
         />
       ) : (
-        <span aria-hidden="true">{initials}</span>
+        <span className="font-bold text-ocean-800 dark:text-ocean-200" aria-hidden="true">
+          {initials}
+        </span>
       )}
     </div>
   );

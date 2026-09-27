@@ -287,11 +287,17 @@ export default async function PropertyDetailPage({ params }: { params: { slug: s
     'inline-flex flex-col items-center gap-1.5 text-center text-[11px] font-semibold text-slate-600 transition hover:text-ocean-800 dark:text-slate-300';
   const advertiserHref = advertiserProfile?.public_slug ? getPublicProfilePath(advertiserProfile.public_slug) : null;
   const advertiserImageUrl = advertiserProfile?.profile_image_url?.trim() || '';
+  const isAgencyAdvertiser = advertiserProfile?.account_type === 'imobiliaria';
   const advertiserAvatar = advertiserImageUrl ? (
-    <img src={advertiserImageUrl} alt={advertiserDisplayName} className="h-full w-full object-cover" />
+    <img
+      src={advertiserImageUrl}
+      alt={advertiserDisplayName}
+      className={isAgencyAdvertiser ? 'max-h-full max-w-full object-contain' : 'h-full w-full object-cover'}
+    />
   ) : (
-    advertiserInitials || 'P'
+    <span className="text-sm font-semibold text-slate-600 dark:text-slate-300">{advertiserInitials || 'P'}</span>
   );
+  const advertiserIdentityClass = `flex h-14 w-14 flex-shrink-0 items-center justify-center${isAgencyAdvertiser || !advertiserImageUrl ? '' : ' overflow-hidden'}`;
   const contactCard = (
     <div className="space-y-5 rounded-2xl border border-sand-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
       <h3 className="text-lg font-bold text-ocean-950 dark:text-white">
@@ -301,15 +307,13 @@ export default async function PropertyDetailPage({ params }: { params: { slug: s
         {advertiserHref ? (
           <Link
             href={advertiserHref}
-            className="flex h-14 w-14 flex-shrink-0 items-center justify-center overflow-hidden rounded-lg bg-slate-950 text-sm font-semibold text-white"
+            className={advertiserIdentityClass}
             aria-label={`Ver página de ${advertiserDisplayName}`}
           >
             {advertiserAvatar}
           </Link>
         ) : (
-          <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center overflow-hidden rounded-lg bg-slate-950 text-sm font-semibold text-white">
-            {advertiserAvatar}
-          </div>
+          <div className={advertiserIdentityClass}>{advertiserAvatar}</div>
         )}
         <div className="min-w-0">
           {advertiserHref ? (
