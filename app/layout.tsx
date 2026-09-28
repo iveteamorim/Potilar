@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import Script from 'next/script';
 import { Analytics } from '@vercel/analytics/react';
 import { BASE_URL } from '@/lib/config';
@@ -9,6 +9,7 @@ import './globals.css';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import Header from '@/components/Header';
 import RouteFooter from '@/components/RouteFooter';
+import PwaRegister from '@/components/PwaRegister';
 
 const GOOGLE_ADS_ID = 'AW-18334944821';
 
@@ -25,6 +26,10 @@ const dmSerif = DM_Serif_Display({
   display: 'swap'
 });
 
+export const viewport: Viewport = {
+  themeColor: '#0f3f5b'
+};
+
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),
   title: {
@@ -36,13 +41,21 @@ export const metadata: Metadata = {
   alternates: {
     canonical: '/'
   },
+  manifest: '/manifest.webmanifest',
+  appleWebApp: {
+    capable: true,
+    title: 'Potilar',
+    statusBarStyle: 'default'
+  },
   icons: {
     icon: [
       { url: '/favicon-48.png', sizes: '48x48', type: 'image/png' },
       { url: '/favicon-192.png', sizes: '192x192', type: 'image/png' },
       { url: '/favicon.svg', type: 'image/svg+xml' }
     ],
-    apple: '/favicon-192.png'
+    apple: [
+      { url: '/favicon-192.png', sizes: '192x192', type: 'image/png' }
+    ]
   },
   openGraph: {
     title: 'Potilar | Portal de imóveis no RN',
@@ -101,6 +114,7 @@ export default function RootLayout({
           </div>
           <RouteFooter />
           <Analytics />
+          <PwaRegister />
         </ThemeProvider>
       </body>
     </html>
