@@ -1,5 +1,5 @@
 import HeroSearch from '@/components/HeroSearch';
-import HomePwaInstallCard from '@/components/HomePwaInstallCard';
+import PwaInstallBanner from '@/components/PwaInstallBanner';
 import FeaturedCarousel from '@/components/FeaturedCarousel';
 import PropertyMap from '@/components/PropertyMapLoader';
 import MobilePropertyMapToggle from '@/components/MobilePropertyMapToggle';
@@ -161,7 +161,6 @@ export default async function HomePage() {
   return (
     <main>
       <HeroSearch />
-      <HomePwaInstallCard />
 
       <section className="border-b border-sand-200 bg-white py-8 dark:border-slate-800 dark:bg-slate-950">
         <div className="mx-auto grid max-w-6xl gap-6 px-4 sm:px-6 lg:grid-cols-[1fr_auto] lg:items-center">
@@ -426,6 +425,7 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+      <PwaInstallBanner />
     </main>
   );
 }
