@@ -8,7 +8,7 @@ import { BedDouble, Bath, MapPin, X } from 'lucide-react';
 import { MapContainer, Marker, TileLayer, useMap, useMapEvents } from 'react-leaflet';
 import type { Property } from '@/data/properties';
 import { showsDestaquePresentation } from '@/lib/legacyHomeFeatured';
-import { formatPropertyPrice } from '@/lib/pricing';
+import { formatMapMarkerPrice, formatPropertyPrice } from '@/lib/pricing';
 import { getCleanPropertyTitle } from '@/lib/displayTitle';
 import { getListingHref } from '@/lib/listingUrls';
 
@@ -82,19 +82,12 @@ function spreadOverlappingMarkers(items: Property[]): MapProperty[] {
   });
 }
 
-function formatMarkerPrice(property: Property) {
-  const suffix = property.transaction === 'Temporada' && property.pricePeriod ? `/${property.pricePeriod}` : '';
-  if (property.price >= 1000000) return `R$ ${(property.price / 1000000).toFixed(property.price >= 10000000 ? 0 : 1).replace('.', ',')} mi${suffix}`;
-  if (property.price >= 1000) return `R$ ${Math.round(property.price / 1000)} mil${suffix}`;
-  return `${formatPropertyPrice(property)}`;
-}
-
 function getMarkerIcon(property: Property, selected = false) {
   const isSuperFeatured = property.isFeatured && property.featuredPlan === 'super_30_days';
   const isHighlighted = showsDestaquePresentation(property);
   const color = isSuperFeatured ? '#7c3aed' : isHighlighted ? '#f59e0b' : '#075985';
   const background = selected ? color : isHighlighted ? '#fff7ed' : 'white';
-  const label = formatMarkerPrice(property);
+  const label = formatMapMarkerPrice(property);
   const selectedStyle = selected
     ? 'transform:translateY(-2px);box-shadow:0 18px 38px rgba(15,23,42,.36);'
     : 'box-shadow:0 12px 28px rgba(15,23,42,.28);';
