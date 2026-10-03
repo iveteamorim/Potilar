@@ -16,7 +16,7 @@ declare
   refreshed_count integer := 0;
 begin
   update public.listings
-  set status = 'paused', updated_at = now()
+  set status = 'needs_renewal', updated_at = now()
   where status = 'approved'
     and listing_expires_at is not null
     and listing_expires_at < now();

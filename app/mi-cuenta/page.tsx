@@ -32,8 +32,15 @@ import {
   setMainImage,
   updateProfessionalProfile,
   updateListingContact,
-  updateOwnListingStatus
+  updateOwnListingStatus,
+  startAvulsoRenewal
 } from './actions';
+import {
+  buildCapacitySnapshot,
+  countCapacityActiveListings,
+  getDashboardUsageLabel,
+  isAvulsoListing
+} from '@/lib/listingCapacity';
 
 export const metadata: Metadata = {
   title: 'Minha conta | Potilar'
@@ -80,7 +87,8 @@ function getStatusLabel(status: string) {
     pending: 'Em revisão',
     approved: 'Publicado',
     paused: 'Pausado',
-    rejected: 'Rejeitado'
+    rejected: 'Rejeitado',
+    needs_renewal: 'Renovação necessária'
   };
 
   return labels[status] ?? status;
@@ -101,7 +109,7 @@ function normalizeForSearch(value: string) {
 }
 
 function getPlanLabel(plan?: string | null, accountType?: string | null) {
-  if (plan === 'plus') return 'Imobiliaria Plus';
+  if (plan === 'plus') return 'Imobiliaria Pro';
   if (plan === 'imobiliaria' || accountType === 'imobiliaria') return 'Imobiliaria';
   return 'Corretor';
 }
@@ -428,6 +436,13 @@ export default async function MinhaContaPage({
       : professionalListings;
     const totalPortfolio = professionalListings.reduce((sum, listing) => sum + listing.price, 0);
     const languages = Array.isArray((profile as any).languages) && (profile as any).languages.length > 0 ? (profile as any).languages : ['Português'];
+    const capacitySnapshot = buildCapacitySnapshot({
+      accountType: profile.account_type,
+      professionalPlan: profile.professional_plan,
+      activeCount: countCapacityActiveListings(listings ?? []),
+      listings: listings ?? []
+    });
+    const usageLabel = getDashboardUsageLabel(capacitySnapshot);
 
     return (
       <main className="bg-sand-50 py-8 dark:bg-slate-950">
@@ -437,6 +452,7 @@ export default async function MinhaContaPage({
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-ocean-600">Conta profissional</p>
               <h1 className="mt-2 text-xl font-semibold text-slate-950 dark:text-white">{displayName}</h1>
               <p className="mt-1 text-sm font-semibold text-slate-500">{getPlanLabel(profile.professional_plan, profile.account_type)}</p>
+              <p className="mt-2 text-sm font-medium text-ocean-700 dark:text-ocean-200">{usageLabel}</p>
             </div>
             <nav className="mt-4 grid gap-1 text-sm font-semibold text-slate-700 dark:text-slate-200">
               {([
@@ -519,7 +535,19 @@ export default async function MinhaContaPage({
 
             {searchParams?.subscription_cancelled && (
               <AccountNotice>
-                Assinatura cancelada. A conta voltou para particular e a página profissional saiu do plano ativo.
+                Assinatura cancelada. Sua conta profissional continua, sem o plano pago. Os imóveis que cabem na cota grátis seguem publicados.
+              </AccountNotice>
+            )}
+
+            {searchParams?.listing_error === 'limit' && (
+              <AccountNotice tone="error">
+                Este imóvel ficou fora da cota coberta. Publique um avulso ou pause outro anúncio. O tipo de conta não muda com o volume.
+              </AccountNotice>
+            )}
+
+            {searchParams?.listing_error && searchParams.listing_error !== 'limit' && (
+              <AccountNotice tone="error">
+                Não foi possível reativar este anúncio.
               </AccountNotice>
             )}
 
@@ -561,7 +589,7 @@ export default async function MinhaContaPage({
 
             <div className="grid gap-4 md:grid-cols-3">
               {[
-                ['Imóveis ativos', String(professionalListings.length)],
+                ['Imóveis ativos', String(capacitySnapshot.activeCount)],
                 ['Valor da carteira', new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(totalPortfolio)],
                 ['Créditos de IA', String(aiCreditBalance)]
               ].map(([label, value]) => (
@@ -600,6 +628,7 @@ export default async function MinhaContaPage({
                 <div>
                   <h3 className="text-xl font-semibold text-slate-950 dark:text-white">Anúncios da conta</h3>
                   <p className="mt-1 text-sm text-slate-500">Prévia interna da carteira publicada.</p>
+                  <p className="mt-2 text-sm font-semibold text-ocean-700">{usageLabel}</p>
                   <p className="mt-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
                     {listingSearch
                       ? `${filteredProfessionalListings.length} de ${professionalListings.length} anúncios encontrados.`
@@ -630,9 +659,42 @@ export default async function MinhaContaPage({
                 </form>
               </div>
               <div className="mt-5 grid gap-5">
-                {filteredProfessionalListings.map((property) => (
+                {filteredProfessionalListings.map((property) => {
+                  const listingId = property.id.replace(/^user-/, '');
+                  const rawListing = (listings ?? []).find((listing) => listing.id === listingId);
+                  const avulso = rawListing ? isAvulsoListing(rawListing) : false;
+                  return (
                   <div key={property.id} className="relative">
                     <PropertyCard property={property} variant="horizontal" panelPreview />
+                    {rawListing && (avulso || rawListing.status === 'needs_renewal' || rawListing.status === 'paused') && (
+                      <div className="mt-3 rounded-xl border border-sand-200 bg-sand-50 px-4 py-3 text-sm text-slate-600 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300">
+                        <p className="font-semibold text-slate-900 dark:text-white">{getStatusLabel(rawListing.status)}</p>
+                        {avulso && (
+                          <p className="mt-1">
+                            Avulso ativo em {formatDate(rawListing.payment_confirmed_at)} · vence em {formatDate(rawListing.listing_expires_at)}
+                          </p>
+                        )}
+                        {(rawListing.status === 'needs_renewal' || rawListing.status === 'paused') && (
+                          <div className="mt-3 flex flex-wrap gap-2">
+                            <form action={updateOwnListingStatus}>
+                              <input type="hidden" name="id" value={listingId} />
+                              <input type="hidden" name="action" value="reactivate" />
+                              <button type="submit" className="rounded-xl bg-ocean-700 px-3 py-2 text-xs font-bold text-white">
+                                Reativar
+                              </button>
+                            </form>
+                            {rawListing.status === 'needs_renewal' && (
+                              <form action={startAvulsoRenewal}>
+                                <input type="hidden" name="id" value={listingId} />
+                                <button type="submit" className="rounded-xl border border-ocean-200 px-3 py-2 text-xs font-bold text-ocean-700">
+                                  Renovar avulso
+                                </button>
+                              </form>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
                     <div className="absolute bottom-4 right-5 z-30 flex items-center gap-3 text-xs font-semibold">
                       <Link href={getListingHref(property)} className="text-slate-950 underline-offset-4 hover:underline dark:text-white">
                         Ver anúncio
@@ -657,7 +719,8 @@ export default async function MinhaContaPage({
                       </form>
                     </div>
                   </div>
-                ))}
+                  );
+                })}
                 {filteredProfessionalListings.length === 0 && (
                   <div className="border border-dashed border-sand-300 p-8 text-center dark:border-slate-700">
                     <p className="text-base font-semibold text-slate-900 dark:text-white">
@@ -741,6 +804,16 @@ export default async function MinhaContaPage({
               {isProfessional
                 ? 'Gerencie sua carteira, página profissional, contatos e anúncios publicados.'
                 : 'Salve favoritos, acompanhe alertas de busca e gerencie seus anúncios publicados.'}
+            </p>
+            <p className="mt-2 text-sm font-semibold text-ocean-700">
+              {getDashboardUsageLabel(
+                buildCapacitySnapshot({
+                  accountType: profile?.account_type,
+                  professionalPlan: profile?.professional_plan,
+                  activeCount: countCapacityActiveListings(listings ?? []),
+                  listings: listings ?? []
+                })
+              )}
             </p>
           </div>
           {profile?.role === 'admin' && (
@@ -904,7 +977,7 @@ export default async function MinhaContaPage({
                       </button>
                     </form>
                   )}
-                  {!hasPendingPayment && listing.status === 'paused' && (
+                  {!hasPendingPayment && (listing.status === 'paused' || listing.status === 'needs_renewal') && (
                     <form action={updateOwnListingStatus}>
                       <input type="hidden" name="id" value={listing.id} />
                       <input type="hidden" name="action" value="reactivate" />
@@ -1003,6 +1076,11 @@ export default async function MinhaContaPage({
                   ) : isPublished ? (
                     <div className="mt-auto space-y-4 text-center text-sm text-slate-600 dark:text-slate-300">
                       <p>{listing.listing_expires_at ? `Publicado até ${formatDate(listing.listing_expires_at)}` : 'Anúncio publicado.'}</p>
+                      {isAvulsoListing(listing) && (
+                        <p>
+                          Avulso · ativado em {formatDate(listing.payment_confirmed_at)} · vence em {formatDate(listing.listing_expires_at)}
+                        </p>
+                      )}
                       {seasonalRenewal?.shouldShowNotice && (
                         <div className="rounded-xl border border-ocean-100 bg-ocean-50 p-3 text-left dark:border-ocean-900 dark:bg-ocean-950/30">
                           <p className="font-semibold text-slate-900 dark:text-white">
@@ -1015,7 +1093,11 @@ export default async function MinhaContaPage({
                     </div>
                   ) : (
                     <p className="mt-auto text-center text-sm leading-6 text-slate-600 dark:text-slate-300">
-                      {listing.status === 'pending' ? 'Seu anúncio está em revisão.' : 'Este anúncio não está publicado.'}
+                      {listing.status === 'pending'
+                        ? 'Seu anúncio está em revisão.'
+                        : listing.status === 'needs_renewal'
+                          ? 'Este anúncio venceu e precisa ser renovado. Os dados foram conservados.'
+                          : 'Este anúncio não está publicado.'}
                     </p>
                   )}
                 </aside>

@@ -19,8 +19,9 @@ export async function GET(request: Request) {
 
     const { data: expiredListings, error: expiredListingsError } = await supabase
       .from('listings')
-      .update({ status: 'paused', updated_at: nowIso })
+      .update({ status: 'needs_renewal', updated_at: nowIso })
       .eq('status', 'approved')
+      .not('listing_expires_at', 'is', null)
       .lt('listing_expires_at', nowIso)
       .select('id');
 

@@ -4,10 +4,7 @@ import {
   ArrowRight,
   BadgeCheck,
   Building2,
-  Check,
   CheckCircle2,
-  Gift,
-  Info,
   LayoutDashboard,
   MapPin,
   MessageCircle,
@@ -16,19 +13,19 @@ import {
   Star,
   TrendingUp
 } from 'lucide-react';
-import ProfessionalPlanCheckoutButton from '@/components/ProfessionalPlanCheckoutButton';
-import { PLANS, formatPlanPrice, getFreeListingLimit, type ProfessionalPlanId } from '@/lib/plans';
+import ProfessionalPlanCards from '@/components/ProfessionalPlanCards';
+import { PLANS, formatPlanPrice, getFreeListingLimit, getProfessionalPlanPublicLabel } from '@/lib/plans';
+import { getFreeActiveLimit } from '@/lib/listingCapacity';
 
 export const metadata: Metadata = {
   title: 'Planos para Corretores e Imobiliárias | Potilar',
-  description: 'Planos para corretores e imobiliárias anunciarem imóveis no Rio Grande do Norte com marca própria e contato direto.',
+  description: 'Comece grátis na Potilar. Corretores e imobiliárias anunciam no Rio Grande do Norte e só pagam quando precisam de mais capacidade.',
   alternates: {
     canonical: '/planos'
   }
 };
 
 const contactHref = '/contato';
-const portfolioTrial = PLANS.professional.portfolioTrial;
 
 const benefits = [
   { title: 'Contato direto', text: 'Interessados falam com você pelo canal escolhido no anúncio.', Icon: MessageCircle },
@@ -44,54 +41,38 @@ const particularPlans = [
     name: `Até ${getFreeListingLimit()} anúncios grátis`,
     price: 'R$ 0',
     description: 'Para casas, apartamentos e terrenos de compra ou aluguel.',
-    details: 'Cada anúncio comum fica ativo por 60 dias.'
+    details: `Cada anúncio comum fica ativo por ${PLANS.listing.additionalDurationDays} dias.`
   },
   {
     name: 'Anúncio comum adicional',
     price: formatPlanPrice(PLANS.listing.additionalPrice),
     description: 'Quando o particular já usou o limite grátis.',
-    details: `${PLANS.listing.standardDurationDays} dias para compra ou aluguel.`
+    details: `${PLANS.listing.additionalDurationDays} dias para compra ou aluguel.`
   }
 ];
 
-const professionalPlans = [
-  {
-    id: 'corretor' as ProfessionalPlanId,
-    name: 'Corretor',
-    price: formatPlanPrice(PLANS.professional.corretor.price, { perMonth: true }),
-    description: 'Para profissionais independentes com carteira enxuta.',
-    limit: PLANS.professional.corretor.listingLimit,
-    aiCredits: PLANS.professional.corretor.aiCredits,
-    activationFee: PLANS.professional.portfolioTrial.activationFees.corretor,
-    cta: 'Começar agora',
-    promotionKit: true,
-    features: ['Perfil profissional', 'Gestão dos anúncios', 'Contato direto', 'Estatísticas dos anúncios']
-  },
-  {
-    id: 'imobiliaria' as ProfessionalPlanId,
-    name: 'Imobiliária',
-    price: formatPlanPrice(PLANS.professional.imobiliaria.price, { perMonth: true }),
-    description: 'Para equipes que precisam divulgar mais imóveis com marca própria.',
-    limit: PLANS.professional.imobiliaria.listingLimit,
-    aiCredits: PLANS.professional.imobiliaria.aiCredits,
-    activationFee: PLANS.professional.portfolioTrial.activationFees.imobiliaria,
-    cta: 'Começar agora',
-    popular: true,
-    promotionKit: true,
-    features: ['Logo da empresa', 'Página própria', 'Gestão centralizada']
-  },
-  {
-    id: 'plus' as ProfessionalPlanId,
-    name: 'Imobiliária Plus',
-    price: formatPlanPrice(PLANS.professional.plus.price, { perMonth: true }),
-    description: 'Para operações maiores que querem volume, destaque e prioridade.',
-    limit: PLANS.professional.plus.listingLimit,
-    aiCredits: PLANS.professional.plus.aiCredits,
-    activationFee: PLANS.professional.portfolioTrial.activationFees.plus,
-    cta: 'Começar agora',
-    promotionKit: true,
-    features: ['Página destacada', '3 destaques incluídos', 'Suporte prioritário']
-  }
+const comparison = [
+  [
+    'Entrada',
+    `Até ${getFreeActiveLimit('corretor')} imóveis grátis`,
+    `Até ${getFreeActiveLimit('imobiliaria')} imóveis grátis`,
+    '—'
+  ],
+  [
+    'Plano pago',
+    `${formatPlanPrice(PLANS.professional.corretor.price, { perMonth: true })} até ${PLANS.professional.corretor.listingLimit}`,
+    `${formatPlanPrice(PLANS.professional.imobiliaria.price, { perMonth: true })} até ${PLANS.professional.imobiliaria.listingLimit}`,
+    `${formatPlanPrice(PLANS.professional.plus.price, { perMonth: true })} até ${PLANS.professional.plus.listingLimit}`
+  ],
+  [
+    '✨ Melhorias com IA / mês',
+    String(PLANS.professional.corretor.aiCredits),
+    String(PLANS.professional.imobiliaria.aiCredits),
+    String(PLANS.professional.plus.aiCredits)
+  ],
+  ['Página profissional', '✔', '✔', '⭐ Em destaque'],
+  ['Destaques incluídos', '—', '—', '3/mês'],
+  ['Suporte', 'Padrão', 'Padrão', 'Prioritário']
 ];
 
 const extras = [
@@ -127,44 +108,24 @@ const extras = [
   }
 ];
 
-const comparison = [
-  [
-    'Imóveis ativos',
-    String(PLANS.professional.corretor.listingLimit),
-    String(PLANS.professional.imobiliaria.listingLimit),
-    String(PLANS.professional.plus.listingLimit)
-  ],
-  [
-    '✨ Melhorias com IA / mês',
-    String(PLANS.professional.corretor.aiCredits),
-    String(PLANS.professional.imobiliaria.aiCredits),
-    String(PLANS.professional.plus.aiCredits)
-  ],
-  ['Página profissional', '✔', '✔', '⭐ Em destaque'],
-  ['Destaques incluídos', '—', '—', '3/mês'],
-  ['Suporte', 'Padrão', 'Padrão', 'Prioritário']
-];
-
 const faqs = [
   [
     'Preciso pagar comissão para a Potilar?',
     'Não. A Potilar funciona como plataforma de divulgação. A conversa e a negociação acontecem diretamente com você.'
   ],
-  ['Como ativo um plano profissional?', 'Fale com a Potilar pelo formulario. Nossa equipe confirma seus dados, o volume de imóveis e o melhor plano para sua carteira.'],
-  ['O plano tem fidelidade?', 'Não. Fale com a Potilar para ativar, ajustar ou cancelar quando precisar.'],
-  ['Destaques podem ser contratados depois?', 'Sim. Você pode publicar primeiro e destacar os imóveis que precisam de mais visibilidade.']
+  [
+    'Preciso pagar para criar conta de Corretor ou Imobiliária?',
+    'Não. A conta é grátis. Corretor começa com 3 imóveis ativos grátis. Imobiliária começa com 10. O plano mensal só entra quando você quiser mais capacidade.'
+  ],
+  [
+    'O plano tem fidelidade?',
+    'Não. Você pode cancelar quando quiser. Sua carteira continua ativa até o fim do período pago.'
+  ],
+  [
+    'Destaques podem ser contratados depois?',
+    'Sim. Você pode publicar primeiro e destacar os imóveis que precisam de mais visibilidade.'
+  ]
 ];
-
-function CheckItem({ children }: { children: string }) {
-  return (
-    <li className="flex items-start gap-3 text-sm leading-6 text-slate-600 dark:text-slate-300">
-      <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-ocean-50 text-ocean-700">
-        <Check className="h-3.5 w-3.5" />
-      </span>
-      <span>{children}</span>
-    </li>
-  );
-}
 
 export default function PlanosPage() {
   return (
@@ -174,19 +135,19 @@ export default function PlanosPage() {
           <div className="max-w-3xl">
             <p className="text-sm font-semibold uppercase tracking-[0.24em] text-ocean-600">Planos para profissionais</p>
             <h1 className="mt-5 max-w-3xl text-5xl font-semibold leading-tight text-slate-950 dark:text-white md:text-6xl">
-              Mais clientes. Menos trabalho.
+              Comece grátis. Pague só quando precisar de mais capacidade.
             </h1>
             <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-600 dark:text-slate-300">
-              A Potilar ajuda corretores e imobiliárias do Rio Grande do Norte a divulgar seus imóveis com marca própria,
-              contato direto e uma vitrine feita para o mercado local.
+              Corretores e imobiliárias do Rio Grande do Norte publicam com marca própria e contato direto. A cota grátis
+              faz parte do produto. O plano mensal entra quando a carteira cresce.
             </p>
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link
-                href={contactHref}
+                href="#planos"
                 className="inline-flex items-center justify-center gap-2 rounded-2xl bg-ocean-700 px-6 py-4 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-ocean-800 hover:shadow-lg"
               >
-                Falar sobre planos
+                Ver planos
                 <ArrowRight className="h-4 w-4" />
               </Link>
               <Link
@@ -211,44 +172,6 @@ export default function PlanosPage() {
                 Destaques opcionais
               </div>
             </div>
-          </div>
-        </section>
-
-        <section className="rounded-[2rem] border border-ocean-200 bg-ocean-50 p-6 shadow-sm dark:border-ocean-900/60 dark:bg-ocean-950/40 md:p-8">
-          <div className="grid gap-6 lg:grid-cols-[1fr_auto] lg:items-center">
-            <div className="max-w-3xl">
-              <p className="inline-flex items-center gap-2 text-sm font-extrabold uppercase tracking-[0.18em] text-ocean-700 dark:text-ocean-100">
-                <Gift className="h-4 w-4" aria-hidden="true" />
-                Campanha para carteiras
-              </p>
-              <h2 className="mt-4 text-3xl font-semibold text-slate-950 dark:text-white">
-                Ative sua carteira agora. A primeira mensalidade começa somente em {portfolioTrial.freeDays} dias.
-              </h2>
-              <p className="mt-3 text-sm leading-7 text-slate-700 dark:text-slate-200">
-                Corretores e imobiliarias que trouxerem uma carteira real para a Potilar pagam a {portfolioTrial.activationName}
-                hoje. A primeira mensalidade começa somente em {portfolioTrial.freeDays} dias, apos revisao dos anuncios publicados.
-              </p>
-            </div>
-            <div className="grid gap-3 text-sm font-semibold text-slate-700 dark:text-slate-200 sm:grid-cols-3 lg:min-w-[420px] lg:grid-cols-1">
-              <div className="rounded-2xl bg-white px-4 py-3 shadow-sm dark:bg-slate-900">
-                Corretor: minimo {portfolioTrial.minBrokerListings} imoveis completos
-              </div>
-              <div className="rounded-2xl bg-white px-4 py-3 shadow-sm dark:bg-slate-900">
-                Imobiliaria: minimo {portfolioTrial.minAgencyListings} imoveis completos
-              </div>
-              <div className="rounded-2xl bg-white px-4 py-3 shadow-sm dark:bg-slate-900">
-                Fotos, preco, cidade e contato validos
-              </div>
-            </div>
-          </div>
-          <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-            <Link href="/mi-cuenta/importar" className="inline-flex items-center justify-center gap-2 rounded-2xl bg-ocean-700 px-5 py-3 text-sm font-semibold text-white">
-              Importar carteira
-              <ArrowRight className="h-4 w-4" aria-hidden="true" />
-            </Link>
-            <Link href={contactHref} className="inline-flex items-center justify-center rounded-2xl border border-ocean-200 bg-white px-5 py-3 text-sm font-semibold text-ocean-800 dark:border-ocean-800 dark:bg-slate-900 dark:text-ocean-100">
-              Falar com a Potilar
-            </Link>
           </div>
         </section>
 
@@ -306,9 +229,9 @@ export default function PlanosPage() {
         <section id="planos">
           <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
             <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.22em] text-ocean-600">Planos mensais</p>
+              <p className="text-sm font-semibold uppercase tracking-[0.22em] text-ocean-600">Planos profissionais</p>
               <h2 className="mt-4 text-3xl font-semibold text-slate-950 dark:text-white">
-                Escolha o tamanho da sua carteira.
+                Gratis para começar. Plano só quando a carteira cresce.
               </h2>
             </div>
             <Link href={contactHref} className="inline-flex items-center gap-2 text-sm font-semibold text-ocean-800">
@@ -317,73 +240,15 @@ export default function PlanosPage() {
             </Link>
           </div>
 
-          <div className="mt-8 grid gap-5 lg:grid-cols-3">
-            {professionalPlans.map((plan) => (
-              <article
-                key={plan.name}
-                className={`relative rounded-3xl border bg-white p-6 shadow-sm dark:bg-slate-900 ${
-                  plan.popular ? 'border-ocean-500 shadow-soft lg:-mt-4' : 'border-sand-200 dark:border-slate-800'
-                }`}
-              >
-                {plan.popular ? (
-                  <span className="absolute right-5 top-5 rounded-full bg-sun-500 px-3 py-1 text-xs font-bold text-white">
-                    Mais popular
-                  </span>
-                ) : null}
-                <h3 className="text-2xl font-semibold text-slate-950 dark:text-white">{plan.name}</h3>
-                <p className="mt-3 min-h-12 text-sm leading-6 text-slate-600 dark:text-slate-300">{plan.description}</p>
-                <p className="mt-5 text-4xl font-semibold text-ocean-800">{plan.price}</p>
-                <p className="mt-3 rounded-2xl border border-ocean-100 bg-ocean-50 px-4 py-3 text-sm font-extrabold text-ocean-900 dark:border-ocean-900/60 dark:bg-ocean-950/40 dark:text-ocean-100">
-                  Ativacao da carteira: {formatPlanPrice(plan.activationFee)}
-                </p>
-                <p className="mt-2 text-sm font-semibold text-slate-500 dark:text-slate-300">
-                  Primeira mensalidade somente em {portfolioTrial.freeDays} dias.
-                </p>
-                <p className="mt-3 rounded-2xl bg-sand-50 px-4 py-3 text-sm font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-200">
-                  Até {plan.limit} imóveis ativos
-                </p>
-                {plan.promotionKit ? (
-                  <div className="mt-3 rounded-2xl border border-ocean-100 bg-ocean-50 px-4 py-3 text-ocean-900 dark:border-ocean-900/60 dark:bg-ocean-950/40 dark:text-ocean-100">
-                    <div className="flex items-center justify-between gap-3">
-                      <span className="text-sm font-extrabold">Kit de divulgação profissional</span>
-                      <button
-                        type="button"
-                        className="group relative inline-flex rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ocean-500"
-                        aria-label="O que inclui o kit de divulgação profissional"
-                      >
-                        <Info className="h-4 w-4" aria-hidden="true" />
-                        <span className="pointer-events-none absolute right-0 top-6 z-20 w-72 rounded-xl bg-slate-950 px-3 py-2 text-left text-xs font-semibold leading-5 text-white opacity-0 shadow-soft transition group-hover:opacity-100 group-focus-within:opacity-100">
-                          <span className="mb-1 block">Kit de divulgação profissional</span>
-                          <span className="mb-1 block font-medium">Incluído no plano.</span>
-                          <span className="block">• IA para melhorar anúncios</span>
-                          <span className="block">• QR Code exclusivo para cada imóvel</span>
-                          <span className="block">• Cartazes para impressão</span>
-                          <span className="block">• Materiais para redes sociais</span>
-                          <span className="block">• Conteúdos prontos para compartilhar</span>
-                        </span>
-                      </button>
-                    </div>
-                  </div>
-                ) : null}
-                <ul className="mt-5 space-y-3">
-                  {plan.features.map((feature) => (
-                    <CheckItem key={feature}>{feature}</CheckItem>
-                  ))}
-                </ul>
-                <div className="mt-7">
-                  <ProfessionalPlanCheckoutButton planId={plan.id} fallbackHref={contactHref}>
-                    {plan.cta}
-                  </ProfessionalPlanCheckoutButton>
-                </div>
-              </article>
-            ))}
+          <div className="mt-8">
+            <ProfessionalPlanCards contactHref={contactHref} />
           </div>
         </section>
 
         <section className="rounded-[2rem] border border-sand-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
           <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
             <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.22em] text-ocean-600">Comparacao</p>
+              <p className="text-sm font-semibold uppercase tracking-[0.22em] text-ocean-600">Comparação</p>
               <h2 className="mt-4 text-3xl font-semibold text-slate-950 dark:text-white">Veja o que muda em cada plano.</h2>
             </div>
           </div>
@@ -392,9 +257,9 @@ export default function PlanosPage() {
               <thead>
                 <tr className="text-slate-500">
                   <th className="border-b border-sand-200 px-4 py-3 font-semibold">Recurso</th>
-                  <th className="border-b border-sand-200 px-4 py-3 font-semibold">Corretor</th>
-                  <th className="border-b border-sand-200 px-4 py-3 font-semibold">Imobiliária</th>
-                  <th className="border-b border-sand-200 px-4 py-3 font-semibold">Plus</th>
+                  <th className="border-b border-sand-200 px-4 py-3 font-semibold">{getProfessionalPlanPublicLabel('corretor')}</th>
+                  <th className="border-b border-sand-200 px-4 py-3 font-semibold">{getProfessionalPlanPublicLabel('imobiliaria')}</th>
+                  <th className="border-b border-sand-200 px-4 py-3 font-semibold">{getProfessionalPlanPublicLabel('plus')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -458,7 +323,7 @@ export default function PlanosPage() {
               </p>
               <h2 className="mt-4 max-w-2xl text-3xl font-semibold">Leve sua carteira de imóveis para um portal feito para o RN.</h2>
               <p className="mt-3 max-w-2xl text-sm leading-7 text-ocean-50">
-                Fale com a Potilar para escolher o plano ideal para sua carteira e divulgar seus imóveis com marca própria.
+                Crie a conta grátis e publique. O plano mensal fica para quando você precisar de mais imóveis ativos.
               </p>
             </div>
             <div className="flex flex-col gap-3 sm:flex-row">

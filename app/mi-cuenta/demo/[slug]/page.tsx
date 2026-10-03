@@ -27,7 +27,7 @@ function formatPrice(value: number) {
 }
 
 function getPlanLabel(plan?: string | null) {
-  if (plan === 'plus') return 'Imobiliária Plus';
+  if (plan === 'plus') return 'Imobiliária Pro';
   if (plan === 'imobiliaria') return 'Imobiliária';
   return 'Corretor';
 }

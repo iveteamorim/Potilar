@@ -1,11 +1,15 @@
-import { PLANS, getProfessionalPlan } from '@/lib/plans';
+import { getProfessionalPlan } from '@/lib/plans';
+import {
+  CAPACITY_ACTIVE_STATUSES,
+  getCoveredActiveLimit,
+  getFreeActiveLimit,
+  normalizeAccountType
+} from '@/lib/listingCapacity';
 
 export type AccountType = 'particular' | 'corretor' | 'imobiliaria';
 
-const ACTIVE_LISTING_STATUSES = ['approved', 'pending', 'paused'] as const;
-
 export function getActiveListingStatuses() {
-  return ACTIVE_LISTING_STATUSES;
+  return CAPACITY_ACTIVE_STATUSES;
 }
 
 export function getListingLimitForAccount(
@@ -14,21 +18,7 @@ export function getListingLimitForAccount(
   professionalPlan?: string | null
 ) {
   if (isAdmin) return Number.POSITIVE_INFINITY;
-
-  const selectedPlan = getProfessionalPlan(professionalPlan);
-  if (selectedPlan) {
-    return selectedPlan.listingLimit;
-  }
-
-  if (accountType === 'corretor') {
-    return PLANS.professional.corretor.listingLimit;
-  }
-
-  if (accountType === 'imobiliaria') {
-    return PLANS.professional.imobiliaria.listingLimit;
-  }
-
-  return Number.POSITIVE_INFINITY;
+  return getCoveredActiveLimit(accountType, professionalPlan);
 }
 
 export function getListingLimitLabel(accountType: AccountType | string | null | undefined, professionalPlan?: string | null) {
@@ -40,13 +30,14 @@ export function getListingLimitLabel(accountType: AccountType | string | null | 
     return `ate ${limit} anuncios ativos no ${selectedPlan.label}`;
   }
 
-  if (accountType === 'corretor') {
-    return `ate ${limit} anuncios ativos no Plano Corretor`;
+  const normalized = normalizeAccountType(accountType);
+  if (normalized === 'corretor') {
+    return `ate ${getFreeActiveLimit(normalized)} imoveis ativos gratis`;
   }
 
-  if (accountType === 'imobiliaria') {
-    return `ate ${limit} anuncios ativos no Plano Imobiliaria`;
+  if (normalized === 'imobiliaria') {
+    return `ate ${getFreeActiveLimit(normalized)} imoveis ativos gratis`;
   }
 
-  return `ate ${limit} anuncios ativos`;
+  return `ate ${limit} anuncios ativos gratis`;
 }

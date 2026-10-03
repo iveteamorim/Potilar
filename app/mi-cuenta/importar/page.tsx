@@ -53,10 +53,10 @@ const steps = [
 
 function getErrorMessage(error?: string, limit?: string, available?: string) {
   if (!error) return null;
-  if (error === 'plan_required') return 'A importacao em lote faz parte dos planos profissionais ativos. Escolha um plano para liberar XML, planilha e portal.';
+  if (error === 'plan_required') return 'A importacao respeita o mesmo limite de imoveis ativos da publicacao manual.';
   if (error === 'import_limit') {
-    const limitText = limit ? `Seu plano permite ate ${limit} anuncios ativos.` : 'Seu plano atingiu o limite de anuncios ativos.';
-    const availableText = available === '0' ? ' Nao ha vagas disponiveis no momento.' : available ? ` Voce ainda pode importar ${available} anuncio(s) agora.` : '';
+    const limitText = limit ? `Seu limite atual e de ${limit} imoveis ativos.` : 'Voce atingiu o limite de imoveis ativos.';
+    const availableText = available === '0' ? ' Nao ha vagas gratis disponiveis. Nao criamos cobrancas automaticas na importacao.' : available ? ` Voce ainda pode importar ${available} anuncio(s) agora.` : '';
     return `${limitText}${availableText}`;
   }
   if (error === 'xml_url') return 'Informe uma URL XML publica e valida.';
@@ -72,7 +72,7 @@ function getErrorMessage(error?: string, limit?: string, available?: string) {
 export default async function ImportarPage({
   searchParams
 }: {
-  searchParams?: { available?: string; error?: string; limit?: string; success?: string; request?: string; source?: string };
+  searchParams?: { available?: string; error?: string; limit?: string; skipped?: string; success?: string; request?: string; source?: string };
 }) {
   const supabase = createClient();
   const {
@@ -91,7 +91,6 @@ export default async function ImportarPage({
     redirect('/mi-cuenta');
   }
 
-  const hasActiveProfessionalPlan = Boolean(profile.professional_plan);
   const errorMessage = getErrorMessage(searchParams?.error, searchParams?.limit, searchParams?.available);
   const portalImportNeedsFallback = searchParams?.error === 'portal_fetch' || searchParams?.error === 'portal_empty';
 
@@ -177,6 +176,9 @@ export default async function ImportarPage({
             {searchParams?.success && (
               <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800">
                 {searchParams.success} anuncios importados por {searchParams.source === 'xml' ? 'XML' : searchParams.source === 'portal' ? 'portal' : 'planilha'} e enviados para revisao.
+                {searchParams.skipped && Number(searchParams.skipped) > 0
+                  ? ` Os ${searchParams.skipped} restantes ficaram de fora porque ultrapassam seu limite atual. Nenhuma cobranca foi criada.`
+                  : ''}
               </div>
             )}
 
@@ -189,18 +191,6 @@ export default async function ImportarPage({
             {errorMessage && (
               <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
                 {errorMessage}
-              </div>
-            )}
-
-            {!hasActiveProfessionalPlan && (
-              <div className="rounded-2xl border border-ocean-200 bg-ocean-50 px-4 py-4 text-sm leading-6 text-ocean-900">
-                <p className="font-semibold">Importacao em lote reservada para plano ativo.</p>
-                <p className="mt-1">
-                  A conta profissional pode ver o painel, mas XML, planilha e importacao por portal so ficam liberados depois da ativacao do plano.
-                </p>
-                <Link href="/planos" className="mt-3 inline-flex rounded-2xl bg-ocean-700 px-4 py-2 text-sm font-semibold text-white">
-                  Ver planos
-                </Link>
               </div>
             )}
 
@@ -245,7 +235,7 @@ export default async function ImportarPage({
               <p className="font-semibold text-slate-800 dark:text-slate-100">Exemplo</p>
               <p className="mt-1 break-all font-mono">https://imobiliaria.com.br/imoveis.xml</p>
             </div>
-            <button type="submit" disabled={!hasActiveProfessionalPlan} className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-ocean-700 px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-ocean-800 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-600">
+            <button type="submit" className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-ocean-700 px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-ocean-800">
               <Upload className="h-4 w-4" />
               Importar XML
             </button>
@@ -277,7 +267,7 @@ export default async function ImportarPage({
             <p className="rounded-2xl bg-violet-50 p-4 text-xs leading-5 text-violet-900 dark:bg-violet-950/40 dark:text-violet-100">
               Alguns portais bloqueiam leitura externa ou ocultam dados. Se isso acontecer, XML ou planilha continuam sendo as opcoes profissionais.
             </p>
-            <button type="submit" disabled={!hasActiveProfessionalPlan} className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-violet-700 px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-violet-800 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-600">
+            <button type="submit" className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-violet-700 px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-violet-800">
               <Upload className="h-4 w-4" />
               Verificar e importar
             </button>
@@ -296,7 +286,7 @@ export default async function ImportarPage({
               </div>
             </div>
 
-            <SpreadsheetImportForm action={importListingsFromCsv} disabled={!hasActiveProfessionalPlan} />
+            <SpreadsheetImportForm action={importListingsFromCsv} />
           </section>
         </section>
 

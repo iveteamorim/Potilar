@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { slugify } from '@/lib/slugify';
 import { cities as RN_CITIES } from '@/data/cities';
-import { getActiveListingStatuses, getListingLimitForAccount } from '@/lib/listingLimits';
+import { getListingCapacitySnapshot } from '@/lib/listingCapacity.server';
 
 type ImportRow = {
   title: string;
@@ -268,9 +268,9 @@ export async function importListingsFromCsv(formData: FormData) {
     redirect('/mi-cuenta/importar?error=empty');
   }
 
-  await insertImportedRows(rows);
+  const result = await insertImportedRows(rows);
   revalidatePath('/mi-cuenta');
-  redirect(`/mi-cuenta/importar?success=${rows.length}`);
+  redirect(`/mi-cuenta/importar?success=${result.imported}&skipped=${result.skipped}&limit=${result.limit}`);
 }
 
 async function insertImportedRows(rows: ImportRow[]) {
@@ -293,31 +293,19 @@ async function insertImportedRows(rows: ImportRow[]) {
     redirect('/mi-cuenta/importar?error=professional');
   }
 
-  if (!profile.professional_plan) {
-    redirect('/mi-cuenta/importar?error=plan_required');
+  const snapshot = await getListingCapacitySnapshot(user.id, profile);
+  const availableSlots = snapshot.importableSlots;
+
+  if (availableSlots <= 0) {
+    redirect(`/mi-cuenta/importar?error=import_limit&limit=${snapshot.coveredLimit}&available=0`);
   }
 
-  const listingLimit = getListingLimitForAccount(profile.account_type, false, profile.professional_plan);
-  const { count, error: countError } = await supabase
-    .from('listings')
-    .select('id', { count: 'exact', head: true })
-    .eq('owner_id', user.id)
-    .in('status', [...getActiveListingStatuses()]);
-
-  if (countError) {
-    redirect(`/mi-cuenta/importar?error=${encodeURIComponent(countError.message)}`);
-  }
-
-  const activeCount = count ?? 0;
-  const availableSlots = Number.isFinite(listingLimit) ? Math.max(0, listingLimit - activeCount) : rows.length;
-
-  if (Number.isFinite(listingLimit) && (availableSlots <= 0 || rows.length > availableSlots)) {
-    redirect(`/mi-cuenta/importar?error=import_limit&limit=${listingLimit}&available=${availableSlots}`);
-  }
+  const acceptedRows = rows.slice(0, availableSlots);
+  const skipped = rows.length - acceptedRows.length;
 
   const now = Date.now();
   const contactName = profile.company_name || profile.full_name || user.email || 'Anunciante';
-  const payload = rows.map((row, index) => ({
+  const payload = acceptedRows.map((row, index) => ({
     owner_id: user.id,
     title: row.title,
     slug: slugify(`${row.title}-${row.city}-${now}-${index}`),
@@ -341,14 +329,28 @@ async function insertImportedRows(rows: ImportRow[]) {
     contact_email: profile.email ?? user.email ?? null,
     contact_methods: profile.phone ? ['whatsapp'] : ['email'],
     status: 'pending',
-    payment_status: 'not_required'
+    payment_status: 'not_required',
+    publication_kind: 'free'
   }));
 
-  const { error } = await supabase.from('listings').insert(payload as any);
+  let { error } = await supabase.from('listings').insert(payload as any);
+
+  if (error && /publication_kind|column|schema cache/i.test(error.message)) {
+    const legacyPayload = payload.map(({ publication_kind: _kind, ...row }) => row);
+    const retry = await supabase.from('listings').insert(legacyPayload as any);
+    error = retry.error;
+  }
 
   if (error) {
     redirect(`/mi-cuenta/importar?error=${encodeURIComponent(error.message)}`);
   }
+
+  return {
+    imported: acceptedRows.length,
+    skipped,
+    limit: snapshot.coveredLimit,
+    available: availableSlots
+  };
 }
 
 export async function importListingsFromXml(formData: FormData) {
@@ -375,9 +377,9 @@ export async function importListingsFromXml(formData: FormData) {
     redirect('/mi-cuenta/importar?error=xml_empty');
   }
 
-  await insertImportedRows(rows);
+  const result = await insertImportedRows(rows);
   revalidatePath('/mi-cuenta');
-  redirect(`/mi-cuenta/importar?success=${rows.length}&source=xml`);
+  redirect(`/mi-cuenta/importar?success=${result.imported}&skipped=${result.skipped}&limit=${result.limit}&source=xml`);
 }
 
 function flattenJsonLd(value: unknown): any[] {
@@ -530,7 +532,7 @@ export async function importListingsFromPortal(formData: FormData) {
     redirect('/mi-cuenta/importar?error=portal_empty');
   }
 
-  await insertImportedRows(rows);
+  const result = await insertImportedRows(rows);
   revalidatePath('/mi-cuenta');
-  redirect(`/mi-cuenta/importar?success=${rows.length}&source=portal`);
+  redirect(`/mi-cuenta/importar?success=${result.imported}&skipped=${result.skipped}&limit=${result.limit}&source=portal`);
 }

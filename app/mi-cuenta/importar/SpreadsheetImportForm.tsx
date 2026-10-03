@@ -58,10 +58,10 @@ function buildPreview(rawValue: string) {
 
 export function SpreadsheetImportForm({
   action,
-  disabled
+  disabled = false
 }: {
   action: ImportListingsAction;
-  disabled: boolean;
+  disabled?: boolean;
 }) {
   const [value, setValue] = useState('');
   const preview = useMemo(() => buildPreview(value), [value]);

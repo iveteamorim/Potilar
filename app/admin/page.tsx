@@ -91,14 +91,14 @@ export default async function AdminPage({
   let { data: listings, error: listingsError } = await supabase
     .from('listings')
     .select(ADMIN_LISTING_SELECT)
-    .in('status', ['pending', 'approved', 'paused', 'rejected'])
+    .in('status', ['pending', 'approved', 'paused', 'rejected', 'needs_renewal'])
     .order('created_at', { ascending: false });
 
   if (listingsError) {
     const fallback = await supabase
       .from('listings')
       .select(ADMIN_LISTING_SELECT_FALLBACK)
-      .in('status', ['pending', 'approved', 'paused', 'rejected'])
+      .in('status', ['pending', 'approved', 'paused', 'rejected', 'needs_renewal'])
       .order('created_at', { ascending: false });
     listings = (fallback.data ?? []).map((listing) => ({
       ...listing,
@@ -161,7 +161,7 @@ export default async function AdminPage({
     if (searchParams?.filtro === 'featured') {
       if (!listing.featured_plan) return false;
     }
-    if (searchParams?.filtro && ['pending', 'approved', 'paused', 'rejected'].includes(searchParams.filtro) && listing.status !== searchParams.filtro) {
+    if (searchParams?.filtro && ['pending', 'approved', 'paused', 'rejected', 'needs_renewal'].includes(searchParams.filtro) && listing.status !== searchParams.filtro) {
       return false;
     }
 

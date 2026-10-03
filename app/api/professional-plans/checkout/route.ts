@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { PLANS, getProfessionalPlan, resolveProfessionalBillingMode, type ProfessionalPlanId } from '@/lib/plans';
+import { isPlanAllowedForAccount } from '@/lib/listingCapacity';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
 
@@ -28,6 +29,40 @@ export async function POST(request: Request) {
 
   if (!user.email) {
     return NextResponse.json({ error: 'Sua conta precisa ter um email para ativar um plano.' }, { status: 400 });
+  }
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('account_type,advertiser_document,creci')
+    .eq('id', user.id)
+    .maybeSingle();
+
+  if (!isPlanAllowedForAccount(profile?.account_type, selectedPlan.id)) {
+    return NextResponse.json(
+      {
+        error:
+          profile?.account_type === 'corretor'
+            ? 'Conta de Corretor assina apenas o Plano Corretor. O volume de imóveis não muda o tipo de conta.'
+            : profile?.account_type === 'imobiliaria'
+              ? 'Conta de Imobiliária assina apenas os planos Imobiliária ou Imobiliária Pro.'
+              : 'Crie uma conta profissional (Corretor ou Imobiliária) para assinar um plano.'
+      },
+      { status: 403 }
+    );
+  }
+
+  if (profile?.account_type === 'imobiliaria') {
+    const documentDigits = String(profile.advertiser_document ?? '').replace(/\D/g, '');
+    if (documentDigits.length !== 14 || String(profile.creci ?? '').trim().length < 3) {
+      return NextResponse.json({ error: 'Imobiliária precisa de CNPJ e CRECI PJ válidos.' }, { status: 400 });
+    }
+  }
+
+  if (profile?.account_type === 'corretor') {
+    const documentDigits = String(profile.advertiser_document ?? '').replace(/\D/g, '');
+    if (documentDigits.length !== 11 || String(profile.creci ?? '').trim().length < 3) {
+      return NextResponse.json({ error: 'Corretor precisa de CPF e CRECI PF válidos.' }, { status: 400 });
+    }
   }
 
   const accessToken = process.env.MERCADO_PAGO_ACCESS_TOKEN;

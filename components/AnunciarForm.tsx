@@ -11,8 +11,9 @@ import { createClient } from '@/lib/supabase/client';
 import { geocodeListingAddress } from '@/lib/geocodeListing';
 import { KNOWN_CITY_NAMES, normalizeKnownCityName, resolveListingCoordinates } from '@/lib/locationCoordinates';
 import { formatPlaceName as formatDisplayPlaceName } from '@/lib/textFormat';
-import { getActiveListingStatuses, getListingLimitForAccount, getListingLimitLabel } from '@/lib/listingLimits';
-import { PLANS, formatPlanPrice, getFreeListingLimit, getLaunchPromoDeadlineLabel, isLaunchPromoActive } from '@/lib/plans';
+import { getCapacityBlockMessage, type CapacitySnapshot } from '@/lib/listingCapacity';
+import ListingCapacityNotice from '@/components/ListingCapacityNotice';
+import { PLANS, formatPlanPrice, getLaunchPromoDeadlineLabel, isLaunchPromoActive } from '@/lib/plans';
 
 const PAID_LISTING_PRICE = PLANS.listing.additionalPrice;
 const SEASONAL_LISTING_PRICE = PLANS.listing.seasonalPrice;
@@ -175,14 +176,18 @@ export default function AnunciarForm({
   const [listingId] = useState(() => crypto.randomUUID());
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [requiresPayment, setRequiresPayment] = useState(false);
-  const [activeListingCount, setActiveListingCount] = useState<number | null>(null);
+  const [capacity, setCapacity] = useState<CapacitySnapshot | null>(null);
+  const [choseCorretorAvulso, setChoseCorretorAvulso] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
   const [isSuggesting, setIsSuggesting] = useState(false);
   const [activeStep, setActiveStep] = useState(1);
   const isSeasonal = transaction === 'Temporada';
   const isLand = propertyType === 'Terreno';
-  const freeListingLimit = getFreeListingLimit();
-  const shouldRequirePaymentNow = !isAdmin && ((activeListingCount !== null && activeListingCount >= freeListingLimit) || isSeasonal);
+  const shouldRequirePaymentNow =
+    !isAdmin &&
+    (isSeasonal ||
+      (capacity?.decision.action === 'require_avulso' &&
+        (capacity.accountType !== 'corretor' || choseCorretorAvulso)));
   const ownerDocumentDigits = cleanDocument(ownerDocument);
   const lockedDocumentDigits = cleanDocument(defaultDocument);
   const hasLockedDocument = lockedDocumentDigits.length === 11;
@@ -210,34 +215,24 @@ export default function AnunciarForm({
   useEffect(() => {
     let active = true;
 
-    async function loadActiveListingCount() {
+    async function loadCapacity() {
       if (isAdmin) {
-        setActiveListingCount(0);
+        setCapacity(null);
         return;
       }
 
-      const supabase = createClient();
-      const {
-        data: { user }
-      } = await supabase.auth.getUser();
-
-      if (!user) return;
-
-      const { count } = await supabase
-        .from('listings')
-        .select('id', { count: 'exact', head: true })
-        .eq('owner_id', user.id)
-        .in('status', [...getActiveListingStatuses()]);
-
-      if (active) setActiveListingCount(count ?? 0);
+      const response = await fetch(`/api/listings/capacity${isSeasonal ? '?seasonal=1' : ''}`);
+      if (!response.ok) return;
+      const snapshot = (await response.json()) as CapacitySnapshot;
+      if (active) setCapacity(snapshot);
     }
 
-    loadActiveListingCount();
+    void loadCapacity();
 
     return () => {
       active = false;
     };
-  }, [isAdmin]);
+  }, [isAdmin, isSeasonal]);
 
   useEffect(() => {
     setRequiresPayment(shouldRequirePaymentNow);
@@ -547,8 +542,9 @@ export default function AnunciarForm({
 
       const canBypassDocument = isAdmin || profile?.role === 'admin';
       const accountType = profile?.account_type ?? 'particular';
-      const professionalPlan = profile?.professional_plan ?? null;
-      const listingLimit = getListingLimitForAccount(accountType, canBypassDocument, professionalPlan);
+      const capacityResponse = await fetch(`/api/listings/capacity${isSeasonal ? '?seasonal=1' : ''}`);
+      const liveCapacity = capacityResponse.ok ? ((await capacityResponse.json()) as CapacitySnapshot) : capacity;
+      if (liveCapacity) setCapacity(liveCapacity);
 
       if (ownerName || ownerPhone || documentForListing) {
         const profileUpdates: Record<string, string> = {
@@ -568,39 +564,44 @@ export default function AnunciarForm({
         }
       }
 
-      const { count, error: countError } = await supabase
-        .from('listings')
-        .select('id', { count: 'exact', head: true })
-        .eq('owner_id', user.id)
-        .in('status', [...getActiveListingStatuses()]);
+      const decision = liveCapacity?.decision;
+      const formattedLocation = formatDisplayPlaceName(normalizeKnownCityName(location));
+      const formattedNeighborhood = neighborhood ? formatDisplayPlaceName(neighborhood) : '';
+      const formattedCommunity = community ? formatDisplayPlaceName(community) : '';
+      const requiresAvulso = !canBypassDocument && decision?.action === 'require_avulso';
+      const requiresListingPix = !canBypassDocument && (requiresAvulso || isSeasonal);
+      const listingPaymentAmount = isSeasonal
+        ? SEASONAL_LISTING_PRICE
+        : decision?.action === 'require_avulso'
+          ? decision.amount
+          : PAID_LISTING_PRICE;
+      const publicationKind =
+        decision?.action === 'allow_plan'
+          ? 'plan'
+          : decision?.action === 'require_avulso' || isSeasonal
+            ? 'avulso'
+            : 'free';
 
-      if (countError) {
-        throw new Error(`Erro ao verificar anúncios gratuitos: ${countError.message}`);
-      }
-
-      if (!canBypassDocument && Number.isFinite(listingLimit) && (count ?? 0) >= listingLimit) {
+      if (requiresAvulso && accountType === 'corretor' && !choseCorretorAvulso) {
         setStatus(
-          `Você atingiu o limite de ${listingLimit} anúncios ativos (${getListingLimitLabel(accountType, professionalPlan)}). Fale com a Potilar para ampliar seu plano.`
+          liveCapacity?.hasPlan
+            ? `Seu Plano Corretor cobre ${liveCapacity.paidLimit} imóveis. Este extra pode ser publicado com um anúncio avulso, sem mudar o tipo de conta.`
+            : 'Você já publicou seus 3 imóveis grátis. Escolha avulso ou o Plano Corretor.'
         );
         setIsPublishing(false);
         return;
       }
-
-      const formattedLocation = formatDisplayPlaceName(normalizeKnownCityName(location));
-      const formattedNeighborhood = neighborhood ? formatDisplayPlaceName(neighborhood) : '';
-      const formattedCommunity = community ? formatDisplayPlaceName(community) : '';
-      const freeSlotsUsed = !canBypassDocument && (count ?? 0) >= freeListingLimit;
-      const requiresListingPix = !canBypassDocument && (freeSlotsUsed || isSeasonal);
-      const listingPaymentAmount = isSeasonal ? SEASONAL_LISTING_PRICE : PAID_LISTING_PRICE;
 
       if (requiresListingPix && !requiresPayment) {
         setRequiresPayment(true);
         setStatus(
           isSeasonal
             ? `Anúncio de temporada custa ${SEASONAL_PRICE_LABEL} por ${PLANS.listing.seasonalDurationDays} dias via Pix. Confira os dados e clique novamente para enviar.`
-            : isLaunchPromoActive()
-              ? `Você já usou os ${freeListingLimit} anúncios gratuitos da promoção (válida até ${getLaunchPromoDeadlineLabel()}). O próximo custa ${LISTING_PRICE_LABEL} via Pix. Confira os dados e clique novamente para enviar.`
-              : `Você já usou seu anúncio gratuito. O próximo custa ${LISTING_PRICE_LABEL} via Pix. Confira os dados e clique novamente para enviar.`
+            : decision?.action === 'require_avulso'
+              ? `Este imóvel custa ${formatPlanPrice(decision.amount)} por ${decision.durationDays} dias via Pix. Confira os dados e clique novamente para enviar.`
+              : isLaunchPromoActive()
+                ? `Você já usou os anúncios gratuitos da promoção (válida até ${getLaunchPromoDeadlineLabel()}). O próximo custa ${LISTING_PRICE_LABEL} via Pix. Confira os dados e clique novamente para enviar.`
+                : `Você já usou seus anúncios gratuitos. O próximo custa ${LISTING_PRICE_LABEL} via Pix. Confira os dados e clique novamente para enviar.`
         );
         setIsPublishing(false);
         return;
@@ -679,6 +680,7 @@ export default function AnunciarForm({
         is_paid: requiresListingPix,
         payment_status: requiresListingPix ? 'pix_pending' : 'not_required',
         payment_amount: requiresListingPix ? listingPaymentAmount : null,
+        publication_kind: publicationKind,
         featured_plan: null,
         featured_payment_status: 'not_requested',
         featured_payment_amount: null,
@@ -696,6 +698,7 @@ export default function AnunciarForm({
           is_pet_friendly: _pet,
           is_furnished: _furnished,
           video_url: _videoUrl,
+          publication_kind: _publicationKind,
           ...legacyPayload
         } = listingPayload;
         insertPayload = referralCode ? { ...legacyPayload, referral_code: referralCode } : legacyPayload;
@@ -1042,10 +1045,27 @@ export default function AnunciarForm({
               </div>
             </div>
 
+            {capacity && capacity.decision.action === 'require_avulso' && (
+              <ListingCapacityNotice
+                snapshot={capacity}
+                onChooseAvulso={() => {
+                  setChoseCorretorAvulso(true);
+                  setRequiresPayment(true);
+                  if (capacity.decision.action === 'require_avulso') {
+                    setStatus(`Este imóvel custa ${formatPlanPrice(capacity.decision.amount)} por ${capacity.decision.durationDays} dias via Pix.`);
+                  }
+                }}
+              />
+            )}
+
             {requiresPayment && (
               <div className="rounded-3xl border border-ocean-100 bg-ocean-50 p-5 text-sm text-ocean-900 dark:border-ocean-900 dark:bg-ocean-950/30 dark:text-ocean-100">
                 <p className="font-semibold">
-                  {isSeasonal ? `Anúncio de temporada: ${SEASONAL_PRICE_LABEL}` : `Anúncio adicional: ${LISTING_PRICE_LABEL}`}
+                  {isSeasonal
+                    ? `Anúncio de temporada: ${SEASONAL_PRICE_LABEL}`
+                    : capacity?.decision.action === 'require_avulso'
+                      ? `Anúncio avulso: ${formatPlanPrice(capacity.decision.amount)} / ${capacity.decision.durationDays} dias`
+                      : `Anúncio adicional: ${LISTING_PRICE_LABEL}`}
                 </p>
                 <p className="mt-2 leading-6">
                   Ao enviar, você será direcionado para pagar com Mercado Pago. Pagamento confirmado e validações aprovadas publicam o anúncio automaticamente.

@@ -6,6 +6,8 @@ import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { isValidContactPhone, normalizeContactPhone } from '@/lib/contactPhone';
 import { getHighlightPrice, type FeaturedPlanId } from '@/lib/plans';
+import { applyProfessionalPlanLoss, reactivateListingWithCapacity } from '@/lib/listingCapacity.server';
+import { getAvulsoOffer, normalizeAccountType } from '@/lib/listingCapacity';
 import { slugify } from '@/lib/slugify';
 
 function parseLanguages(value: string) {
@@ -323,7 +325,6 @@ export async function updateOwnListingStatus(formData: FormData) {
     redirect('/login?next=/mi-cuenta');
   }
 
-  const rpcName = action === 'pause' ? 'owner_pause_listing' : 'owner_reactivate_listing';
   const { data: listing } = await supabase
     .from('listings')
     .select('payment_status')
@@ -335,7 +336,24 @@ export async function updateOwnListingStatus(formData: FormData) {
     redirect('/mi-cuenta?listing_error=payment_pending');
   }
 
-  const { error } = await supabase.rpc(rpcName, { listing_id: id });
+  if (action === 'reactivate') {
+    let result: Awaited<ReturnType<typeof reactivateListingWithCapacity>>;
+    try {
+      result = await reactivateListingWithCapacity(user.id, id);
+    } catch (error) {
+      redirect(`/mi-cuenta?listing_error=${encodeURIComponent(error instanceof Error ? error.message : 'status')}`);
+    }
+
+    revalidatePath('/mi-cuenta');
+    revalidatePath('/imoveis');
+    revalidatePath('/');
+    if (result.status === 'payment_required') {
+      redirect(`/mi-cuenta/pagar/${id}?tipo=${result.paymentKind}`);
+    }
+    redirect('/mi-cuenta?listing_reactivated=1');
+  }
+
+  const { error } = await supabase.rpc('owner_pause_listing', { listing_id: id });
 
   if (error) {
     redirect(`/mi-cuenta?listing_error=${encodeURIComponent(error.message)}`);
@@ -344,7 +362,50 @@ export async function updateOwnListingStatus(formData: FormData) {
   revalidatePath('/mi-cuenta');
   revalidatePath('/imoveis');
   revalidatePath('/');
-  redirect(action === 'pause' ? '/mi-cuenta?listing_paused=1' : '/mi-cuenta?listing_reactivated=1');
+  redirect('/mi-cuenta?listing_paused=1');
+}
+
+export async function startAvulsoRenewal(formData: FormData) {
+  const id = String(formData.get('id') ?? '');
+  if (!id) {
+    redirect('/mi-cuenta?listing_error=missing');
+  }
+
+  const supabase = createClient();
+  const {
+    data: { user }
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect('/login?next=/mi-cuenta');
+  }
+
+  const adminSupabase = createAdminClient();
+  const { data: profile } = await adminSupabase
+    .from('profiles')
+    .select('account_type')
+    .eq('id', user.id)
+    .maybeSingle();
+  const offer = getAvulsoOffer(normalizeAccountType(profile?.account_type));
+  const now = new Date().toISOString();
+
+  const { error } = await adminSupabase
+    .from('listings')
+    .update({
+      payment_status: 'pix_pending',
+      is_paid: true,
+      payment_amount: offer.amount,
+      payment_proof_sent_at: null,
+      updated_at: now
+    })
+    .eq('id', id)
+    .eq('owner_id', user.id);
+
+  if (error) {
+    redirect(`/mi-cuenta?listing_error=${encodeURIComponent(error.message)}`);
+  }
+
+  redirect(`/mi-cuenta/pagar/${id}?tipo=listing`);
 }
 
 export async function cancelProfessionalSubscription(formData: FormData) {
@@ -397,10 +458,15 @@ export async function cancelProfessionalSubscription(formData: FormData) {
     redirect(`/mi-cuenta?subscription_error=${encodeURIComponent(subscriptionError.message)}`);
   }
 
+  try {
+    await applyProfessionalPlanLoss(user.id);
+  } catch (error) {
+    redirect(`/mi-cuenta?subscription_error=${encodeURIComponent(error instanceof Error ? error.message : 'plan_loss')}`);
+  }
+
   const { error: profileError } = await adminSupabase
     .from('profiles')
     .update({
-      account_type: 'particular',
       professional_plan: null
     })
     .eq('id', user.id);

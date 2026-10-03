@@ -2,7 +2,7 @@ export type FeaturedPlanId = '7_days' | '15_days' | '30_days';
 export type ProfessionalPlanId = 'corretor' | 'imobiliaria' | 'plus';
 export type ProfessionalBillingMode = 'launch_offer' | 'standard_subscription';
 
-export const DEFAULT_PROFESSIONAL_BILLING_MODE: ProfessionalBillingMode = 'launch_offer';
+export const DEFAULT_PROFESSIONAL_BILLING_MODE: ProfessionalBillingMode = 'standard_subscription';
 export const LAUNCH_OFFER_DURATION_DAYS = 30;
 
 export function resolveProfessionalBillingMode(value?: string | null): ProfessionalBillingMode {
@@ -14,13 +14,18 @@ export const PLANS = {
     firstFree: true,
     /** Promocao de lancamento ate setembro/2026 */
     launchPromo: {
-      freeListingLimit: 1,
+      freeListingLimit: 2,
       /** Fim da promo: 30/set/2026 23:59 (horario de Brasilia) */
       endsAtIso: '2026-10-01T02:59:59.999Z'
     },
     /** Apos a promo de lancamento */
-    standardFreeListingLimit: 1,
-    additionalPrice: 19.9,
+    standardFreeListingLimit: 2,
+    additionalPrice: 29.9,
+    additionalDurationDays: 30,
+    avulsoPrice: 29.9,
+    avulsoDurationDays: 30,
+    corretorAvulsoPrice: 29.9,
+    corretorAvulsoDurationDays: 30,
     seasonalPrice: 29.9,
     seasonalRenewal30Price: 19.9,
     seasonalRenewal60Price: 24.9,
@@ -52,7 +57,7 @@ export const PLANS = {
     },
     corretor: { label: 'Plano Corretor', price: 199.9, listingLimit: 10, aiCredits: 5 },
     imobiliaria: { label: 'Plano Imobiliaria', price: 349.9, listingLimit: 30, aiCredits: 15 },
-    plus: { label: 'Plano Imobiliaria Plus', price: 599.9, listingLimit: 75, aiCredits: 30 }
+    plus: { label: 'Plano Imobiliaria Pro', price: 599.9, listingLimit: 75, aiCredits: 30 }
   } satisfies Record<ProfessionalPlanId, { label: string; price: number; listingLimit: number; aiCredits: number }> & {
     portfolioTrial: {
       freeMonths: number;
@@ -84,7 +89,7 @@ export function getLaunchPromoDeadlineLabel() {
 export function getLaunchPromoShortLabel() {
   return isLaunchPromoActive()
     ? `1 anúncio grátis até ${getLaunchPromoDeadlineLabel()}`
-    : '1 anúncio grátis';
+    : '2 anúncios grátis';
 }
 
 export function formatPlanPrice(value: number, options?: { perMonth?: boolean }) {
@@ -106,6 +111,13 @@ export function getProfessionalPlan(planId?: string | null) {
 
 export function getProfessionalAccountType(planId: ProfessionalPlanId) {
   return planId === 'corretor' ? 'corretor' : 'imobiliaria';
+}
+
+export function getProfessionalPlanPublicLabel(planId?: string | null) {
+  if (planId === 'plus') return 'Imobiliária Pro';
+  if (planId === 'imobiliaria') return 'Imobiliária';
+  if (planId === 'corretor') return 'Corretor';
+  return 'Profissional';
 }
 
 export function getHighlightPrice(plan: FeaturedPlanId) {

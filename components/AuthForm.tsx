@@ -103,7 +103,6 @@ export default function AuthForm() {
   const requestedMode = searchParams.get('mode');
   const requestedAccount = searchParams.get('account');
   const requestedPlan = getRequestedPlan(searchParams.get('plan'));
-  const requestedBillingMode = searchParams.get('billing') === 'manual' ? 'manual' : 'automatic';
   const isProfessionalPlanFlow = Boolean(requestedPlan);
   const isBuyerIntent = intent === 'favorite' || intent === 'alert' || intent === 'chat';
   const confirmed = searchParams.get('confirmed') === '1';
@@ -138,23 +137,6 @@ export default function AuthForm() {
   const cpfHasLengthError = cpfDigits.length > 0 && cpfDigits.length < 11;
   const cnpjHasLengthError = cnpjDigits.length > 0 && cnpjDigits.length < 14;
   const phoneHasError = phone.length > 0 && !isValidContactPhone(phone);
-
-  async function startProfessionalCheckout(planId: ProfessionalPlanId) {
-    const response = await fetch('/api/professional-plans/checkout', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ planId, billingMode: requestedBillingMode })
-    });
-    const payload = await response.json();
-
-    if (!response.ok || !payload.initPoint) {
-      setMessage(payload.error ?? 'Conta criada, mas não foi possível abrir o pagamento agora. Entre em Planos e tente novamente.');
-      setLoading(false);
-      return;
-    }
-
-    window.location.href = payload.initPoint;
-  }
 
   function getAuthOrigin() {
     if (typeof window === 'undefined') return BASE_URL;
@@ -481,11 +463,6 @@ export default function AuthForm() {
       }
     }
 
-    if (requestedPlan) {
-      await startProfessionalCheckout(requestedPlan);
-      return;
-    }
-
     window.dispatchEvent(new Event('potilar:auth-changed'));
     router.push(next);
     router.refresh();
@@ -601,7 +578,12 @@ export default function AuthForm() {
                 </div>
               )}
               {accountType !== 'particular' && (
-                <input value={creci} onChange={(event) => setCreci(event.target.value)} placeholder="CRECI" className="w-full rounded-xl border border-sand-200 bg-white px-4 py-2.5 text-sm dark:border-slate-700 dark:bg-slate-900" />
+                <input
+                  value={creci}
+                  onChange={(event) => setCreci(event.target.value)}
+                  placeholder={accountType === 'imobiliaria' ? 'CRECI PJ' : 'CRECI PF'}
+                  className="w-full rounded-xl border border-sand-200 bg-white px-4 py-2.5 text-sm dark:border-slate-700 dark:bg-slate-900"
+                />
               )}
             </>
           )}
@@ -701,16 +683,8 @@ export default function AuthForm() {
           : isRecovery
             ? 'Guardar nova senha'
             : mode === 'signup'
-              ? isProfessionalPlanFlow
-                ? requestedBillingMode === 'manual'
-                  ? 'Criar conta e pagar 30 dias'
-                  : 'Criar conta e assinar'
-                : 'Começar grátis'
-              : requestedPlan
-                ? requestedBillingMode === 'manual'
-                  ? 'Entrar e pagar 30 dias'
-                  : 'Entrar e assinar'
-                : 'Entrar'}
+              ? 'Começar grátis'
+              : 'Entrar'}
       </button>
 
       {mode === 'login' && !isRecovery && (

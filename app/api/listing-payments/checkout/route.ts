@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { PLANS, getHighlightDurationDays, getHighlightLabel, getHighlightPrice, type FeaturedPlanId } from '@/lib/plans';
+import { getAvulsoOffer, normalizeAccountType } from '@/lib/listingCapacity';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { normalizeCouponCode, validateSecondListingCoupon } from '@/lib/listingCoupons';
@@ -11,6 +12,7 @@ type ResolvedPayment = {
   amount: number;
   description: string;
   renewal_days?: number;
+  publication_days?: number;
 };
 
 function getBaseUrl(request: Request) {
@@ -19,7 +21,7 @@ function getBaseUrl(request: Request) {
   return new URL(request.url).origin;
 }
 
-function resolvePayment(listing: any, kind: PaymentKind): ResolvedPayment | null {
+function resolvePayment(listing: any, kind: PaymentKind, accountType?: string | null): ResolvedPayment | null {
   if (kind === 'highlight') {
     if (!listing.featured_plan || listing.featured_payment_status !== 'pix_pending') return null;
     if (!['7_days', '15_days', '30_days'].includes(listing.featured_plan)) return null;
@@ -54,11 +56,18 @@ function resolvePayment(listing: any, kind: PaymentKind): ResolvedPayment | null
 
   if (listing.payment_status !== 'pix_pending') return null;
 
+  const avulso = getAvulsoOffer(normalizeAccountType(accountType));
+  const publicationDays = kind === 'seasonal' ? PLANS.listing.seasonalDurationDays : avulso.durationDays;
+
   return {
     product: kind === 'seasonal' ? 'seasonal_listing' : 'listing_publication',
     title: kind === 'seasonal' ? 'Potilar - Anúncio de temporada' : 'Potilar - Publicação de anúncio',
     amount: Number(listing.payment_amount ?? 0),
-    description: kind === 'seasonal' ? 'Anúncio para temporada por 60 dias.' : 'Publicação de anúncio adicional.'
+    description:
+      kind === 'seasonal'
+        ? 'Anúncio para temporada por 60 dias.'
+        : `Publicação de anúncio adicional por ${publicationDays} dias.`,
+    publication_days: publicationDays
   };
 }
 
@@ -92,7 +101,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: listingError?.message ?? 'Anúncio não encontrado.' }, { status: 404 });
   }
 
-  let payment = resolvePayment(listing, kind);
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('account_type')
+    .eq('id', user.id)
+    .maybeSingle();
+
+  let payment = resolvePayment(listing, kind, profile?.account_type);
 
   if (!payment || payment.amount <= 0) {
     return NextResponse.json({ error: 'Este pagamento não está pendente.' }, { status: 400 });
@@ -151,6 +166,7 @@ export async function POST(request: Request) {
         listing_id: listing.id,
         payment_kind: kind,
         renewal_days: payment.renewal_days ?? null,
+        publication_days: payment.publication_days ?? null,
         coupon_code: appliedCoupon?.code ?? null,
         coupon_amount_before: appliedCoupon?.amountBefore ?? null,
         coupon_amount_after: appliedCoupon?.amountAfter ?? null

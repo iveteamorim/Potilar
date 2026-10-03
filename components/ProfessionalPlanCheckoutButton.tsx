@@ -10,6 +10,8 @@ type Props = {
   fallbackHref: string;
   className?: string;
   showRepeatIcon?: boolean;
+  showArrow?: boolean;
+  loadingLabel?: string;
 };
 
 export default function ProfessionalPlanCheckoutButton({
@@ -17,7 +19,9 @@ export default function ProfessionalPlanCheckoutButton({
   children,
   fallbackHref,
   className,
-  showRepeatIcon = true
+  showRepeatIcon = true,
+  showArrow = true,
+  loadingLabel = 'Abrindo checkout...'
 }: Props) {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
@@ -42,13 +46,13 @@ export default function ProfessionalPlanCheckoutButton({
       }
 
       if (!response.ok || !payload.initPoint) {
-        setMessage(payload.error ?? 'Nao foi possivel iniciar a ativacao agora.');
+        setMessage(payload.error ?? 'Não foi possível iniciar o checkout agora.');
         return;
       }
 
       window.location.href = payload.initPoint;
     } catch {
-      setMessage('Nao foi possivel iniciar a ativacao agora.');
+      setMessage('Não foi possível iniciar o checkout agora.');
     } finally {
       setLoading(false);
     }
@@ -66,8 +70,8 @@ export default function ProfessionalPlanCheckoutButton({
         }
       >
         {showRepeatIcon ? <Repeat className="h-4 w-4" /> : null}
-        {loading ? 'Abrindo ativacao...' : children}
-        <ArrowRight className="h-4 w-4" />
+        {loading ? loadingLabel : children}
+        {showArrow ? <ArrowRight className="h-4 w-4" /> : null}
       </button>
       {message && (
         <p className="text-xs font-semibold text-slate-600 dark:text-slate-300">

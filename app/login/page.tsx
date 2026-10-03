@@ -19,9 +19,9 @@ function isProfessionalPlan(plan?: string) {
 }
 
 function getTitle(plan?: string) {
-  if (plan === 'corretor') return 'Assine o plano Corretor.';
-  if (plan === 'imobiliaria') return 'Assine o plano Imobiliária.';
-  if (plan === 'plus') return 'Assine o plano Imobiliária Plus.';
+  if (plan === 'corretor') return 'Crie sua conta de Corretor.';
+  if (plan === 'imobiliaria') return 'Crie sua conta de Imobiliária.';
+  if (plan === 'plus') return 'Crie sua conta de Imobiliária.';
   return 'Entre para salvar imóveis.';
 }
 
@@ -31,8 +31,8 @@ export default function LoginPage({ searchParams }: Props) {
   const items = professionalFlow
     ? [
         [Home, 'Crie sua página profissional'],
-        [Bell, 'Ative seu plano mensal'],
-        [Home, 'Publique sua carteira de imóveis'],
+        [Bell, 'Use seus imóveis grátis agora'],
+        [Home, 'Contrate um plano só se precisar de mais'],
         [MessageCircle, 'Fale direto com interessados']
       ]
     : [
@@ -54,7 +54,7 @@ export default function LoginPage({ searchParams }: Props) {
           </h1>
           <p className="mt-2 max-w-md text-sm leading-6 text-slate-600 dark:text-slate-300 sm:mt-3">
             {professionalFlow
-              ? 'Crie sua conta profissional, preencha seus dados e siga para o pagamento do plano.'
+              ? 'Crie sua conta profissional grátis. O pagamento só aparece se você quiser publicar acima do limite gratuito.'
               : 'Favoritos, alertas, mensagens e anúncios em um só lugar.'}
           </p>
           <div className="mt-8 hidden gap-3 text-sm font-semibold text-slate-700 dark:text-slate-200 lg:grid">

@@ -1,9 +1,11 @@
 import { NextResponse } from 'next/server';
 import { getAiCreditPackage } from '@/lib/aiCredits';
-import { PLANS, getHighlightDurationDays, getProfessionalAccountType, getProfessionalPlan, type ProfessionalPlanId } from '@/lib/plans';
+import { PLANS, getHighlightDurationDays, getProfessionalPlan, type ProfessionalPlanId } from '@/lib/plans';
+import { isPlanAllowedForAccount } from '@/lib/listingCapacity';
 import { isSecondListingCoupon } from '@/lib/listingCoupons';
 import { buildProfessionalProfileSlug } from '@/lib/publicProfile';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { applyProfessionalPlanLoss } from '@/lib/listingCapacity.server';
 
 function getPaymentId(url: string, body: any) {
   const searchParams = new URL(url).searchParams;
@@ -110,16 +112,19 @@ async function activateProfessionalProfile({
   }
 
   const supabase = createAdminClient();
-  const accountType = getProfessionalAccountType(planId);
   const { data: profile } = await supabase
     .from('profiles')
-    .select('id,full_name,company_name,public_slug')
+    .select('id,full_name,company_name,public_slug,account_type')
     .eq('id', userId)
     .maybeSingle();
 
+  if (!isPlanAllowedForAccount(profile?.account_type, planId)) {
+    return { error: 'Plano incompatível com o tipo de conta.', status: 403 };
+  }
+
   const publicSlug = profile?.public_slug || buildProfessionalProfileSlug(profile ?? {}, userId);
+  const accountType = profile?.account_type === 'imobiliaria' ? 'imobiliaria' : 'corretor';
   const profileUpdate = {
-    account_type: accountType,
     professional_plan: planId,
     public_slug: publicSlug,
     company_name: accountType === 'imobiliaria' ? profile?.company_name || profile?.full_name || null : profile?.company_name || null
@@ -131,7 +136,6 @@ async function activateProfessionalProfile({
     const fallback = await supabase
       .from('profiles')
       .update({
-        account_type: accountType,
         public_slug: publicSlug,
         company_name: profileUpdate.company_name
       })
@@ -190,10 +194,7 @@ async function syncProfessionalSubscription({
   );
 
   if (status === 'cancelled') {
-    await activeResult.supabase
-      .from('profiles')
-      .update({ account_type: 'particular', professional_plan: null })
-      .eq('id', userId);
+    await applyProfessionalPlanLoss(userId);
   }
 
   return { ok: true, publicSlug: activeResult.publicSlug };
@@ -406,25 +407,40 @@ async function confirmListingPayment({
     product === 'listing_renewal' && listing.listing_expires_at && new Date(listing.listing_expires_at) > now
       ? new Date(listing.listing_expires_at)
       : now;
-  const days = product === 'listing_renewal' ? Number(renewalDays ?? PLANS.listing.seasonalRenewal60DurationDays) : getListingDurationDays(listing.transaction);
+  const days =
+    product === 'listing_renewal'
+      ? Number(renewalDays ?? PLANS.listing.seasonalRenewal60DurationDays)
+      : Number(payment.metadata?.publication_days || getListingDurationDays(listing.transaction));
   const reviewIssues = product === 'listing_renewal' ? [] : await needsManualListingReview(supabase, listing);
-  const nextStatus = product === 'listing_renewal'
-    ? listing.status
-    : reviewIssues.length > 0
-      ? 'pending'
-      : 'approved';
+  const nextStatus =
+    product === 'listing_renewal'
+      ? listing.status === 'needs_renewal' || listing.status === 'paused'
+        ? 'approved'
+        : listing.status
+      : reviewIssues.length > 0
+        ? 'pending'
+        : 'approved';
 
-  const { error } = await supabase
-    .from('listings')
-    .update({
-      payment_status: 'confirmed',
-      payment_confirmed_at: now.toISOString(),
-      payment_proof_sent_at: null,
-      listing_expires_at: addDays(baseDate, days).toISOString(),
-      status: listing.status === 'rejected' ? 'pending' : nextStatus,
-      updated_at: now.toISOString()
-    })
-    .eq('id', listingId);
+  const listingUpdate = {
+    payment_status: 'confirmed',
+    payment_confirmed_at: now.toISOString(),
+    payment_proof_sent_at: null,
+    listing_expires_at: addDays(baseDate, days).toISOString(),
+    publication_kind:
+      product === 'listing_renewal' || product === 'listing_publication' || product === 'seasonal_listing'
+        ? 'avulso'
+        : undefined,
+    status: listing.status === 'rejected' ? 'pending' : nextStatus,
+    updated_at: now.toISOString()
+  };
+
+  let { error } = await supabase.from('listings').update(listingUpdate).eq('id', listingId);
+
+  if (error && /publication_kind|column|schema cache/i.test(error.message)) {
+    const { publication_kind: _publicationKind, ...legacyUpdate } = listingUpdate;
+    const fallback = await supabase.from('listings').update(legacyUpdate).eq('id', listingId);
+    error = fallback.error;
+  }
 
   if (error) {
     return { error: error.message, status: 500 };
