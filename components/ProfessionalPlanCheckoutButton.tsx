@@ -11,6 +11,7 @@ type Props = {
   className?: string;
   showRepeatIcon?: boolean;
   showArrow?: boolean;
+  showMessage?: boolean;
   loadingLabel?: string;
 };
 
@@ -21,6 +22,7 @@ export default function ProfessionalPlanCheckoutButton({
   className,
   showRepeatIcon = true,
   showArrow = true,
+  showMessage = true,
   loadingLabel = 'Abrindo checkout...'
 }: Props) {
   const [loading, setLoading] = useState(false);
@@ -38,7 +40,7 @@ export default function ProfessionalPlanCheckoutButton({
       });
       const payload = await response.json();
 
-      if (response.status === 401) {
+      if (response.status === 401 || ((response.status === 400 || response.status === 403) && !showMessage)) {
         const accountType = planId === 'corretor' ? 'corretor' : 'imobiliaria';
         const next = `/planos?plan=${encodeURIComponent(planId)}#planos`;
         window.location.href = `/login?mode=signup&account=${accountType}&plan=${encodeURIComponent(planId)}&next=${encodeURIComponent(next)}`;
@@ -46,13 +48,17 @@ export default function ProfessionalPlanCheckoutButton({
       }
 
       if (!response.ok || !payload.initPoint) {
-        setMessage(payload.error ?? 'Não foi possível iniciar o checkout agora.');
+        if (showMessage) {
+          setMessage('Não foi possível iniciar o checkout agora.');
+        }
         return;
       }
 
       window.location.href = payload.initPoint;
     } catch {
-      setMessage('Não foi possível iniciar o checkout agora.');
+      if (showMessage) {
+        setMessage('Não foi possível iniciar o checkout agora.');
+      }
     } finally {
       setLoading(false);
     }
@@ -73,7 +79,7 @@ export default function ProfessionalPlanCheckoutButton({
         {loading ? loadingLabel : children}
         {showArrow ? <ArrowRight className="h-4 w-4" /> : null}
       </button>
-      {message && (
+      {showMessage && message && (
         <p className="text-xs font-semibold text-slate-600 dark:text-slate-300">
           {message}{' '}
           <a href={fallbackHref} target="_blank" rel="noreferrer" className="text-ocean-700 underline">

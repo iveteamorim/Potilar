@@ -174,6 +174,7 @@ export default function ProfessionalPlanCards({ contactHref }: Props) {
                   className={theme.primary}
                   showRepeatIcon={false}
                   showArrow={false}
+                  showMessage={false}
                   loadingLabel="Abrindo checkout..."
                 >
                   {plan.primary.label}
@@ -187,6 +188,7 @@ export default function ProfessionalPlanCards({ contactHref }: Props) {
                   className={`inline-flex w-full items-center justify-center rounded-xl px-4 py-2 text-sm font-semibold underline-offset-2 hover:underline ${theme.secondary}`}
                   showRepeatIcon={false}
                   showArrow={false}
+                  showMessage={false}
                   loadingLabel="Abrindo checkout..."
                 >
                   {plan.secondary.label}
