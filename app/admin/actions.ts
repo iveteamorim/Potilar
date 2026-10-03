@@ -4,6 +4,12 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { PLANS, getHighlightDurationDays } from '@/lib/plans';
+import {
+  isCommercialPropertyType,
+  isLandPropertyType,
+  isPropertyType,
+  usesResidentialLayoutFields
+} from '@/lib/propertyTypes';
 
 async function ensureAdmin() {
   const supabase = createClient();
@@ -388,6 +394,70 @@ export async function updateCreciVerification(formData: FormData) {
 
     if (error || !data) {
       throw new Error(error?.message ?? 'Não foi possível atualizar o CRECI');
+    }
+
+    revalidatePath('/admin');
+    revalidatePath('/imoveis');
+    revalidatePath('/');
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Erro desconhecido';
+    redirect(`/admin?error=${encodeURIComponent(message)}`);
+  }
+
+  redirect('/admin?success=1');
+}
+
+export async function updateListingPropertyType(formData: FormData) {
+  try {
+    const id = String(formData.get('id') || '');
+    const propertyType = String(formData.get('property_type') || '');
+
+    if (!id || !isPropertyType(propertyType)) {
+      throw new Error('Tipo de imóvel inválido');
+    }
+
+    const supabase = await ensureAdmin();
+    const { data: listing, error: listingError } = await supabase
+      .from('listings')
+      .select('id,transaction')
+      .eq('id', id)
+      .single();
+
+    if (listingError || !listing) {
+      throw new Error(listingError?.message ?? 'Anúncio não encontrado');
+    }
+
+    const update: Record<string, unknown> = {
+      property_type: propertyType,
+      updated_at: new Date().toISOString()
+    };
+
+    if (!usesResidentialLayoutFields(propertyType)) {
+      update.bedrooms = 0;
+      update.bathrooms = 0;
+      update.is_pet_friendly = false;
+      update.is_furnished = false;
+      update.condo_included = false;
+    }
+
+    if (isLandPropertyType(propertyType)) {
+      update.parking = 0;
+    }
+
+    if (isCommercialPropertyType(propertyType) && listing.transaction === 'Temporada') {
+      update.transaction = 'Aluguel';
+      update.price_period = null;
+    }
+
+    const { data, error } = await supabase
+      .from('listings')
+      .update(update)
+      .eq('id', id)
+      .select('id,property_type')
+      .single();
+
+    if (error || !data) {
+      throw new Error(error?.message ?? 'Não foi possível atualizar o tipo');
     }
 
     revalidatePath('/admin');

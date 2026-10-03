@@ -64,6 +64,12 @@ function splitFeatures(value: string) {
     .filter(Boolean);
 }
 
+function featureChipClass(selected: boolean) {
+  return selected
+    ? 'rounded-full border border-green-600 bg-green-600 px-3 py-1.5 text-xs font-semibold text-white'
+    : 'rounded-full border border-sand-200 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:border-green-300 hover:text-green-700 dark:border-slate-700 dark:text-slate-200';
+}
+
 function formatPlaceName(value: string) {
   const smallWords = new Set(['da', 'de', 'do', 'das', 'dos', 'e']);
   return value
@@ -144,11 +150,25 @@ export default function ListingEditorForm({
     }
   }, [propertyType, transaction]);
 
-  function addFeature(value: string) {
+  function hasFeature(value: string) {
+    return splitFeatures(features).some((item) => item.toLowerCase() === value.toLowerCase());
+  }
+
+  function toggleFeature(value: string) {
     setFeatures((current) => {
       const items = splitFeatures(current);
-      if (items.some((item) => item.toLowerCase() === value.toLowerCase())) return current;
-      return [...items, value].join(', ');
+      const exists = items.some((item) => item.toLowerCase() === value.toLowerCase());
+      return (exists ? items.filter((item) => item.toLowerCase() !== value.toLowerCase()) : [...items, value]).join(', ');
+    });
+  }
+
+  function selectCommercialSubtype(value: string) {
+    setFeatures((current) => {
+      const items = splitFeatures(current).filter(
+        (item) => !COMMERCIAL_SUBTYPES.some((subtype) => subtype.toLowerCase() === item.toLowerCase())
+      );
+      const alreadySelected = splitFeatures(current).some((item) => item.toLowerCase() === value.toLowerCase());
+      return (alreadySelected ? items : [...items, value]).join(', ');
     });
   }
 
@@ -536,7 +556,13 @@ export default function ListingEditorForm({
             <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Tipo comercial</p>
             <div className="mt-2 flex flex-wrap gap-2">
               {COMMERCIAL_SUBTYPES.map((item) => (
-                <button key={item} type="button" onClick={() => addFeature(item)} className="rounded-full border border-sand-200 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:border-ocean-300 hover:text-ocean-700 dark:border-slate-700 dark:text-slate-200">
+                <button
+                  key={item}
+                  type="button"
+                  onClick={() => selectCommercialSubtype(item)}
+                  aria-pressed={hasFeature(item)}
+                  className={featureChipClass(hasFeature(item))}
+                >
                   {item}
                 </button>
               ))}
@@ -546,7 +572,13 @@ export default function ListingEditorForm({
             <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Diferenciais do ponto</p>
             <div className="mt-2 flex flex-wrap gap-2">
               {COMMERCIAL_FEATURES.map((item) => (
-                <button key={item} type="button" onClick={() => addFeature(item)} className="rounded-full border border-sand-200 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:border-ocean-300 hover:text-ocean-700 dark:border-slate-700 dark:text-slate-200">
+                <button
+                  key={item}
+                  type="button"
+                  onClick={() => toggleFeature(item)}
+                  aria-pressed={hasFeature(item)}
+                  className={featureChipClass(hasFeature(item))}
+                >
                   {item}
                 </button>
               ))}

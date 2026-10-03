@@ -5,7 +5,8 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { getPaymentCode } from '@/lib/pix';
 import { PLANS } from '@/lib/plans';
-import { ensureApprovedListingExpiries, setMainImage, grantHighlight, updateCreciVerification, updateHighlightStatus, updateListingPaymentStatus, updateListingStatus } from './actions';
+import { PROPERTY_TYPES, usesResidentialLayoutFields } from '@/lib/propertyTypes';
+import { ensureApprovedListingExpiries, setMainImage, grantHighlight, updateCreciVerification, updateHighlightStatus, updateListingPaymentStatus, updateListingPropertyType, updateListingStatus } from './actions';
 import LogoutButton from '@/components/LogoutButton';
 
 export const metadata: Metadata = {
@@ -35,6 +36,21 @@ function formatDate(value?: string | null) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return '';
   return new Intl.DateTimeFormat('pt-BR').format(date);
+}
+
+function formatAdminListingFacts(listing: { property_type: string; transaction: string; bedrooms: number; bathrooms: number; parking: number }) {
+  const facts = [listing.transaction];
+
+  if (usesResidentialLayoutFields(listing.property_type)) {
+    if (listing.bedrooms > 0) facts.push(`${listing.bedrooms} quartos`);
+    if (listing.bathrooms > 0) facts.push(`${listing.bathrooms} banheiros`);
+  }
+
+  if (listing.parking > 0) {
+    facts.push(`${listing.parking} vaga${listing.parking === 1 ? '' : 's'}`);
+  }
+
+  return facts.join(' · ');
 }
 
 function getListingPaymentLabel(listing: { transaction: string; payment_amount?: number | null }) {
@@ -486,9 +502,26 @@ export default async function AdminPage({
                   </div>
 
                   <p className="line-clamp-1 text-sm text-slate-600 dark:text-slate-300">{listing.description}</p>
-                  <p className="text-xs font-semibold text-slate-500">
-                    {listing.property_type} - {listing.transaction} - {listing.bedrooms} quartos - {listing.bathrooms} banheiros - {listing.parking} garagem
-                  </p>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <form action={updateListingPropertyType} className="flex flex-wrap items-center gap-2">
+                      <input type="hidden" name="id" value={listing.id} />
+                      <select
+                        name="property_type"
+                        defaultValue={listing.property_type}
+                        className="rounded-xl border border-sand-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                      >
+                        {PROPERTY_TYPES.map((type) => (
+                          <option key={type} value={type}>
+                            {type}
+                          </option>
+                        ))}
+                      </select>
+                      <button className="rounded-xl border border-ocean-200 px-3 py-2 text-xs font-semibold text-ocean-700">
+                        Salvar tipo
+                      </button>
+                    </form>
+                    <p className="text-xs font-semibold text-slate-500">{formatAdminListingFacts(listing)}</p>
+                  </div>
 
                   {listing.status === 'approved' && (
                     <div className="rounded-xl border border-violet-200 bg-violet-50 p-3 dark:border-violet-900 dark:bg-slate-900">
