@@ -11,14 +11,15 @@ import { geocodeListingAddress } from '@/lib/geocodeListing';
 import { KNOWN_CITY_NAMES, normalizeKnownCityName, resolveListingCoordinates } from '@/lib/locationCoordinates';
 import { formatPlaceName as formatDisplayPlaceName } from '@/lib/textFormat';
 import { normalizeTourUrl } from '@/lib/tourUrl';
-import type { PropertyType } from '@/lib/propertyTypes';
 import {
+  PROPERTY_TYPES,
   allowsSeasonalTransaction,
   COMMERCIAL_FEATURES,
   COMMERCIAL_SUBTYPES,
   isCommercialPropertyType,
   isLandPropertyType,
-  usesResidentialLayoutFields
+  usesResidentialLayoutFields,
+  type PropertyType
 } from '@/lib/propertyTypes';
 import { saveListingEditorChanges } from '@/app/mi-cuenta/saveListingEditor';
 
@@ -443,11 +444,11 @@ export default function ListingEditorForm({
 
       <div className="grid gap-3 sm:grid-cols-2">
         <select value={propertyType} onChange={(event) => setPropertyType(event.target.value as ListingEditorData['property_type'])} className="rounded-2xl border border-sand-200 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-900">
-          <option>Casa</option>
-          <option>Terreno</option>
-          <option>Apartamento</option>
-          <option>Kitnet/Conjugado</option>
-          <option>Ponto comercial</option>
+          {PROPERTY_TYPES.map((type) => (
+            <option key={type} value={type}>
+              {type}
+            </option>
+          ))}
         </select>
         <select value={transaction} onChange={(event) => setTransaction(event.target.value as ListingEditorData['transaction'])} className="rounded-2xl border border-sand-200 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-900">
           <option>Compra</option>

@@ -3,6 +3,7 @@ import AnunciarForm from '@/components/AnunciarForm';
 import Link from 'next/link';
 import { resolveCityPrefill } from '@/lib/cityPages';
 import { getFreeListingLimit, getLaunchPromoDeadlineLabel, isLaunchPromoActive } from '@/lib/plans';
+import { isPropertyType } from '@/lib/propertyTypes';
 import { createClient } from '@/lib/supabase/server';
 
 export function generateMetadata(): Metadata {
@@ -48,7 +49,7 @@ function normalizeReferral(ref?: string) {
 export default async function AnunciarPage({
   searchParams
 }: {
-  searchParams?: { ref?: string; cidade?: string };
+  searchParams?: { ref?: string; cidade?: string; imovel?: string };
 }) {
   let isAuthenticated = false;
   let defaultName = '';
@@ -59,6 +60,8 @@ export default async function AnunciarPage({
   let isAdmin = false;
   const referralCode = normalizeReferral(searchParams?.ref);
   const defaultCity = resolveCityPrefill(searchParams?.cidade);
+  const requestedPropertyType = searchParams?.imovel ?? '';
+  const defaultPropertyType = isPropertyType(requestedPropertyType) ? requestedPropertyType : '';
 
   try {
     const supabase = createClient();
@@ -121,6 +124,7 @@ export default async function AnunciarPage({
               accountType={accountType}
               isAdmin={isAdmin}
               defaultCity={defaultCity}
+              defaultPropertyType={defaultPropertyType}
             />
           </div>
         ) : (

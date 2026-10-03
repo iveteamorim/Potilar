@@ -5,6 +5,14 @@ import { useRouter } from 'next/navigation';
 import { Camera, ChevronDown, Eye, Sparkles, X } from 'lucide-react';
 import PrecoJustoRNAdvisor from '@/components/PrecoJustoRNAdvisor';
 import type { Property } from '@/data/properties';
+import {
+  PROPERTY_TYPES,
+  allowsSeasonalTransaction,
+  isCommercialPropertyType,
+  isLandPropertyType,
+  isPropertyType,
+  usesResidentialLayoutFields
+} from '@/lib/propertyTypes';
 import { compressImage } from '@/lib/imageCompression';
 import { formatContactPhoneInput, isValidContactPhone, normalizeContactPhone } from '@/lib/contactPhone';
 import { createClient } from '@/lib/supabase/client';
@@ -130,6 +138,7 @@ type AnunciarFormProps = {
   accountType?: string;
   isAdmin?: boolean;
   defaultCity?: string;
+  defaultPropertyType?: string;
 };
 
 export default function AnunciarForm({
@@ -140,7 +149,8 @@ export default function AnunciarForm({
   defaultDocument = '',
   accountType = 'particular',
   isAdmin = false,
-  defaultCity = ''
+  defaultCity = '',
+  defaultPropertyType = ''
 }: AnunciarFormProps) {
   const router = useRouter();
   const cityInputRef = useRef<HTMLInputElement>(null);
@@ -156,7 +166,9 @@ export default function AnunciarForm({
   const [neighborhood, setNeighborhood] = useState('');
   const [community, setCommunity] = useState('');
   const [addressExtra, setAddressExtra] = useState('');
-  const [propertyType, setPropertyType] = useState<Property['propertyType'] | ''>('');
+  const [propertyType, setPropertyType] = useState<Property['propertyType'] | ''>(
+    isPropertyType(defaultPropertyType) ? defaultPropertyType : ''
+  );
   const [transaction, setTransaction] = useState<Property['transaction'] | ''>('');
   const [price, setPrice] = useState('');
   const [pricePeriod, setPricePeriod] = useState<'dia' | 'semana' | 'mes'>('dia');
@@ -182,7 +194,9 @@ export default function AnunciarForm({
   const [isSuggesting, setIsSuggesting] = useState(false);
   const [activeStep, setActiveStep] = useState(1);
   const isSeasonal = transaction === 'Temporada';
-  const isLand = propertyType === 'Terreno';
+  const isLand = isLandPropertyType(propertyType);
+  const isCommercial = isCommercialPropertyType(propertyType);
+  const showResidentialFields = usesResidentialLayoutFields(propertyType);
   const shouldRequirePaymentNow =
     !isAdmin &&
     (isSeasonal ||
@@ -203,14 +217,20 @@ export default function AnunciarForm({
   }, [location]);
 
   useEffect(() => {
-    if (!isLand) return;
+    if (usesResidentialLayoutFields(propertyType)) return;
     setBedrooms('');
     setBathrooms('');
-    setParking('');
-    setCondoFee('');
     setIsPetFriendly(false);
     setIsFurnished(false);
-  }, [isLand]);
+    setCondoIncluded(false);
+    if (isLandPropertyType(propertyType)) {
+      setParking('');
+      setCondoFee('');
+    }
+    if (isCommercialPropertyType(propertyType) && transaction === 'Temporada') {
+      setTransaction('Aluguel');
+    }
+  }, [propertyType, transaction]);
 
   useEffect(() => {
     let active = true;
@@ -334,9 +354,9 @@ export default function AnunciarForm({
     setIsSuggesting(true);
 
     const formattedPrice = price ? `R$ ${price.replace(/^R\$\s*/i, '')}${transaction === 'Temporada' ? `/${pricePeriod}` : ''}` : '';
-    const bedroomText = !isLand && Number(bedrooms) > 0 ? `${bedrooms} quarto${bedrooms === '1' ? '' : 's'}` : '';
-    const bathroomText = !isLand && Number(bathrooms) > 0 ? `${bathrooms} banheiro${bathrooms === '1' ? '' : 's'}` : '';
-    const parkingText = !isLand && Number(parking) > 0 ? `${parking} vaga${parking === '1' ? '' : 's'} de garagem` : '';
+    const bedroomText = showResidentialFields && Number(bedrooms) > 0 ? `${bedrooms} quarto${bedrooms === '1' ? '' : 's'}` : '';
+    const bathroomText = showResidentialFields && Number(bathrooms) > 0 ? `${bathrooms} banheiro${bathrooms === '1' ? '' : 's'}` : '';
+    const parkingText = !isLand && Number(parking) > 0 ? `${parking} vaga${parking === '1' ? '' : 's'}${isCommercial ? '' : ' de garagem'}` : '';
     const areaText = Number(areaSqm) > 0 ? `${areaSqm} m2` : '';
     const highlights = [bedroomText, bathroomText, parkingText, areaText].filter(Boolean);
     const typedFeatures = features
@@ -651,14 +671,14 @@ export default function AnunciarForm({
         transaction,
         price: Number(price.replace(/\D/g, '')) || 0,
         price_period: transaction === 'Temporada' ? pricePeriod : null,
-        bedrooms: isLand ? 0 : Number(bedrooms) || 0,
-        bathrooms: isLand ? 0 : Number(bathrooms) || 0,
+        bedrooms: showResidentialFields ? Number(bedrooms) || 0 : 0,
+        bathrooms: showResidentialFields ? Number(bathrooms) || 0 : 0,
         parking: isLand ? 0 : Number(parking) || 0,
         area_sqm: Number(areaSqm) > 0 ? Number(areaSqm) : null,
         condo_fee: !isLand && Number(condoFee.replace(/\D/g, '')) > 0 ? Number(condoFee.replace(/\D/g, '')) : null,
-        condo_included: !isLand && transaction === 'Aluguel' && condoIncluded,
-        is_pet_friendly: !isLand && isPetFriendly,
-        is_furnished: !isLand && isFurnished,
+        condo_included: showResidentialFields && transaction === 'Aluguel' && condoIncluded,
+        is_pet_friendly: showResidentialFields && isPetFriendly,
+        is_furnished: showResidentialFields && isFurnished,
         location: formattedLocation,
         neighborhood: formattedNeighborhood || null,
         community: formattedCommunity || null,
@@ -887,20 +907,21 @@ export default function AnunciarForm({
             <div className="grid gap-3 sm:grid-cols-2">
               <select value={propertyType} onChange={(event) => setPropertyType(event.target.value as Property['propertyType'])} className={inputClass}>
                 <option value="">Tipo de imóvel</option>
-                <option>Casa</option>
-                <option>Terreno</option>
-                <option>Apartamento</option>
-                <option>Kitnet/Conjugado</option>
+                {PROPERTY_TYPES.map((type) => (
+                  <option key={type} value={type}>
+                    {type}
+                  </option>
+                ))}
               </select>
               <select value={transaction} onChange={(event) => setTransaction(event.target.value as Property['transaction'])} className={inputClass}>
                 <option value="">Negociação</option>
                 <option>Compra</option>
                 <option>Aluguel</option>
-                <option>Temporada</option>
+                {allowsSeasonalTransaction(propertyType) && <option>Temporada</option>}
               </select>
             </div>
 
-            <div className={`grid gap-3 ${isLand ? 'sm:grid-cols-2' : 'sm:grid-cols-4'}`}>
+            <div className={`grid gap-3 ${showResidentialFields ? 'sm:grid-cols-4' : 'sm:grid-cols-2'}`}>
               <label className="space-y-1.5">
                 <span className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Preço</span>
                 <input type="text" placeholder="R$" value={price} onChange={(event) => setPrice(event.target.value)} className={inputClass} />
@@ -915,7 +936,7 @@ export default function AnunciarForm({
                   </select>
                 </label>
               )}
-              {!isLand && (
+              {showResidentialFields && (
                 <>
                   <label className="space-y-1.5">
                     <span className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Quartos</span>
@@ -931,6 +952,12 @@ export default function AnunciarForm({
                   </label>
                 </>
               )}
+              {isCommercial && (
+                <label className="space-y-1.5">
+                  <span className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Vagas</span>
+                  <input type="number" min="0" placeholder="0" value={parking} onChange={(event) => setParking(event.target.value)} className={inputClass} />
+                </label>
+              )}
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2">
@@ -940,7 +967,7 @@ export default function AnunciarForm({
 
             <PrecoJustoRNAdvisor price={price} transaction={transaction} propertyType={propertyType} location={location} neighborhood={neighborhood} bedrooms={bedrooms} areaSqm={areaSqm} />
 
-            {!isLand && (
+            {showResidentialFields && (
               <div className="grid gap-3 text-sm font-semibold text-slate-700 dark:text-slate-200 sm:grid-cols-3">
                 <label className="inline-flex items-center gap-3 rounded-2xl border border-sand-200 bg-white px-4 py-3 dark:border-slate-700 dark:bg-slate-900"><input type="checkbox" checked={isPetFriendly} onChange={(event) => setIsPetFriendly(event.target.checked)} /> Aceita pet</label>
                 <label className="inline-flex items-center gap-3 rounded-2xl border border-sand-200 bg-white px-4 py-3 dark:border-slate-700 dark:bg-slate-900"><input type="checkbox" checked={isFurnished} onChange={(event) => setIsFurnished(event.target.checked)} /> Mobiliado</label>
@@ -1037,8 +1064,8 @@ export default function AnunciarForm({
                 <p className="text-sm text-slate-500">{[location, neighborhood].filter(Boolean).join(' - ') || 'Rio Grande do Norte'}</p>
                 <p className="text-2xl font-semibold text-ocean-700">{previewPrice}{isSeasonal ? `/${pricePeriod}` : ''}</p>
                 <div className="flex flex-wrap gap-2 text-xs font-semibold text-slate-600">
-                  {!isLand && <span>{bedrooms || 0} quartos</span>}
-                  {!isLand && <span>{bathrooms || 0} banheiros</span>}
+                  {showResidentialFields && <span>{bedrooms || 0} quartos</span>}
+                  {showResidentialFields && <span>{bathrooms || 0} banheiros</span>}
                   {!isLand && <span>{parking || 0} vagas</span>}
                   {areaSqm && <span>{areaSqm} m2</span>}
                 </div>
