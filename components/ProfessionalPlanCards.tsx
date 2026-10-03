@@ -111,16 +111,14 @@ type Props = {
 
 export default function ProfessionalPlanCards({ contactHref }: Props) {
   return (
-    <div className="grid gap-5 lg:grid-cols-3 lg:items-start">
+    <div className="grid gap-5 lg:grid-cols-3 lg:items-stretch">
       {cards.map((plan) => {
         const theme = themes[plan.theme];
 
         return (
           <article
             key={plan.id}
-            className={`relative rounded-3xl bg-white p-6 text-slate-950 shadow-sm dark:bg-slate-900 dark:text-white ${theme.card} ${
-              plan.featured ? 'lg:-mt-2 lg:pb-7' : ''
-            }`}
+            className={`relative flex h-full flex-col rounded-3xl bg-white p-6 text-slate-950 shadow-sm dark:bg-slate-900 dark:text-white ${theme.card}`}
           >
             {plan.featured ? (
               <span className="absolute -top-3 right-5 rounded-full bg-green-700 px-3 py-1 text-[10px] font-extrabold uppercase tracking-[0.12em] text-white">
@@ -132,24 +130,20 @@ export default function ProfessionalPlanCards({ contactHref }: Props) {
               <span className={`grid h-11 w-11 place-items-center rounded-full ${theme.icon}`}>
                 <plan.Icon className="h-5 w-5" aria-hidden="true" />
               </span>
-              <h3 className="text-xl font-bold">{plan.name}</h3>
+              <h3 className="whitespace-nowrap text-xl font-bold">{plan.name}</h3>
             </div>
 
             <p className={`mt-4 inline-flex rounded-full px-3 py-1 text-[11px] font-extrabold uppercase tracking-[0.16em] ${theme.eyebrow}`}>
               {plan.eyebrow}
             </p>
 
-            {plan.freeLimit != null ? (
-              <p className="mt-3 text-lg font-semibold text-slate-950 dark:text-white">
-                Até {plan.freeLimit} imóveis ativos grátis
-              </p>
-            ) : null}
+            <p className="mt-3 min-h-[1.75rem] text-lg font-semibold text-slate-950 dark:text-white">
+              {plan.freeLimit != null ? `Até ${plan.freeLimit} imóveis ativos grátis` : '\u00A0'}
+            </p>
 
-            {plan.paidIntro ? (
-              <p className="mt-4 text-[11px] font-extrabold uppercase tracking-[0.16em] text-slate-400">
-                {plan.paidIntro}
-              </p>
-            ) : null}
+            <p className="mt-4 min-h-[1rem] text-[11px] font-extrabold uppercase tracking-[0.16em] text-slate-400">
+              {plan.paidIntro ?? '\u00A0'}
+            </p>
 
             <p className={`mt-1 text-[2.05rem] font-extrabold leading-none ${theme.price}`}>
               {formatPlanPrice(plan.monthlyPrice)}
@@ -159,7 +153,7 @@ export default function ProfessionalPlanCards({ contactHref }: Props) {
               Até {plan.paidLimit} imóveis ativos
             </p>
 
-            <ul className="mt-4 space-y-2">
+            <ul className="mt-4 flex-1 space-y-2">
               {plan.features.map((feature) => (
                 <li key={feature} className="flex items-start gap-2.5 text-sm leading-6 text-slate-700 dark:text-slate-300">
                   <Check className={`mt-0.5 h-4 w-4 shrink-0 ${theme.check}`} aria-hidden="true" />
@@ -179,6 +173,7 @@ export default function ProfessionalPlanCards({ contactHref }: Props) {
                   fallbackHref={contactHref}
                   className={theme.primary}
                   showRepeatIcon={false}
+                  showArrow={false}
                   loadingLabel="Abrindo checkout..."
                 >
                   {plan.primary.label}
@@ -196,7 +191,9 @@ export default function ProfessionalPlanCards({ contactHref }: Props) {
                 >
                   {plan.secondary.label}
                 </ProfessionalPlanCheckoutButton>
-              ) : null}
+              ) : (
+                <div className="h-10" aria-hidden="true" />
+              )}
             </div>
           </article>
         );
