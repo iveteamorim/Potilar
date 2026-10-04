@@ -3,12 +3,13 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState, type ReactNode } from 'react';
-import { Bath, BedDouble, Camera, Car, ChevronLeft, ChevronRight, Flag, Mail, MapPin, MessageCircle, Phone, Ruler, Share2 } from 'lucide-react';
+import { Bath, BedDouble, Building2, Camera, Car, CheckCircle2, ChevronLeft, ChevronRight, Flag, Mail, MapPin, MessageCircle, Phone, Ruler, Share2 } from 'lucide-react';
 import type { Property } from '@/data/properties';
 import { formatListingDateLabel } from '@/lib/dateLabels';
 import { formatPropertyCardTitle, getCleanPropertyTitle } from '@/lib/displayTitle';
 import { BASE_URL } from '@/lib/config';
 import { getListingHref } from '@/lib/listingUrls';
+import { getPublicProfilePath } from '@/lib/publicProfile';
 import { showsDestaquePresentation } from '@/lib/legacyHomeFeatured';
 import { usesResidentialLayoutFields } from '@/lib/propertyTypes';
 import FavoriteButton from './FavoriteButton';
@@ -35,6 +36,94 @@ function cleanPhone(value?: string) {
 
 function getListingReportCode(listingId: string) {
   return `POT-${listingId.replace(/^user-/, '').slice(0, 8).toUpperCase()}`;
+}
+
+function isProfessionalAdvertiser(property: Property) {
+  return ['corretor', 'imobiliaria'].includes(property.advertiserAccountType ?? '');
+}
+
+function AdvertiserContactLine({
+  property,
+  compact = false
+}: {
+  property: Property;
+  compact?: boolean;
+}) {
+  if (!isProfessionalAdvertiser(property)) return null;
+
+  const isAgency = property.advertiserAccountType === 'imobiliaria';
+  const displayName =
+    property.advertiserDisplayName?.trim() || (isAgency ? 'Imobiliária' : 'Corretor');
+  const verified = Boolean(property.advertiserCreciVerified);
+  const roleLabel = verified
+    ? isAgency
+      ? 'Anunciante verificado'
+      : 'Corretor verificado'
+    : isAgency
+      ? 'Imobiliária'
+      : 'Corretor de imóveis';
+  const initials = displayName
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? '')
+    .join('');
+  const avatarSize = compact ? 'h-8 w-8' : 'h-9 w-9';
+
+  const avatar = (
+    <span
+      className={`relative flex ${avatarSize} shrink-0 items-center justify-center overflow-hidden rounded-full bg-sand-100 text-[10px] font-bold text-ocean-800 dark:bg-slate-800 dark:text-ocean-200`}
+    >
+      {property.advertiserImageUrl ? (
+        <img
+          src={property.advertiserImageUrl}
+          alt=""
+          className={isAgency ? 'h-full w-full object-contain p-1' : 'h-full w-full object-cover'}
+        />
+      ) : isAgency ? (
+        <Building2 className="h-4 w-4 text-slate-400" aria-hidden="true" />
+      ) : initials ? (
+        <span aria-hidden="true">{initials}</span>
+      ) : (
+        <Building2 className="h-4 w-4 text-slate-400" aria-hidden="true" />
+      )}
+    </span>
+  );
+
+  const content = (
+    <>
+      {avatar}
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-sm font-semibold leading-tight text-slate-800 dark:text-slate-100">
+          {displayName}
+        </span>
+        <span className="mt-0.5 inline-flex items-center gap-1 text-[11px] font-medium text-slate-500 dark:text-slate-400">
+          {roleLabel}
+          {verified ? <CheckCircle2 className="h-3 w-3 text-ocean-600" aria-hidden="true" /> : null}
+        </span>
+      </span>
+      {property.advertiserPublicSlug ? (
+        <ChevronRight className="h-4 w-4 shrink-0 text-slate-300" aria-hidden="true" />
+      ) : null}
+    </>
+  );
+
+  const className = 'mb-2.5 flex min-w-0 items-center gap-2.5';
+
+  if (!property.advertiserPublicSlug) {
+    return <div className={className}>{content}</div>;
+  }
+
+  return (
+    <Link
+      href={getPublicProfilePath(property.advertiserPublicSlug)}
+      className={`${className} transition hover:opacity-80`}
+      aria-label={`Ver página de ${displayName}`}
+      onClick={(event) => event.stopPropagation()}
+    >
+      {content}
+    </Link>
+  );
 }
 
 export default function PropertyCard({
@@ -99,6 +188,7 @@ export default function PropertyCard({
   const reportHref = `/contato?assunto=${encodeURIComponent(`Denunciar anúncio ${getListingReportCode(property.id)}`)}&url=${encodeURIComponent(detailUrl)}`;
   const hasPotilarChat = Boolean(property.ownerId) && !panelPreview;
   const hasContactActions = !panelPreview && (hasPotilarChat || Boolean(whatsappHref || phoneHref || emailHref));
+  const showAdvertiserLine = !panelPreview && isProfessionalAdvertiser(property);
   const isHorizontal = variant === 'horizontal';
   const isCompact = variant === 'compact';
   const isPanelCard = panelPreview && isHorizontal;
@@ -247,7 +337,7 @@ export default function PropertyCard({
     </div>
   );
 
-  const contactActions = hasContactActions ? (
+  const contactActions = hasContactActions || showAdvertiserLine ? (
     <div
       className={
         isHorizontal
@@ -257,7 +347,8 @@ export default function PropertyCard({
             : 'border-t border-sand-100 p-4 dark:border-slate-800'
       }
     >
-      {contactRow}
+      {showAdvertiserLine ? <AdvertiserContactLine property={property} compact={isCompact || isHorizontal} /> : null}
+      {hasContactActions ? contactRow : null}
     </div>
   ) : null;
 
