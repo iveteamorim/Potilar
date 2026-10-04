@@ -371,18 +371,7 @@ export default function PropertyCard({
               {property.advertiserAccountType === 'imobiliaria' ? 'Imobiliária' : 'Corretor'}
             </span>
           )}
-          {property.advertiserCreci && (
-            <span
-              className={`rounded-full px-3 py-1 text-xs font-semibold shadow-sm ${
-                showVerifiedProfessional
-                  ? 'bg-green-50 text-green-700 ring-1 ring-green-200'
-                  : 'bg-white/95 text-slate-800'
-              }`}
-            >
-              {property.advertiserCreci}
-            </span>
-          )}
-          {showVerifiedProfessional && !property.advertiserCreci && (
+          {showVerifiedProfessional && (
             <span className="inline-flex items-center gap-1 rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-700 shadow-sm ring-1 ring-green-200">
               <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
               Profissional verificado
