@@ -237,7 +237,7 @@ export default async function AnunciantePage({ params, searchParams }: Props) {
                     }`}
                   >
                     <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
-                    {profile.creci.trim()}
+                    {/^creci\b/i.test(profile.creci.trim()) ? profile.creci.trim() : `CRECI ${profile.creci.trim()}`}
                     {profile.creci_verified ? ' · verificado' : ''}
                   </span>
                 ) : (
