@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState, type ReactNode } from 'react';
-import { Bath, BedDouble, Building2, Camera, Car, CheckCircle2, ChevronLeft, ChevronRight, Flag, Mail, MapPin, MessageCircle, Phone, Ruler, Share2 } from 'lucide-react';
+import { Bath, BedDouble, Building2, Camera, Car, CheckCircle2, ChevronLeft, ChevronRight, Flag, Mail, MapPin, MessageCircle, Phone, Ruler, Share2, User } from 'lucide-react';
 import type { Property } from '@/data/properties';
 import { formatListingDateLabel } from '@/lib/dateLabels';
 import { formatPropertyCardTitle, getCleanPropertyTitle } from '@/lib/displayTitle';
@@ -49,7 +49,25 @@ function AdvertiserContactLine({
   property: Property;
   compact?: boolean;
 }) {
-  if (!isProfessionalAdvertiser(property)) return null;
+  if (!isProfessionalAdvertiser(property)) {
+    return (
+      <div className="mb-2.5 flex min-w-0 items-center gap-2.5">
+        <span
+          className={`flex ${compact ? 'h-8 w-8' : 'h-9 w-9'} shrink-0 items-center justify-center rounded-full bg-sand-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500`}
+        >
+          <User className={compact ? 'h-4 w-4' : 'h-5 w-5'} aria-hidden="true" />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-sm font-semibold leading-tight text-slate-800 dark:text-slate-100">
+            Particular
+          </span>
+          <span className="mt-0.5 block text-[11px] font-medium text-slate-500 dark:text-slate-400">
+            Anunciante particular
+          </span>
+        </span>
+      </div>
+    );
+  }
 
   const isAgency = property.advertiserAccountType === 'imobiliaria';
   const displayName =
@@ -188,7 +206,7 @@ export default function PropertyCard({
   const reportHref = `/contato?assunto=${encodeURIComponent(`Denunciar anúncio ${getListingReportCode(property.id)}`)}&url=${encodeURIComponent(detailUrl)}`;
   const hasPotilarChat = Boolean(property.ownerId) && !panelPreview;
   const hasContactActions = !panelPreview && (hasPotilarChat || Boolean(whatsappHref || phoneHref || emailHref));
-  const showAdvertiserLine = !panelPreview && isProfessionalAdvertiser(property);
+  const showAdvertiserLine = !panelPreview;
   const isHorizontal = variant === 'horizontal';
   const isCompact = variant === 'compact';
   const isPanelCard = panelPreview && isHorizontal;
@@ -244,8 +262,8 @@ export default function PropertyCard({
     : isHorizontal
     ? 'mt-0 border-t border-sand-100 pt-2.5 dark:border-slate-800'
     : isCompact
-      ? 'mt-auto border-t border-sand-100 pt-2 dark:border-slate-800'
-      : 'mt-auto border-t border-sand-100 pt-4 dark:border-slate-800';
+      ? 'border-t border-sand-100 pt-2 dark:border-slate-800'
+      : 'border-t border-sand-100 pt-4 dark:border-slate-800';
   const contactButtonClassName = isCompact || isHorizontal
     ? 'gap-1 px-1.5 py-1.5 text-[11px]'
     : 'gap-1.5 px-2 py-2 text-xs';
@@ -343,8 +361,8 @@ export default function PropertyCard({
         isHorizontal
           ? 'mt-2 border-t border-sand-100 pt-2.5 dark:border-slate-800'
           : isCompact
-            ? 'border-t border-sand-100 p-2.5 dark:border-slate-800'
-            : 'border-t border-sand-100 p-4 dark:border-slate-800'
+            ? 'mt-auto border-t border-sand-100 p-2.5 dark:border-slate-800'
+            : 'mt-auto border-t border-sand-100 p-4 dark:border-slate-800'
       }
     >
       {showAdvertiserLine ? <AdvertiserContactLine property={property} compact={isCompact || isHorizontal} /> : null}
@@ -543,7 +561,7 @@ export default function PropertyCard({
 
   return (
     <article className={cardShellClassName}>
-      <Link href={getListingHref(property)} className="flex h-full flex-col">
+      <Link href={getListingHref(property)} className="flex min-h-0 flex-1 flex-col">
         {content}
       </Link>
       {contactActions}
