@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState, type ReactNode } from 'react';
-import { Bath, BedDouble, Building2, Camera, Car, CheckCircle2, ChevronLeft, ChevronRight, Flag, Mail, MapPin, MessageCircle, Phone, Ruler, Share2, User } from 'lucide-react';
+import { Bath, BedDouble, Building2, Camera, Car, CheckCircle2, ChevronLeft, ChevronRight, Flag, Mail, MapPin, MessageCircle, Phone, Ruler, Share2 } from 'lucide-react';
 import type { Property } from '@/data/properties';
 import { formatListingDateLabel } from '@/lib/dateLabels';
 import { formatPropertyCardTitle, getCleanPropertyTitle } from '@/lib/displayTitle';
@@ -51,19 +51,12 @@ function AdvertiserContactLine({
 }) {
   if (!isProfessionalAdvertiser(property)) {
     return (
-      <div className="mb-2.5 flex min-w-0 items-center gap-2.5">
-        <span
-          className={`flex ${compact ? 'h-8 w-8' : 'h-9 w-9'} shrink-0 items-center justify-center rounded-full bg-sand-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500`}
-        >
-          <User className={compact ? 'h-4 w-4' : 'h-5 w-5'} aria-hidden="true" />
+      <div className="mb-2.5 min-w-0">
+        <span className="block truncate text-sm font-semibold leading-tight text-slate-800 dark:text-slate-100">
+          Particular
         </span>
-        <span className="min-w-0 flex-1">
-          <span className="block truncate text-sm font-semibold leading-tight text-slate-800 dark:text-slate-100">
-            Particular
-          </span>
-          <span className="mt-0.5 block text-[11px] font-medium text-slate-500 dark:text-slate-400">
-            Anunciante particular
-          </span>
+        <span className="mt-0.5 block text-[11px] font-medium text-slate-500 dark:text-slate-400">
+          Anunciante particular
         </span>
       </div>
     );
