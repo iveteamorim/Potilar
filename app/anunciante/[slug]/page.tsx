@@ -135,12 +135,12 @@ function getBannerImage(profile: Profile, listings: ProfileListings) {
 }
 
 const LANGUAGE_CHIPS = [
-  { match: /portugu|brazilian|pt[-_]?br|^pt$/i, flag: '🇧🇷', label: 'Português' },
-  { match: /espanh|spanish|^es$/i, flag: '🇪🇸', label: 'Espanhol' },
-  { match: /ingl[eê]s|english|^en$/i, flag: '🇬🇧', label: 'Inglês' },
-  { match: /italian|^it$/i, flag: '🇮🇹', label: 'Italiano' },
-  { match: /franc[eê]s|french|^fr$/i, flag: '🇫🇷', label: 'Francês' },
-  { match: /alem[aã]o|german|^de$/i, flag: '🇩🇪', label: 'Alemão' }
+  { match: /portugu|brazilian|pt[-_]?br|^pt$/i, code: 'br', label: 'Português' },
+  { match: /espanh|spanish|^es$/i, code: 'es', label: 'Espanhol' },
+  { match: /ingl[eê]s|english|^en$/i, code: 'gb', label: 'Inglês' },
+  { match: /italian|^it$/i, code: 'it', label: 'Italiano' },
+  { match: /franc[eê]s|french|^fr$/i, code: 'fr', label: 'Francês' },
+  { match: /alem[aã]o|german|^de$/i, code: 'de', label: 'Alemão' }
 ] as const;
 
 function getLanguages(profile: Profile) {
@@ -151,9 +151,20 @@ function getLanguages(profile: Profile) {
   return ['Português'];
 }
 
+function getProfileLocation(listings: ProfileListings) {
+  const location = listings.find((property) => property.location)?.location?.trim();
+  if (!location) return 'Rio Grande do Norte';
+  return /,\s*RN$/i.test(location) ? location : `${location.replace(/,\s*Rio Grande do Norte$/i, '')}, RN`;
+}
+
+function formatCreciLabel(creci: string) {
+  const value = creci.trim();
+  return /^creci\b/i.test(value) ? value : `CRECI ${value}`;
+}
+
 function toLanguageChip(value: string) {
   const known = LANGUAGE_CHIPS.find((item) => item.match.test(value));
-  return known ?? { flag: '', label: value };
+  return known ?? { code: '', label: value };
 }
 
 function buildTabHref(slug: string, tipo: string) {
@@ -182,9 +193,13 @@ export default async function AnunciantePage({ params, searchParams }: Props) {
         : property.advertiserImageUrl
   }));
   const accountLabel = getAccountTypeLabel(profile.account_type as 'corretor' | 'imobiliaria');
+  const professionalBadge =
+    profile.account_type === 'imobiliaria' ? 'Imobiliária' : 'Profissional imobiliário';
   const profileBio = profile.bio?.trim();
   const shouldShowBio =
     Boolean(profileBio) && profileBio?.toLowerCase() !== accountLabel.toLowerCase();
+  const profileLocation = getProfileLocation(listings);
+  const creciLabel = profile.creci?.trim() ? formatCreciLabel(profile.creci) : null;
   const phone = profile.phone?.replace(/\D/g, '');
   const whatsappHref = phone
     ? `https://wa.me/55${phone}?text=${encodeURIComponent(`Ola, vi seu perfil na Potilar e quero falar sobre imoveis.`)}`
@@ -222,98 +237,51 @@ export default async function AnunciantePage({ params, searchParams }: Props) {
         aria-label={`Imagem de capa de ${displayName}`}
       />
 
-      <section className="mx-auto -mt-20 max-w-7xl px-4 sm:-mt-20 sm:px-6 md:-mt-16 lg:px-8">
-        <div className="overflow-hidden rounded-[1.5rem] border border-sand-200 bg-white shadow-[0_18px_45px_rgba(15,23,42,0.14)] dark:border-slate-800 dark:bg-slate-900">
-          <div className="grid gap-4 p-4 sm:p-5 md:grid-cols-[118px_1fr_280px] md:gap-7 md:p-7">
-            <div className="flex items-start justify-center md:justify-start">
-              <div className="grid h-36 w-36 place-items-center overflow-hidden rounded-xl bg-sand-100 text-center text-lg font-semibold leading-tight text-slate-950 shadow-sm dark:bg-slate-800">
+      <section className="mx-auto -mt-16 max-w-7xl px-4 sm:-mt-20 sm:px-6 md:-mt-24 lg:px-8">
+        <div className="rounded-[2rem] border border-sand-200 bg-white px-5 py-5 shadow-[0_18px_45px_rgba(15,23,42,0.12)] dark:border-slate-800 dark:bg-slate-900 sm:px-7 sm:py-6">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:items-center sm:text-left">
+              <div className="h-24 w-24 shrink-0 overflow-hidden rounded-full bg-sand-100 shadow-sm ring-4 ring-white dark:bg-slate-800 dark:ring-slate-900 sm:h-28 sm:w-28">
                 {profileImage ? (
                   <img src={profileImage} alt={`Foto ou logo de ${displayName}`} className="h-full w-full object-cover" />
                 ) : (
-                  displayName
+                  <span className="grid h-full w-full place-items-center text-sm font-semibold text-slate-600">{displayName}</span>
                 )}
               </div>
-            </div>
 
-            <div className="text-center md:text-left">
-              <div className="flex flex-wrap items-center justify-center gap-2 md:justify-start">
-                <span className="inline-flex items-center gap-2 rounded-full bg-ocean-50 px-3 py-1 text-xs font-bold text-ocean-800 ring-1 ring-ocean-100">
-                  <BadgeCheck className="h-3.5 w-3.5" aria-hidden="true" />
-                  {accountLabel}
-                  {profile.creci_verified ? ' verificado' : ''}
-                </span>
-                {profile.creci?.trim() ? (
-                  <span
-                    className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold ${
-                      profile.creci_verified
-                        ? 'bg-green-50 text-green-700'
-                        : 'bg-sand-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200'
-                    }`}
-                  >
-                    <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
-                    {/^creci\b/i.test(profile.creci.trim()) ? profile.creci.trim() : `CRECI ${profile.creci.trim()}`}
-                    {profile.creci_verified ? ' · verificado' : ''}
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-600 ring-1 ring-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:ring-slate-700">
+                    <BadgeCheck className="h-3.5 w-3.5" aria-hidden="true" />
+                    {professionalBadge}
                   </span>
-                ) : (
-                  <span className="inline-flex items-center gap-2 rounded-full bg-sun-50 px-3 py-1 text-xs font-semibold text-slate-700">
-                    CRECI não informado
-                  </span>
-                )}
-              </div>
-              <h1 className="mt-3 font-sans text-3xl font-extrabold leading-tight text-slate-950 dark:text-white sm:text-4xl md:text-5xl">
-                {displayName}
-              </h1>
-              <p className="mt-2 text-base font-semibold text-slate-600 dark:text-slate-300">
-                {listings.length} imovel{listings.length === 1 ? '' : 's'} ativo{listings.length === 1 ? '' : 's'}
-              </p>
-              <p className="sr-only">
-                {listings.length} imóvel{listings.length === 1 ? '' : 's'} publicado{listings.length === 1 ? '' : 's'}
-              </p>
-              <div className="sr-only">
-                <span>{listings.length} imoveis</span>
-                <span className="hidden h-1 w-1 rounded-full bg-slate-300 sm:inline-block" aria-hidden="true" />
-                <span>Membro PotiLar</span>
-                <span className="hidden h-1 w-1 rounded-full bg-slate-300 sm:inline-block" aria-hidden="true" />
-                <span className="inline-flex items-center gap-1">
-                  <MapPin className="h-3.5 w-3.5 text-ocean-700" aria-hidden="true" />
-                  RN
-                </span>
-              </div>
-              {shouldShowBio && (
-                <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-600 dark:text-slate-300">{profileBio}</p>
-              )}
-              <div className="mt-4 grid max-w-[180px] grid-cols-1 gap-2">
-                <div className="hidden rounded-2xl bg-sand-50 px-3 py-2 text-center ring-1 ring-sand-100 dark:bg-slate-950">
-                  <strong className="block text-lg font-extrabold text-ocean-800 dark:text-ocean-200">{listings.length}</strong>
-                  <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">imoveis ativos</span>
+                  {creciLabel ? (
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-600 ring-1 ring-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:ring-slate-700">
+                      <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
+                      {creciLabel}
+                    </span>
+                  ) : null}
                 </div>
-                <div className="hidden rounded-2xl bg-sand-50 px-3 py-2 text-center ring-1 ring-sand-100 dark:bg-slate-950">
-                  <strong className="block text-lg font-extrabold text-green-700">{profile.creci && profile.creci_verified ? 'OK' : 'PotiLar'}</strong>
-                  <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">perfil verificado</span>
-                </div>
-                <div className="hidden rounded-2xl bg-sand-50 px-3 py-2 text-center ring-1 ring-sand-100 dark:bg-slate-950">
-                  <strong className="block text-lg font-extrabold text-ocean-800 dark:text-ocean-200">RN</strong>
-                  <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">atuação local</span>
-                </div>
-                <div className="hidden rounded-2xl bg-sand-50 px-3 py-2 text-center ring-1 ring-sand-100 dark:bg-slate-950">
-                  <strong className="block text-lg font-extrabold text-ocean-800 dark:text-ocean-200">{profile.creci && profile.creci_verified ? 'OK' : 'PotiLar'}</strong>
-                  <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">perfil profissional</span>
-                </div>
-              </div>
-              <div className="sr-only">
-                <p className="inline-flex items-center gap-2 text-ocean-700">
-                  <MapPin className="h-4 w-4" aria-hidden="true" />
-                  Rio Grande do Norte
+                <h1 className="mt-2 font-sans text-3xl font-extrabold leading-none text-slate-950 dark:text-white sm:text-4xl">
+                  {displayName}
+                </h1>
+                <p className="mt-2 text-sm font-medium text-slate-500 dark:text-slate-400">
+                  {listings.length} imóvel{listings.length === 1 ? '' : 's'} ativo{listings.length === 1 ? '' : 's'}
                 </p>
+                <p className="mt-1 inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 dark:text-slate-400">
+                  <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                  {profileLocation}
+                </p>
+                {shouldShowBio ? (
+                  <p className="mt-3 max-w-xl text-sm leading-6 text-slate-600 dark:text-slate-300">{profileBio}</p>
+                ) : null}
               </div>
             </div>
 
-            <aside className="space-y-4 text-center md:text-right">
+            <aside className="shrink-0 space-y-4 text-center lg:text-right">
               <div>
-                <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">
-                  {languages.length > 1 ? 'Idiomas de atendimento' : 'Atendimento em'}
-                </p>
-                <div className="mt-2 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 md:justify-end">
+                <p className="text-sm font-medium text-slate-400">Idiomas de atendimento</p>
+                <div className="mt-2 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 lg:justify-end">
                   {languages.map((language) => {
                     const chip = toLanguageChip(language);
                     return (
@@ -321,9 +289,15 @@ export default async function AnunciantePage({ params, searchParams }: Props) {
                         key={language}
                         className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-700 dark:text-slate-200"
                       >
-                        {chip.flag ? (
-                          <span aria-hidden="true" className="text-base leading-none">
-                            {chip.flag}
+                        {chip.code ? (
+                          <span className="flex h-5 w-5 overflow-hidden rounded-full ring-1 ring-slate-200">
+                            <img
+                              src={`/flags/${chip.code}.svg`}
+                              alt=""
+                              width={20}
+                              height={20}
+                              className="h-full w-full object-cover"
+                            />
                           </span>
                         ) : null}
                         {chip.label}
@@ -332,24 +306,24 @@ export default async function AnunciantePage({ params, searchParams }: Props) {
                   })}
                 </div>
               </div>
-              <div className="flex flex-wrap items-center justify-center gap-3 md:justify-end">
-                {whatsappHref && (
+              <div className="flex flex-nowrap items-center justify-center gap-3 lg:justify-end">
+                {whatsappHref ? (
                   <a
                     href={whatsappHref}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-green-600 px-5 py-3 text-sm font-extrabold text-white shadow-sm transition hover:bg-green-700"
+                    className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-green-600 px-5 text-sm font-extrabold text-white shadow-sm transition hover:bg-green-700"
                   >
                     <MessageCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
                     WhatsApp
                   </a>
-                )}
-                {phone && (
+                ) : null}
+                {phone ? (
                   <RevealPhoneButton
                     phone={phone}
-                    className="min-h-12 justify-center rounded-2xl border border-sand-200 bg-white px-5 py-3 text-sm shadow-sm dark:border-slate-700 dark:bg-slate-950"
+                    className="h-12 justify-center rounded-2xl border border-sand-200 bg-white px-5 text-sm dark:border-slate-700 dark:bg-slate-950"
                   />
-                )}
+                ) : null}
               </div>
             </aside>
           </div>

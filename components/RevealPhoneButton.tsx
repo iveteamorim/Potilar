@@ -26,8 +26,8 @@ export default function RevealPhoneButton({ phone, label = 'Ver telefone', class
 
   if (revealed) {
     return (
-      <p className={`flex items-center gap-3 text-lg font-semibold text-ocean-800 ${className}`}>
-        <Phone className="h-5 w-5 shrink-0" aria-hidden="true" />
+      <p className={`inline-flex items-center gap-2 text-sm font-semibold text-ocean-800 ${className}`}>
+        <Phone className="h-4 w-4 shrink-0" aria-hidden="true" />
         <span>{display}</span>
       </p>
     );
@@ -37,7 +37,7 @@ export default function RevealPhoneButton({ phone, label = 'Ver telefone', class
     <button
       type="button"
       onClick={() => setRevealed(true)}
-      className={`flex items-center gap-3 text-left text-lg font-semibold text-ocean-800 transition hover:text-ocean-900 ${className}`}
+      className={`inline-flex items-center gap-2 text-left text-sm font-semibold text-ocean-800 transition hover:text-ocean-900 ${className}`}
     >
       <Phone className="h-5 w-5 shrink-0" aria-hidden="true" />
       {label}
