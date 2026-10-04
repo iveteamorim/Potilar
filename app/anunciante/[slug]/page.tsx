@@ -134,12 +134,26 @@ function getBannerImage(profile: Profile, listings: ProfileListings) {
   return getHeroImage(listings);
 }
 
+const LANGUAGE_CHIPS = [
+  { match: /portugu|brazilian|pt[-_]?br|^pt$/i, flag: '🇧🇷', label: 'Português' },
+  { match: /espanh|spanish|^es$/i, flag: '🇪🇸', label: 'Espanhol' },
+  { match: /ingl[eê]s|english|^en$/i, flag: '🇬🇧', label: 'Inglês' },
+  { match: /italian|^it$/i, flag: '🇮🇹', label: 'Italiano' },
+  { match: /franc[eê]s|french|^fr$/i, flag: '🇫🇷', label: 'Francês' },
+  { match: /alem[aã]o|german|^de$/i, flag: '🇩🇪', label: 'Alemão' }
+] as const;
+
 function getLanguages(profile: Profile) {
   if ('languages' in profile && Array.isArray(profile.languages) && profile.languages.length > 0) {
-    return profile.languages;
+    return profile.languages.map((item) => String(item).trim()).filter(Boolean);
   }
 
   return ['Português'];
+}
+
+function toLanguageChip(value: string) {
+  const known = LANGUAGE_CHIPS.find((item) => item.match.test(value));
+  return known ?? { flag: '', label: value };
 }
 
 function buildTabHref(slug: string, tipo: string) {
@@ -294,20 +308,37 @@ export default async function AnunciantePage({ params, searchParams }: Props) {
               </div>
             </div>
 
-            <aside className="space-y-4 md:border-l md:border-sand-200 md:pl-8 dark:md:border-slate-800">
-              <a href={`/anunciante/${publicSlug}`} className="hidden">
-                Página Potilar
-              </a>
-              <div className="text-base font-semibold leading-7 text-slate-800 dark:text-slate-100">
-                Fala {languages.join(', ')}
+            <aside className="space-y-4 text-center md:text-right">
+              <div>
+                <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">
+                  {languages.length > 1 ? 'Idiomas de atendimento' : 'Atendimento em'}
+                </p>
+                <div className="mt-2 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 md:justify-end">
+                  {languages.map((language) => {
+                    const chip = toLanguageChip(language);
+                    return (
+                      <span
+                        key={language}
+                        className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-700 dark:text-slate-200"
+                      >
+                        {chip.flag ? (
+                          <span aria-hidden="true" className="text-base leading-none">
+                            {chip.flag}
+                          </span>
+                        ) : null}
+                        {chip.label}
+                      </span>
+                    );
+                  })}
+                </div>
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="flex flex-wrap items-center justify-center gap-3 md:justify-end">
                 {whatsappHref && (
                   <a
                     href={whatsappHref}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex min-h-14 items-center justify-center gap-2 rounded-2xl bg-green-600 px-4 py-3 text-center text-sm font-extrabold text-white shadow-sm transition hover:bg-green-700 sm:text-base"
+                    className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-green-600 px-5 py-3 text-sm font-extrabold text-white shadow-sm transition hover:bg-green-700"
                   >
                     <MessageCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
                     WhatsApp
@@ -316,7 +347,7 @@ export default async function AnunciantePage({ params, searchParams }: Props) {
                 {phone && (
                   <RevealPhoneButton
                     phone={phone}
-                    className="min-h-14 justify-center rounded-2xl border border-ocean-200 bg-white px-4 py-3 text-center text-sm shadow-sm sm:text-base"
+                    className="min-h-12 justify-center rounded-2xl border border-sand-200 bg-white px-5 py-3 text-sm shadow-sm dark:border-slate-700 dark:bg-slate-950"
                   />
                 )}
               </div>
