@@ -65,14 +65,7 @@ function AdvertiserContactLine({
   const isAgency = property.advertiserAccountType === 'imobiliaria';
   const displayName =
     property.advertiserDisplayName?.trim() || (isAgency ? 'Imobiliária' : 'Corretor');
-  const verified = Boolean(property.advertiserCreciVerified);
-  const roleLabel = verified
-    ? isAgency
-      ? 'Anunciante verificado'
-      : 'Corretor verificado'
-    : isAgency
-      ? 'Imobiliária'
-      : 'Corretor de imóveis';
+  const roleLabel = isAgency ? 'Imobiliária' : 'Corretor de imóveis';
   const initials = displayName
     .split(/\s+/)
     .filter(Boolean)
@@ -105,12 +98,12 @@ function AdvertiserContactLine({
     <>
       {avatar}
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-sm font-semibold leading-tight text-slate-800 dark:text-slate-100">
-          {displayName}
+        <span className="flex min-w-0 items-center gap-1 text-sm font-semibold leading-tight text-slate-800 dark:text-slate-100">
+          <span className="truncate">{displayName}</span>
+          <CheckCircle2 className="h-3.5 w-3.5 shrink-0 fill-[#2f80ed] text-white" aria-label="Verificado" />
         </span>
-        <span className="mt-0.5 inline-flex items-center gap-1 text-[11px] font-medium text-slate-500 dark:text-slate-400">
+        <span className="mt-0.5 block text-[11px] font-medium text-slate-500 dark:text-slate-400">
           {roleLabel}
-          {verified ? <CheckCircle2 className="h-3 w-3 text-ocean-600" aria-hidden="true" /> : null}
         </span>
       </span>
       {property.advertiserPublicSlug ? (
