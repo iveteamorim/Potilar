@@ -89,6 +89,8 @@ export default function ProfessionalProfilePanelCard({
             name="creci"
             defaultValue={creci || ''}
             placeholder="Ex: CRECI-RN 0000-F"
+            required
+            minLength={3}
             className="mt-2 h-11 w-full rounded-xl border border-sand-200 bg-white px-3 text-sm dark:border-slate-700 dark:bg-slate-950"
           />
         </label>

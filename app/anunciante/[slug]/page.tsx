@@ -158,6 +158,7 @@ export default async function AnunciantePage({ params, searchParams }: Props) {
   const verifiedListings = visibleListings.map((property) => ({
     ...property,
     advertiserAccountType: profile.account_type ?? undefined,
+    advertiserCreci: profile.creci?.trim() || undefined,
     advertiserCreciVerified: Boolean(profile.creci && profile.creci_verified),
     advertiserPublicSlug: publicSlug,
     advertiserDisplayName: displayName,
@@ -182,6 +183,7 @@ export default async function AnunciantePage({ params, searchParams }: Props) {
   const mapListingsWithBrand = mapListings.map((property) => ({
     ...property,
     advertiserAccountType: profile.account_type ?? property.advertiserAccountType,
+    advertiserCreci: profile.creci?.trim() || property.advertiserCreci,
     advertiserCreciVerified: Boolean(profile.creci && profile.creci_verified),
     advertiserPublicSlug: publicSlug,
     advertiserDisplayName: displayName,
@@ -223,12 +225,24 @@ export default async function AnunciantePage({ params, searchParams }: Props) {
               <div className="flex flex-wrap items-center justify-center gap-2 md:justify-start">
                 <span className="inline-flex items-center gap-2 rounded-full bg-ocean-50 px-3 py-1 text-xs font-bold text-ocean-800 ring-1 ring-ocean-100">
                   <BadgeCheck className="h-3.5 w-3.5" aria-hidden="true" />
-                  {accountLabel} verificado
+                  {accountLabel}
+                  {profile.creci_verified ? ' verificado' : ''}
                 </span>
-                {profile.creci && profile.creci_verified && (
-                  <span className="inline-flex items-center gap-2 rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-700">
+                {profile.creci?.trim() ? (
+                  <span
+                    className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold ${
+                      profile.creci_verified
+                        ? 'bg-green-50 text-green-700'
+                        : 'bg-sand-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200'
+                    }`}
+                  >
                     <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
-                    CRECI verificado
+                    {profile.creci.trim()}
+                    {profile.creci_verified ? ' · verificado' : ''}
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-2 rounded-full bg-sun-50 px-3 py-1 text-xs font-semibold text-slate-700">
+                    CRECI não informado
                   </span>
                 )}
               </div>
@@ -273,7 +287,6 @@ export default async function AnunciantePage({ params, searchParams }: Props) {
                 </div>
               </div>
               <div className="sr-only">
-                {profile.creci && <p>{profile.creci}</p>}
                 <p className="inline-flex items-center gap-2 text-ocean-700">
                   <MapPin className="h-4 w-4" aria-hidden="true" />
                   Rio Grande do Norte

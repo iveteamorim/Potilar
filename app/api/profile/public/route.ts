@@ -60,7 +60,10 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: 'Este endereço público já está em uso' }, { status: 409 });
   }
 
-  const nextCreci = body.creci?.trim() || null;
+  const nextCreci = ('creci' in body ? body.creci : profile.creci)?.trim() || null;
+  if (!nextCreci || nextCreci.length < 3) {
+    return NextResponse.json({ error: 'Informe o CRECI para manter a página de corretor ou imobiliária.' }, { status: 400 });
+  }
   const creciChanged = 'creci' in body && (profile.creci ?? null) !== nextCreci;
 
   const updatePayload: Record<string, string | string[] | null | boolean> = {

@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { getDemoProfessionalProfile } from '@/data/demoProfessionalProfiles';
+import { fillMissingCreciFromAuth } from '@/lib/creciFromAuth';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
 
@@ -65,6 +66,11 @@ async function queryProfileFromRpc(supabase: SupabaseClient, slug: string) {
   return rpc.data[0] as PublicAdvertiserProfileRow;
 }
 
+async function withRecoveredCreci(profile: PublicAdvertiserProfileRow, fallbackSlug: string) {
+  const [hydrated] = await fillMissingCreciFromAuth([profile]);
+  return withFallbackFields(hydrated, fallbackSlug);
+}
+
 export async function fetchPublicAdvertiserProfile(slug: string) {
   const normalizedSlug = normalizeSlug(slug);
   if (!normalizedSlug) return null;
@@ -73,12 +79,12 @@ export async function fetchPublicAdvertiserProfile(slug: string) {
 
   const rpcProfile = await queryProfileFromRpc(supabase, normalizedSlug);
   if (rpcProfile?.public_slug) {
-    return withFallbackFields(rpcProfile, normalizedSlug);
+    return withRecoveredCreci(rpcProfile, normalizedSlug);
   }
 
   const directProfile = await queryProfileBySlug(supabase, normalizedSlug, 'exact');
   if (directProfile?.public_slug) {
-    return withFallbackFields(directProfile, normalizedSlug);
+    return withRecoveredCreci(directProfile, normalizedSlug);
   }
 
   try {
@@ -86,17 +92,17 @@ export async function fetchPublicAdvertiserProfile(slug: string) {
 
     const adminRpc = await admin.rpc('get_public_profile_by_slug', { profile_slug: normalizedSlug });
     if (!adminRpc.error && adminRpc.data?.[0]) {
-      return withFallbackFields(adminRpc.data[0] as PublicAdvertiserProfileRow, normalizedSlug);
+      return withRecoveredCreci(adminRpc.data[0] as PublicAdvertiserProfileRow, normalizedSlug);
     }
 
     const adminExact = await queryProfileBySlug(admin, normalizedSlug, 'exact');
     if (adminExact) {
-      return withFallbackFields(adminExact, normalizedSlug);
+      return withRecoveredCreci(adminExact, normalizedSlug);
     }
 
     const adminPrefix = await queryProfileBySlug(admin, normalizedSlug, 'prefix');
     if (adminPrefix) {
-      return withFallbackFields(adminPrefix, normalizedSlug);
+      return withRecoveredCreci(adminPrefix, normalizedSlug);
     }
   } catch {
     // Service role not configured in this environment.

@@ -42,6 +42,10 @@ export async function updateProfessionalProfile(formData: FormData) {
     redirect('/mi-cuenta?profile_error=not_professional');
   }
 
+  if (creci.length < 3) {
+    redirect('/mi-cuenta?profile_error=creci');
+  }
+
   const creciChanged = (profile.creci ?? '') !== creci;
   const nextSlug = profile.public_slug || slugify(displayName || profile.company_name || profile.full_name || user.id);
   const updatePayload: Record<string, string | string[] | boolean | null> = {

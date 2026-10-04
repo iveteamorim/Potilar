@@ -159,6 +159,7 @@ function toPropertyCardListing(listing: any, profile: any): Property {
     contactEmail: listing.contact_email ?? undefined,
     contactMethods,
     advertiserAccountType: profile?.account_type ?? undefined,
+    advertiserCreci: profile?.creci?.trim() || undefined,
     advertiserCreciVerified: Boolean(profile?.creci && profile?.creci_verified),
     advertiserPublicSlug: profile?.public_slug ?? undefined,
     advertiserDisplayName: profile?.company_name ?? profile?.full_name ?? undefined,
@@ -318,7 +319,7 @@ export default async function MinhaContaPage({
     }
   }
 
-  if (profile && isProfessionalAccountType(profile.account_type) && !profile.public_slug) {
+  if (profile && isProfessionalAccountType(profile.account_type) && !profile.public_slug && String(profile.creci ?? '').trim().length >= 3) {
     const publicSlug = buildProfessionalProfileSlug(profile, user.id);
     const { error: profileSlugError } = await supabase
       .from('profiles')
@@ -529,7 +530,9 @@ export default async function MinhaContaPage({
 
             {searchParams?.profile_error && (
               <AccountNotice tone="error">
-                Não foi possível salvar o perfil público: {searchParams.profile_error}
+                {searchParams.profile_error === 'creci'
+                  ? 'Informe o CRECI para manter a página de corretor ou imobiliária.'
+                  : `Não foi possível salvar o perfil público: ${searchParams.profile_error}`}
               </AccountNotice>
             )}
 

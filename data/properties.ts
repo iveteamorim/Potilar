@@ -35,6 +35,7 @@ export type Property = {
   contactEmail?: string;
   contactMethods?: string[];
   advertiserAccountType?: 'particular' | 'corretor' | 'imobiliaria' | string;
+  advertiserCreci?: string;
   advertiserCreciVerified?: boolean;
   advertiserPublicSlug?: string;
   advertiserDisplayName?: string;

@@ -98,6 +98,12 @@ export default function ProfileEditorForm({
       return;
     }
 
+    if (creciValue.trim().length < 3) {
+      setStatus('Informe o CRECI para manter a página de corretor ou imobiliária.');
+      setLoading(false);
+      return;
+    }
+
     const response = await fetch('/api/profile/public', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -220,6 +226,8 @@ export default function ProfileEditorForm({
               value={creciValue}
               onChange={(event) => setCreciValue(event.target.value)}
               placeholder="Ex: CRECI-RN 0000-F"
+              required
+              minLength={3}
               className="mt-2 w-full rounded-2xl border border-sand-200 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-900"
             />
             <p className={`mt-2 text-xs font-semibold ${creciVerified ? 'text-green-700' : 'text-slate-500'}`}>

@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
+import { fillMissingCreciFromAuth } from '@/lib/creciFromAuth';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
 import { getPaymentCode } from '@/lib/pix';
 import { PLANS } from '@/lib/plans';
@@ -148,8 +150,29 @@ export default async function AdminPage({
       profileDocs = fallback.data?.map((profile) => ({ ...profile, creci_verified: false })) ?? [];
     }
 
+    const loadedIds = new Set((profileDocs ?? []).map((profile) => profile.id));
+    const missingOwnerIds = ownerIds.filter((id) => !loadedIds.has(id));
+    if (missingOwnerIds.length > 0) {
+      try {
+        const admin = createAdminClient();
+        const adminSelect = await admin
+          .from('profiles')
+          .select('id,full_name,email,phone,created_at,advertiser_document,account_type,creci,creci_verified,role')
+          .in('id', missingOwnerIds);
+        if (adminSelect.data?.length) {
+          profileDocs = [...(profileDocs ?? []), ...adminSelect.data];
+        }
+      } catch {
+        // Keep the user-client profiles if service role is not configured.
+      }
+    }
+
+    const hydratedProfiles = await fillMissingCreciFromAuth(
+      ((profileDocs ?? []) as Array<{ id: string; full_name?: string | null; email?: string | null; phone?: string | null; created_at?: string | null; advertiser_document: string | null; account_type: string | null; creci: string | null; creci_verified?: boolean | null; role?: string | null }>)
+    );
+
     advertiserProfiles = new Map(
-      ((profileDocs ?? []) as Array<{ id: string; full_name?: string | null; email?: string | null; phone?: string | null; created_at?: string | null; advertiser_document: string | null; account_type: string | null; creci: string | null; creci_verified?: boolean | null; role?: string | null }>).map((profile) => [
+      hydratedProfiles.map((profile) => [
         profile.id,
         {
           fullName: profile.full_name ?? null,
@@ -451,12 +474,12 @@ export default async function AdminPage({
                         <p className="inline-flex rounded-full border border-sand-200 px-3 py-1 text-xs font-semibold text-slate-600 dark:border-slate-700 dark:text-slate-300">
                           CPF/CNPJ: {formatDocument(advertiserProfiles.get(listing.owner_id)?.document, advertiserProfiles.get(listing.owner_id)?.role)}
                         </p>
-                        {advertiserProfiles.get(listing.owner_id)?.creci && (
-                          <p className="inline-flex rounded-full border border-sand-200 px-3 py-1 text-xs font-semibold text-slate-600 dark:border-slate-700 dark:text-slate-300">
-                            CRECI: {advertiserProfiles.get(listing.owner_id)?.creci}
-                          </p>
-                        )}
-                        {advertiserProfiles.get(listing.owner_id)?.creci && (
+                        <p className="inline-flex rounded-full border border-sand-200 px-3 py-1 text-xs font-semibold text-slate-600 dark:border-slate-700 dark:text-slate-300">
+                          CRECI:{' '}
+                          {advertiserProfiles.get(listing.owner_id)?.creci?.trim() ||
+                            (advertiserProfiles.get(listing.owner_id) ? 'não informado' : 'perfil não carregado')}
+                        </p>
+                        {advertiserProfiles.get(listing.owner_id)?.creci?.trim() && (
                           <p
                             className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
                               advertiserProfiles.get(listing.owner_id)?.creciVerified

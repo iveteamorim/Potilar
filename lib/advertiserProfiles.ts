@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Property } from '@/data/properties';
+import { fillMissingCreciFromAuth } from '@/lib/creciFromAuth';
 import { attachListingContactFields } from '@/lib/listingContactFields';
 import { createAdminClient } from '@/lib/supabase/admin';
 
@@ -95,7 +96,7 @@ export async function attachAdvertiserProfiles(supabase: SupabaseClient, propert
   const ownerIds = Array.from(new Set(withOwners.map((property) => property.ownerId).filter(Boolean))) as string[];
   if (ownerIds.length === 0) return withOwners;
 
-  const profiles = await loadAdvertiserProfileRows(supabase, ownerIds);
+  const profiles = await fillMissingCreciFromAuth(await loadAdvertiserProfileRows(supabase, ownerIds));
   const profileById = new Map(profiles.map((profile) => [profile.id, profile]));
 
   return withOwners.map((property) => {
@@ -106,6 +107,7 @@ export async function attachAdvertiserProfiles(supabase: SupabaseClient, propert
     return {
       ...property,
       advertiserAccountType: profile.account_type ?? property.advertiserAccountType,
+      advertiserCreci: profile.creci?.trim() || property.advertiserCreci,
       advertiserCreciVerified:
         profile.creci && profile.creci_verified
           ? true

@@ -424,8 +424,22 @@ export default function AuthForm() {
     }
 
     if (signInData.user) {
-      const { data: profile } = await supabase.from('profiles').select('role').eq('id', signInData.user.id).maybeSingle();
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role,account_type,creci')
+        .eq('id', signInData.user.id)
+        .maybeSingle();
       let currentProfile = profile;
+      const metadataCreci =
+        typeof signInData.user.user_metadata?.creci === 'string' ? signInData.user.user_metadata.creci.trim() : '';
+      if (
+        currentProfile &&
+        ['corretor', 'imobiliaria'].includes(String(currentProfile.account_type ?? '')) &&
+        !String(currentProfile.creci ?? '').trim() &&
+        metadataCreci.length >= 3
+      ) {
+        await supabase.from('profiles').update({ creci: metadataCreci }).eq('id', signInData.user.id);
+      }
 
       if (!currentProfile) {
         const metadata = signInData.user.user_metadata ?? {};
@@ -442,7 +456,7 @@ export default function AuthForm() {
             public_slug: null,
             company_name: null
           })
-          .select('role')
+          .select('role,account_type,creci')
           .maybeSingle();
 
         if (createProfileError || !createdProfile) {
