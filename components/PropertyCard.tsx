@@ -3,13 +3,12 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState, type ReactNode } from 'react';
-import { Bath, BedDouble, Box, Camera, Car, ChevronLeft, ChevronRight, CheckCircle2, Flag, Mail, MapPin, MessageCircle, Phone, PlayCircle, Ruler, Share2 } from 'lucide-react';
+import { Bath, BedDouble, Camera, Car, ChevronLeft, ChevronRight, Flag, Mail, MapPin, MessageCircle, Phone, Ruler, Share2 } from 'lucide-react';
 import type { Property } from '@/data/properties';
 import { formatListingDateLabel } from '@/lib/dateLabels';
 import { formatPropertyCardTitle, getCleanPropertyTitle } from '@/lib/displayTitle';
 import { BASE_URL } from '@/lib/config';
 import { getListingHref } from '@/lib/listingUrls';
-import { getPublicProfilePath } from '@/lib/publicProfile';
 import { showsDestaquePresentation } from '@/lib/legacyHomeFeatured';
 import { usesResidentialLayoutFields } from '@/lib/propertyTypes';
 import FavoriteButton from './FavoriteButton';
@@ -28,71 +27,6 @@ function formatPropertyPrice(property: Property) {
   const price = formatPrice(property.price);
   if (property.transaction !== 'Temporada' || !property.pricePeriod) return price;
   return `${price}/${property.pricePeriod}`;
-}
-
-function isProfessionalAdvertiser(property: Property) {
-  return ['corretor', 'imobiliaria'].includes(property.advertiserAccountType ?? '');
-}
-
-function AdvertiserBrandMark({
-  property,
-  size = 'default'
-}: {
-  property: Property;
-  size?: 'compact' | 'default' | 'large';
-}) {
-  if (!isProfessionalAdvertiser(property)) return null;
-
-  const displayName = property.advertiserDisplayName?.trim();
-  const initials = displayName
-    ? displayName
-        .split(/\s+/)
-        .filter(Boolean)
-        .slice(0, 2)
-        .map((part) => part[0]?.toUpperCase() ?? '')
-        .join('')
-    : '';
-
-  if (!property.advertiserImageUrl && !initials) return null;
-
-  const isAgency = property.advertiserAccountType === 'imobiliaria';
-  const boxClassName =
-    size === 'compact'
-      ? 'h-11 w-14 text-[10px]'
-      : size === 'large'
-        ? 'h-[4.5rem] w-[5.75rem] text-sm'
-        : 'h-14 w-20 text-xs';
-
-  const mark = (
-    <div className={`flex shrink-0 items-center justify-center ${isAgency ? '' : 'overflow-hidden'} ${boxClassName}`}>
-      {property.advertiserImageUrl ? (
-        <img
-          src={property.advertiserImageUrl}
-          alt={displayName ? (isAgency ? `Logo de ${displayName}` : `Foto de ${displayName}`) : 'Identidade do anunciante'}
-          className={isAgency ? 'max-h-full max-w-full object-contain' : 'h-full w-full object-cover'}
-        />
-      ) : (
-        <span className="font-bold text-ocean-800 dark:text-ocean-200" aria-hidden="true">
-          {initials}
-        </span>
-      )}
-    </div>
-  );
-
-  if (!property.advertiserPublicSlug) return mark;
-
-  return (
-    <Link
-      href={getPublicProfilePath(property.advertiserPublicSlug)}
-      className="shrink-0 transition hover:-translate-y-0.5"
-      aria-label={
-        displayName ? `Ver p\u00e1gina de ${displayName}` : 'Ver p\u00e1gina profissional'
-      }
-      onClick={(event) => event.stopPropagation()}
-    >
-      {mark}
-    </Link>
-  );
 }
 
 function cleanPhone(value?: string) {
@@ -123,23 +57,19 @@ export default function PropertyCard({
   const cardTitle = formatPropertyCardTitle(displayTitle);
   const imageAlt = `Anuncio de ${property.propertyType.toLowerCase()} em ${property.location}: ${displayTitle}`;
   const isSuperFeatured = property.isFeatured && property.featuredPlan === 'super_30_days';
-  const showVerifiedProfessional =
-    (Boolean(property.advertiserCreciVerified) &&
-      ['corretor', 'imobiliaria'].includes(property.advertiserAccountType ?? '')) ||
-    (property.location === 'Parnamirim' && property.price === 660);
   const showDestaquePresentation = showsDestaquePresentation(property);
   const cardClassName = isSuperFeatured
-    ? 'group relative flex h-full w-full flex-col overflow-hidden rounded-xl border-2 border-violet-500 bg-white shadow-[0_0_0_1px_rgba(124,58,237,0.35)] transition hover:-translate-y-[2px] hover:shadow-[0_8px_28px_rgba(124,58,237,0.22)] dark:border-violet-400 dark:bg-slate-900'
+    ? 'group relative flex h-full w-full flex-col overflow-hidden rounded-xl border-2 border-violet-500 bg-white shadow-[0_18px_60px_rgba(15,23,42,0.11)] transition hover:-translate-y-[2px] hover:shadow-[0_28px_76px_rgba(15,23,42,0.17)] dark:border-violet-400 dark:bg-slate-900'
     : showDestaquePresentation
-      ? 'group relative flex h-full w-full flex-col overflow-hidden rounded-xl border-2 border-[#ef8f1f] bg-white shadow-[0_0_0_1px_rgba(239,143,31,0.45)] transition hover:-translate-y-[2px] hover:shadow-[0_8px_28px_rgba(239,143,31,0.22)] dark:border-sun-400 dark:bg-slate-900'
+      ? 'group relative flex h-full w-full flex-col overflow-hidden rounded-xl border-2 border-[#ef8f1f] bg-white shadow-[0_18px_60px_rgba(15,23,42,0.11)] transition hover:-translate-y-[2px] hover:shadow-[0_28px_76px_rgba(15,23,42,0.17)] dark:border-sun-400 dark:bg-slate-900'
       : 'group relative flex h-full w-full flex-col overflow-hidden rounded-xl border border-sand-200 bg-white shadow-[0_18px_60px_rgba(15,23,42,0.11)] transition hover:-translate-y-[3px] hover:shadow-[0_28px_76px_rgba(15,23,42,0.17)] dark:border-slate-800 dark:bg-slate-900';
   const featuredBadgeClassName = isSuperFeatured
-    ? 'rounded-full bg-violet-600 px-3 py-1 text-xs font-semibold text-white shadow-md shadow-violet-500/30'
-    : 'rounded-full bg-sun-500 px-3 py-1 text-xs font-semibold text-white shadow-sm';
+    ? 'rounded-full bg-violet-600 px-2.5 py-0.5 text-[11px] font-semibold text-white'
+    : 'rounded-full bg-sun-500 px-2.5 py-0.5 text-[11px] font-semibold text-white';
   const featuredLabel = isSuperFeatured ? 'Super destaque' : 'Destaque';
   const dateLabel = formatListingDateLabel(property.createdAt, property.updatedAt);
-  const hasVideo = Boolean(property.videoUrl);
-  const hasTour = Boolean(property.tourUrl);
+  const showLayoutSpecs = usesResidentialLayoutFields(property.propertyType);
+  const extraFeatureTags = !showLayoutSpecs ? property.features.slice(0, 2) : [];
   const contactMethods =
     property.contactMethods && property.contactMethods.length > 0
       ? property.contactMethods
@@ -188,7 +118,6 @@ export default function PropertyCard({
       ? 'h-9 w-9 shadow-md'
       : 'h-10 w-10 shadow-md';
   const listingIdForChat = property.id.startsWith('user-') ? property.id.replace(/^user-/, '') : property.id;
-  const advertiserBrandSize = isCompact ? 'compact' : 'default';
   const bodyPaddingClassName = isPanelCard
     ? 'gap-3 p-5 md:p-6'
     : isHorizontal
@@ -225,8 +154,8 @@ export default function PropertyCard({
     : isHorizontal
     ? 'mt-0 border-t border-sand-100 pt-2.5 dark:border-slate-800'
     : isCompact
-      ? 'mt-auto min-h-[72px] border-t border-sand-100 pt-2 dark:border-slate-800'
-      : 'mt-auto min-h-[142px] border-t border-sand-100 pt-4 dark:border-slate-800';
+      ? 'mt-auto border-t border-sand-100 pt-2 dark:border-slate-800'
+      : 'mt-auto border-t border-sand-100 pt-4 dark:border-slate-800';
   const contactButtonClassName = isCompact || isHorizontal
     ? 'gap-1 px-1.5 py-1.5 text-[11px]'
     : 'gap-1.5 px-2 py-2 text-xs';
@@ -349,49 +278,21 @@ export default function PropertyCard({
             />
           </div>
         )}
-        <div className={`absolute left-3 top-3 flex flex-wrap items-center ${isCompact ? 'gap-1 pr-10' : 'gap-2 pr-12'}`}>
-          <span className={`bg-sun-500 font-bold text-white ${isCompact ? 'px-2 py-0.5 text-[10px]' : 'px-3 py-1 text-xs'}`}>
-            {property.transaction}
-          </span>
-          <span className={`bg-white/95 font-bold text-slate-800 ${isCompact ? 'px-2 py-0.5 text-[10px]' : 'px-3 py-1 text-xs'}`}>
-            {property.propertyType}
-          </span>
-          {isUserListing && (
-            <span className="rounded-full bg-green-500 px-3 py-1 text-xs font-semibold text-white">
-              Novo
-            </span>
-          )}
+        <div className={`absolute left-3 top-3 flex flex-wrap items-center ${isCompact ? 'gap-1 pr-10' : 'gap-1.5 pr-12'}`}>
           {showDestaquePresentation && (
             <span className={featuredBadgeClassName}>
               {featuredLabel}
             </span>
           )}
-          {isProfessionalAdvertiser(property) && (
-            <span className="rounded-full bg-ocean-50 px-3 py-1 text-xs font-semibold text-ocean-800 shadow-sm ring-1 ring-ocean-100">
-              {property.advertiserAccountType === 'imobiliaria' ? 'Imobiliária' : 'Corretor'}
-            </span>
-          )}
-          {showVerifiedProfessional && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-700 shadow-sm ring-1 ring-green-200">
-              <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
-              Profissional verificado
-            </span>
-          )}
-          {hasVideo && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-slate-950/85 px-3 py-1 text-xs font-semibold text-white">
-              <PlayCircle className="h-3.5 w-3.5" aria-hidden="true" />
-              Com video
-            </span>
-          )}
-          {hasTour && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-violet-600/95 px-3 py-1 text-xs font-semibold text-white">
-              <Box className="h-3.5 w-3.5" aria-hidden="true" />
-              Tour 3D
-            </span>
-          )}
+          <span className={`bg-sun-500 font-bold text-white ${isCompact ? 'px-2 py-0.5 text-[10px]' : 'px-2.5 py-1 text-xs'}`}>
+            {property.transaction}
+          </span>
+          <span className={`bg-white/95 font-bold text-slate-800 ${isCompact ? 'px-2 py-0.5 text-[10px]' : 'px-2.5 py-1 text-xs'}`}>
+            {property.propertyType}
+          </span>
         </div>
-        <span className="absolute bottom-3 right-3 inline-flex items-center gap-1 rounded-full bg-slate-950/80 px-3 py-1 text-xs font-semibold text-white">
-          <Camera className="h-3.5 w-3.5" aria-hidden="true" />
+        <span className="absolute bottom-3 right-3 inline-flex items-center gap-1 rounded-full bg-slate-950/70 px-2 py-0.5 text-[11px] font-semibold text-white">
+          <Camera className="h-3 w-3" aria-hidden="true" />
           {imageIndex + 1}/{images.length}
         </span>
         {images.length > 1 && (
@@ -399,18 +300,22 @@ export default function PropertyCard({
             <button
               type="button"
               onClick={showPreviousImage}
-              className="absolute left-2 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-slate-800 shadow-md transition hover:bg-white"
+              className={`absolute left-2 top-1/2 flex -translate-y-1/2 items-center justify-center rounded-full bg-white/85 text-slate-800 shadow-sm transition hover:bg-white ${
+                isCompact ? 'h-6 w-6' : 'h-7 w-7'
+              }`}
               aria-label="Ver foto anterior"
             >
-              <ChevronLeft className="h-5 w-5" aria-hidden="true" />
+              <ChevronLeft className={isCompact ? 'h-3.5 w-3.5' : 'h-4 w-4'} aria-hidden="true" />
             </button>
             <button
               type="button"
               onClick={showNextImage}
-              className="absolute right-2 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-slate-800 shadow-md transition hover:bg-white"
+              className={`absolute right-2 top-1/2 flex -translate-y-1/2 items-center justify-center rounded-full bg-white/85 text-slate-800 shadow-sm transition hover:bg-white ${
+                isCompact ? 'h-6 w-6' : 'h-7 w-7'
+              }`}
               aria-label="Ver próxima foto"
             >
-              <ChevronRight className="h-5 w-5" aria-hidden="true" />
+              <ChevronRight className={isCompact ? 'h-3.5 w-3.5' : 'h-4 w-4'} aria-hidden="true" />
             </button>
           </>
         )}
@@ -419,33 +324,28 @@ export default function PropertyCard({
 
   const detailsBlock = (
     <>
-        <div className={isCompact ? 'min-h-[62px]' : isHorizontal ? '' : 'min-h-[116px]'}>
-          <div className="flex items-start justify-between gap-2.5">
-            <div className="min-w-0 flex-1">
-              <h3 className={`${titleClassName} line-clamp-2 font-semibold leading-snug text-ocean-700 dark:text-ocean-200`}>
-                {cardTitle}
-              </h3>
-              <p
-                className={`${isHorizontal ? 'mt-1 text-xs' : isCompact ? 'mt-1.5 text-xs' : 'mt-2 text-sm'} flex items-center gap-1.5 text-slate-500 dark:text-slate-400`}
-              >
-                <MapPin className={`${isHorizontal ? 'h-3.5 w-3.5' : 'h-4 w-4'} shrink-0`} />
-                {property.location}, RN
-              </p>
-              {dateLabel && (
-                <div className={`${isHorizontal ? 'mt-1' : isCompact ? 'mt-1.5' : 'mt-2'} flex flex-wrap items-center gap-2`}>
-                  <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">{dateLabel}</span>
-                </div>
-              )}
-            </div>
-            <AdvertiserBrandMark property={property} size={advertiserBrandSize} />
-          </div>
+        <div>
+          <h3 className={`${titleClassName} line-clamp-2 font-semibold leading-snug text-ocean-700 dark:text-ocean-200`}>
+            {cardTitle}
+          </h3>
+          <p
+            className={`${isHorizontal ? 'mt-1 text-xs' : isCompact ? 'mt-1 text-xs' : 'mt-1.5 text-sm'} flex items-center gap-1.5 text-slate-500 dark:text-slate-400`}
+          >
+            <MapPin className={`${isHorizontal ? 'h-3.5 w-3.5' : 'h-4 w-4'} shrink-0`} />
+            {property.location}, RN
+          </p>
+          {dateLabel && (
+            <p className={`${isHorizontal || isCompact ? 'mt-0.5' : 'mt-1'} text-[11px] font-medium text-slate-400 dark:text-slate-500`}>
+              {dateLabel}
+            </p>
+          )}
         </div>
         <div className={priceSectionClassName}>
           <span className={`block ${priceClassName} font-bold leading-tight text-ocean-800 dark:text-sand-50`}>
             {formatPropertyPrice(property)}
           </span>
           <div className={`${specsClassName} flex flex-wrap items-center font-semibold text-slate-500 dark:text-slate-400`}>
-            {usesResidentialLayoutFields(property.propertyType) && (
+            {showLayoutSpecs && (
               <>
                 <span className="inline-flex items-center gap-1">
                   <BedDouble className="h-4 w-4" />
@@ -457,7 +357,7 @@ export default function PropertyCard({
                 </span>
               </>
             )}
-            {(usesResidentialLayoutFields(property.propertyType) || property.parking > 0) && (
+            {(showLayoutSpecs || property.parking > 0) && (
               <span className="inline-flex items-center gap-1">
                 <Car className="h-4 w-4" />
                 {property.parking}
@@ -466,27 +366,44 @@ export default function PropertyCard({
             {property.areaSqm && (
               <span className="inline-flex items-center gap-1">
                 <Ruler className="h-4 w-4" />
-                {property.areaSqm} m2
+                {property.areaSqm} m²
               </span>
             )}
+            {!showLayoutSpecs && (
+              <span>{property.propertyType}</span>
+            )}
           </div>
-          {!isPanelCard && usesResidentialLayoutFields(property.propertyType) &&
-            (property.condoIncluded || property.isFurnished || property.isPetFriendly) && (
+          {!isPanelCard && (showLayoutSpecs
+            ? property.condoIncluded || property.isFurnished || property.isPetFriendly
+            : extraFeatureTags.length > 0) && (
             <div className={`${tagsClassName} flex flex-wrap gap-1.5`}>
-              {property.condoIncluded && (
-                <span className="rounded-full bg-ocean-50 px-2.5 py-1 text-[11px] font-semibold text-ocean-700 dark:bg-ocean-950/40 dark:text-ocean-200">
-                  Condomínio incluso
-                </span>
-              )}
-              {property.isFurnished && (
-                <span className="rounded-full bg-sand-100 px-2.5 py-1 text-[11px] font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-200">
-                  Mobiliado
-                </span>
-              )}
-              {property.isPetFriendly && (
-                <span className="rounded-full bg-sand-100 px-2.5 py-1 text-[11px] font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-200">
-                  Aceita pet
-                </span>
+              {showLayoutSpecs ? (
+                <>
+                  {property.condoIncluded && (
+                    <span className="rounded-full bg-ocean-50 px-2.5 py-1 text-[11px] font-semibold text-ocean-700 dark:bg-ocean-950/40 dark:text-ocean-200">
+                      Condomínio incluso
+                    </span>
+                  )}
+                  {property.isFurnished && (
+                    <span className="rounded-full bg-sand-100 px-2.5 py-1 text-[11px] font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                      Mobiliado
+                    </span>
+                  )}
+                  {property.isPetFriendly && (
+                    <span className="rounded-full bg-sand-100 px-2.5 py-1 text-[11px] font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                      Aceita pet
+                    </span>
+                  )}
+                </>
+              ) : (
+                extraFeatureTags.map((feature) => (
+                  <span
+                    key={feature}
+                    className="rounded-full bg-sand-100 px-2.5 py-1 text-[11px] font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                  >
+                    {feature}
+                  </span>
+                ))
               )}
             </div>
           )}

@@ -75,7 +75,7 @@ export default function PropertyCardMoreMenu({
     setOpen(true);
   }
 
-  const buttonSize = compact ? 'h-8 w-8' : 'h-9 w-9';
+  const buttonSize = compact ? 'h-7 w-7' : 'h-8 w-8';
 
   return (
     <>
@@ -86,9 +86,9 @@ export default function PropertyCardMoreMenu({
         aria-expanded={open}
         aria-controls={open ? menuId : undefined}
         onClick={toggleMenu}
-        className={`inline-flex ${buttonSize} shrink-0 items-center justify-center rounded-lg border border-ocean-200 bg-white text-ocean-700 transition hover:bg-ocean-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800`}
+        className={`inline-flex ${buttonSize} shrink-0 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 dark:text-slate-500 dark:hover:bg-slate-800 dark:hover:text-slate-300`}
       >
-        <MoreHorizontal className={compact ? 'h-4 w-4' : 'h-5 w-5'} aria-hidden="true" />
+        <MoreHorizontal className={compact ? 'h-3.5 w-3.5' : 'h-4 w-4'} aria-hidden="true" />
       </button>
       {mounted &&
         open &&
