@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Bath, BedDouble, Box, Camera, Car, ChevronLeft, ChevronRight, CheckCircle2, Flag, Mail, MapPin, MessageCircle, Phone, PlayCircle, Ruler, Share2 } from 'lucide-react';
 import type { Property } from '@/data/properties';
 import { formatListingDateLabel } from '@/lib/dateLabels';
@@ -106,12 +106,14 @@ function getListingReportCode(listingId: string) {
 export default function PropertyCard({
   property,
   variant = 'grid',
-  panelPreview = false
+  panelPreview = false,
+  panelActions
 }: {
   property: Property;
   variant?: 'grid' | 'horizontal' | 'compact';
   /** Vista interna do painel do anunciante: sem favorito nem contacto publico. */
   panelPreview?: boolean;
+  panelActions?: ReactNode;
 }) {
   const [imageIndex, setImageIndex] = useState(0);
   const isUserListing = property.id.startsWith('user-');
@@ -169,11 +171,14 @@ export default function PropertyCard({
   const hasContactActions = !panelPreview && (hasPotilarChat || Boolean(whatsappHref || phoneHref || emailHref));
   const isHorizontal = variant === 'horizontal';
   const isCompact = variant === 'compact';
+  const isPanelCard = panelPreview && isHorizontal;
   const cardShellClassName = isHorizontal
-    ? `${cardClassName} md:grid md:grid-cols-[minmax(200px,32%)_1fr] md:items-stretch`
+    ? `${cardClassName} md:grid ${isPanelCard ? 'md:h-[19rem] md:grid-cols-[minmax(260px,36%)_1fr]' : 'md:grid-cols-[minmax(200px,32%)_1fr]'} md:items-stretch`
     : cardClassName;
   const imageClassName = isHorizontal
-    ? 'relative h-44 w-full overflow-hidden md:col-start-1 md:h-full md:min-h-[10.75rem]'
+    ? isPanelCard
+      ? 'relative h-56 w-full overflow-hidden md:col-start-1 md:h-full'
+      : 'relative h-44 w-full overflow-hidden md:col-start-1 md:h-full md:min-h-[10.75rem]'
     : isCompact
       ? 'relative aspect-[8/5] w-full shrink-0 overflow-hidden'
       : 'relative h-60 w-full overflow-hidden lg:h-64';
@@ -184,26 +189,40 @@ export default function PropertyCard({
       : 'h-10 w-10 shadow-md';
   const listingIdForChat = property.id.startsWith('user-') ? property.id.replace(/^user-/, '') : property.id;
   const advertiserBrandSize = isCompact ? 'compact' : 'default';
-  const bodyPaddingClassName = isHorizontal
-    ? hasContactActions
-      ? 'gap-2 px-3 pt-3 md:px-4 md:pt-4'
-      : 'gap-2 p-3 md:p-4'
+  const bodyPaddingClassName = isPanelCard
+    ? 'gap-3 p-5 md:p-6'
+    : isHorizontal
+      ? hasContactActions
+        ? 'gap-2 px-3 pt-3 md:px-4 md:pt-4'
+        : 'gap-2 p-3 md:p-4'
     : isCompact
       ? 'gap-1.5 p-3'
       : 'gap-3 p-5';
-  const titleClassName = isHorizontal
-    ? 'text-lg md:text-xl'
+  const titleClassName = isPanelCard
+    ? 'text-xl md:text-2xl'
+    : isHorizontal
+      ? 'text-lg md:text-xl'
     : isCompact
       ? 'text-base'
       : 'text-xl';
-  const priceClassName = isHorizontal ? 'text-xl md:text-[1.35rem]' : isCompact ? 'text-[1.15rem]' : 'text-[1.7rem]';
-  const specsClassName = isHorizontal
+  const priceClassName = isPanelCard
+    ? 'text-2xl md:text-3xl'
+    : isHorizontal
+      ? 'text-xl md:text-[1.35rem]'
+      : isCompact
+        ? 'text-[1.15rem]'
+        : 'text-[1.7rem]';
+  const specsClassName = isPanelCard
+    ? 'mt-3 gap-x-5 gap-y-2 text-sm'
+    : isHorizontal
     ? 'mt-1.5 gap-x-4 gap-y-1 text-xs'
     : isCompact
       ? 'mt-1.5 gap-x-3 gap-y-1 text-xs'
       : 'mt-3 gap-x-5 gap-y-2 text-sm';
   const tagsClassName = isHorizontal ? 'mt-1.5' : isCompact ? 'mt-2' : 'mt-3';
-  const priceSectionClassName = isHorizontal
+  const priceSectionClassName = isPanelCard
+    ? 'mt-auto border-t border-sand-100 pt-4 dark:border-slate-800'
+    : isHorizontal
     ? 'mt-0 border-t border-sand-100 pt-2.5 dark:border-slate-800'
     : isCompact
       ? 'mt-auto min-h-[72px] border-t border-sand-100 pt-2 dark:border-slate-800'
@@ -446,8 +465,8 @@ export default function PropertyCard({
               </span>
             )}
           </div>
-          {(usesResidentialLayoutFields(property.propertyType) &&
-            (property.condoIncluded || property.isFurnished || property.isPetFriendly)) && (
+          {!isPanelCard && usesResidentialLayoutFields(property.propertyType) &&
+            (property.condoIncluded || property.isFurnished || property.isPetFriendly) && (
             <div className={`${tagsClassName} flex flex-wrap gap-1.5`}>
               {property.condoIncluded && (
                 <span className="rounded-full bg-ocean-50 px-2.5 py-1 text-[11px] font-semibold text-ocean-700 dark:bg-ocean-950/40 dark:text-ocean-200">
@@ -479,7 +498,7 @@ export default function PropertyCard({
 
   if (isHorizontal) {
     const detailsColumn = (
-      <div className={`flex flex-col ${bodyPaddingClassName} md:col-start-2`}>
+      <div className={`flex h-full min-h-0 flex-col ${bodyPaddingClassName} md:col-start-2`}>
         {isUserListing ? (
           detailsBlock
         ) : (
@@ -488,6 +507,7 @@ export default function PropertyCard({
           </Link>
         )}
         {contactActions}
+        {panelActions ? <div className="mt-auto flex flex-wrap items-center justify-end gap-2 pt-3">{panelActions}</div> : null}
       </div>
     );
 

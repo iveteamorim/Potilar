@@ -664,10 +664,45 @@ export default async function MinhaContaPage({
                   const rawListing = (listings ?? []).find((listing) => listing.id === listingId);
                   const avulso = rawListing ? isAvulsoListing(rawListing) : false;
                   return (
-                  <div key={property.id} className="relative">
-                    <PropertyCard property={property} variant="horizontal" panelPreview />
+                  <div key={property.id} className="space-y-3">
+                    <PropertyCard
+                      property={property}
+                      variant="horizontal"
+                      panelPreview
+                      panelActions={
+                        <>
+                          <Link
+                            href={getListingHref(property)}
+                            className="inline-flex items-center rounded-xl border border-sand-200 px-4 py-2.5 text-sm font-bold text-ocean-800 transition hover:border-ocean-300 hover:text-ocean-700 dark:border-slate-700 dark:text-sand-50"
+                          >
+                            Ver anúncio
+                          </Link>
+                          <Link
+                            href={`/mi-cuenta/editar/${listingId}`}
+                            className="inline-flex items-center rounded-xl border border-sand-200 px-4 py-2.5 text-sm font-bold text-ocean-800 transition hover:border-ocean-300 hover:text-ocean-700 dark:border-slate-700 dark:text-sand-50"
+                          >
+                            Editar
+                          </Link>
+                          <form action={requestListingHighlight} className="flex flex-wrap items-center gap-2">
+                            <input type="hidden" name="id" value={listingId} />
+                            {(['7_days', '15_days', '30_days'] as const).map((planId) => (
+                              <button
+                                key={planId}
+                                type="submit"
+                                name="featured_plan"
+                                value={planId}
+                                title={`${getHighlightLabel(planId)} - ${formatPlanPrice(getHighlightPrice(planId))}`}
+                                className="rounded-full bg-sun-500 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-sun-600"
+                              >
+                                {PLANS.highlights[planId].days} dias
+                              </button>
+                            ))}
+                          </form>
+                        </>
+                      }
+                    />
                     {rawListing && (avulso || rawListing.status === 'needs_renewal' || rawListing.status === 'paused') && (
-                      <div className="mt-3 rounded-xl border border-sand-200 bg-sand-50 px-4 py-3 text-sm text-slate-600 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300">
+                      <div className="rounded-xl border border-sand-200 bg-sand-50 px-4 py-3 text-sm text-slate-600 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300">
                         <p className="font-semibold text-slate-900 dark:text-white">{getStatusLabel(rawListing.status)}</p>
                         {avulso && (
                           <p className="mt-1">
@@ -695,29 +730,6 @@ export default async function MinhaContaPage({
                         )}
                       </div>
                     )}
-                    <div className="absolute bottom-4 right-5 z-30 flex items-center gap-3 text-xs font-semibold">
-                      <Link href={getListingHref(property)} className="text-slate-950 underline-offset-4 hover:underline dark:text-white">
-                        Ver anúncio
-                      </Link>
-                      <Link href={`/mi-cuenta/editar/${property.id.replace(/^user-/, '')}`} className="text-slate-950 underline-offset-4 hover:underline dark:text-white">
-                        Editar
-                      </Link>
-                      <form action={requestListingHighlight} className="flex items-center gap-2">
-                        <input type="hidden" name="id" value={property.id.replace(/^user-/, '')} />
-                        {(['7_days', '15_days', '30_days'] as const).map((planId) => (
-                          <button
-                            key={planId}
-                            type="submit"
-                            name="featured_plan"
-                            value={planId}
-                            title={`${getHighlightLabel(planId)} - ${formatPlanPrice(getHighlightPrice(planId))}`}
-                            className="rounded-full bg-sun-500 px-3 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-sun-600"
-                          >
-                            {PLANS.highlights[planId].days} dias
-                          </button>
-                        ))}
-                      </form>
-                    </div>
                   </div>
                   );
                 })}
