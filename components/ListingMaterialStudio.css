@@ -1143,9 +1143,9 @@
 
 .campaign-scan-arrow {
   position: absolute;
-  left: -18%;
-  bottom: -42%;
-  width: 2.6em;
+  left: -34%;
+  bottom: -1.9em;
+  width: clamp(24px, 5.2cqw, 38px);
   height: auto;
   color: var(--green);
 }
