@@ -229,8 +229,7 @@
 }
 
 .size-card > span,
-.size-card strong,
-.size-card small {
+.size-card strong {
   display: block;
 }
 
@@ -254,13 +253,22 @@
   margin-top: 10px;
 }
 
-.size-card small {
+.size-card button {
   border: 1px solid #e9d2a5;
   border-radius: 999px;
-  padding: 4px 8px;
+  padding: 6px 10px;
   color: #64748b;
+  background: #fff;
   font-size: 11px;
   font-weight: 750;
+  cursor: pointer;
+}
+
+.size-card button.active {
+  color: var(--navy);
+  border-color: var(--navy);
+  background: #f8fafc;
+  font-weight: 850;
 }
 
 .download-card {
@@ -311,6 +319,18 @@
 
 .download-button--print {
   background: var(--green-dark);
+}
+
+.download-button--secondary {
+  color: var(--navy);
+  background: #fff;
+  border: 1.5px solid #d6c4a0;
+}
+
+.download-button--secondary.download-button--print {
+  color: var(--green-dark);
+  background: #fff;
+  border-color: #8dcaa3;
 }
 
 .download-button:disabled {

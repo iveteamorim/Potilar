@@ -1,6 +1,6 @@
 'use client';
 
-import { ChangeEvent, useEffect, useMemo, useRef, useState } from 'react';
+import { ChangeEvent, useEffect, useRef, useState } from 'react';
 import {
   Bath,
   BedDouble,
@@ -11,6 +11,7 @@ import {
   Download,
   Hash,
   Home,
+  Image as ImageIcon,
   Loader2,
   MapPin,
   PanelTop,
@@ -32,6 +33,8 @@ type PosterSize = {
   label: string;
   widthMm: number;
   heightMm: number;
+  widthPx?: number;
+  heightPx?: number;
 };
 
 function WhatsAppGlyph({ className = '' }: { className?: string }) {
@@ -114,8 +117,8 @@ const sizesByTarget: Record<MaterialTarget, PosterSize[]> = {
     { label: 'A2 - 420 x 594 mm', widthMm: 420, heightMm: 594 }
   ],
   social: [
-    { label: 'Instagram - 1080 x 1080', widthMm: 108, heightMm: 108 },
-    { label: 'Story - 1080 x 1920', widthMm: 108, heightMm: 192 }
+    { label: 'Instagram - 1080 x 1080', widthMm: 108, heightMm: 108, widthPx: 1080, heightPx: 1080 },
+    { label: 'Story - 1080 x 1920', widthMm: 108, heightMm: 192, widthPx: 1080, heightPx: 1920 }
   ]
 };
 
@@ -146,17 +149,20 @@ export default function ListingMaterialStudio({ material }: { material: ListingM
   const [target, setTarget] = useState<MaterialTarget>('social');
   const [model, setModel] = useState<PosterModel>('premium');
   const [copied, setCopied] = useState(false);
-  const [downloading, setDownloading] = useState(false);
+  const [downloading, setDownloading] = useState<'png' | PdfMode | null>(null);
   const [selectedImage, setSelectedImage] = useState(material.image);
   const [imagePosition, setImagePosition] = useState(50);
+  const [sizeIndex, setSizeIndex] = useState(0);
   const [contactChannel, setContactChannel] = useState<ContactChannel>(() =>
     hasWhatsapp || (!hasPhone && Boolean(fallbackContact)) ? 'whatsapp' : 'phone'
   );
-  const size = useMemo(() => sizesByTarget[target][0], [target]);
   const allSizes = sizesByTarget[target];
+  const size = allSizes[Math.min(sizeIndex, allSizes.length - 1)] ?? allSizes[0];
   const featureItems = material.compactFeatures.split(' - ').filter(Boolean).slice(0, 4);
   const previewKey = `${target}-${model}-${size.widthMm}x${size.heightMm}`;
   const isCampaign = model === 'premium' || model === 'agency';
+  const isDigital = target === 'social';
+  const busy = downloading !== null;
 
   const displayContact =
     contactChannel === 'whatsapp'
@@ -178,27 +184,82 @@ export default function ListingMaterialStudio({ material }: { material: ListingM
     }
   }
 
-  async function downloadPdf(mode: PdfMode) {
-    const node = document.getElementById('printable-poster');
-    if (!node || downloading) return;
+  function getExportPixels() {
+    if (size.widthPx && size.heightPx) {
+      return { width: size.widthPx, height: size.heightPx };
+    }
 
-    setDownloading(true);
+    const dpi = 300;
+    const width = Math.round((size.widthMm / 25.4) * dpi);
+    const height = Math.round((size.heightMm / 25.4) * dpi);
+    const maxEdge = 5600;
+    const scale = Math.min(1, maxEdge / Math.max(width, height, 1));
+    return { width: Math.round(width * scale), height: Math.round(height * scale) };
+  }
+
+  async function capturePosterPng() {
+    const node = document.getElementById('printable-poster');
+    if (!node) return null;
+
+    const { toPng } = await import('html-to-image');
+    const { width, height } = getExportPixels();
+
+    if (document.fonts?.ready) {
+      await document.fonts.ready;
+    }
+
+    return toPng(node, {
+      cacheBust: true,
+      pixelRatio: 1,
+      width,
+      height,
+      canvasWidth: width,
+      canvasHeight: height,
+      backgroundColor: '#ffffff',
+      preferredFontFormat: 'woff2',
+      skipAutoScale: true,
+      style: {
+        width: `${width}px`,
+        height: `${height}px`,
+        transform: 'none',
+        margin: '0',
+        inset: 'auto',
+        boxShadow: 'none',
+        border: '0'
+      }
+    });
+  }
+
+  async function downloadPng() {
+    if (busy) return;
+    setDownloading('png');
 
     try {
-      const { toPng } = await import('html-to-image');
+      const dataUrl = await capturePosterPng();
+      if (!dataUrl) return;
+      const { width, height } = getExportPixels();
+      const link = document.createElement('a');
+      link.download = `potilar-${target}-${width}x${height}.png`;
+      link.href = dataUrl;
+      link.click();
+    } catch (error) {
+      console.error(error);
+      window.alert('Nao foi possivel gerar o PNG. Tente novamente em alguns segundos.');
+    } finally {
+      setDownloading(null);
+    }
+  }
+
+  async function downloadPdf(mode: PdfMode) {
+    const node = document.getElementById('printable-poster');
+    if (!node || busy) return;
+
+    setDownloading(mode);
+
+    try {
       const { jsPDF } = await import('jspdf');
-
-      const rect = node.getBoundingClientRect();
-      const maxEdge = mode === 'print' ? 5600 : 3200;
-      const maxRatio = mode === 'print' ? 4 : 2.5;
-      const pixelRatio = Math.min(maxRatio, maxEdge / Math.max(rect.width, rect.height, 1));
-
-      const dataUrl = await toPng(node, {
-        cacheBust: true,
-        pixelRatio,
-        backgroundColor: '#ffffff',
-        preferredFontFormat: 'woff2'
-      });
+      const dataUrl = await capturePosterPng();
+      if (!dataUrl) return;
 
       const orientation = size.widthMm >= size.heightMm ? 'landscape' : 'portrait';
       const pdf = new jsPDF({
@@ -215,7 +276,7 @@ export default function ListingMaterialStudio({ material }: { material: ListingM
       console.error(error);
       window.alert('Nao foi possivel gerar o PDF. Tente novamente em alguns segundos.');
     } finally {
-      setDownloading(false);
+      setDownloading(null);
     }
   }
 
@@ -248,6 +309,7 @@ export default function ListingMaterialStudio({ material }: { material: ListingM
                 type="button"
                 onClick={() => {
                   setTarget(item.id);
+                  setSizeIndex(0);
                   if (item.id === 'window' || item.id === 'social') {
                     setModel('premium');
                   } else if (model !== 'premium' && model !== 'agency') {
@@ -350,23 +412,54 @@ export default function ListingMaterialStudio({ material }: { material: ListingM
           <span>Tamanho recomendado</span>
           <strong>{size.label}</strong>
           <div>
-            {allSizes.map((item) => (
-              <small key={item.label}>{item.label}</small>
+            {allSizes.map((item, index) => (
+              <button
+                key={item.label}
+                type="button"
+                className={index === sizeIndex ? 'active' : ''}
+                onClick={() => setSizeIndex(index)}
+              >
+                {item.label}
+              </button>
             ))}
           </div>
         </div>
 
         <div className="download-card">
           <span>Baixar material</span>
-          <button type="button" onClick={() => downloadPdf('domestic')} className="download-button" disabled={downloading}>
-            {downloading ? <Loader2 aria-hidden className="download-spin" /> : <Download aria-hidden />}
-            PDF domestico
-          </button>
-          <button type="button" onClick={() => downloadPdf('print')} className="download-button download-button--print" disabled={downloading}>
-            {downloading ? <Loader2 aria-hidden className="download-spin" /> : <Printer aria-hidden />}
-            PDF para grafica
-          </button>
-          <p>Para lona, use uma foto principal em alta qualidade. Recomendado: minimo 2000 px de largura.</p>
+          {isDigital ? (
+            <>
+              <button type="button" onClick={downloadPng} className="download-button" disabled={busy}>
+                {downloading === 'png' ? <Loader2 aria-hidden className="download-spin" /> : <ImageIcon aria-hidden />}
+                Baixar imagem (PNG)
+              </button>
+              <button type="button" onClick={() => downloadPdf('domestic')} className="download-button download-button--secondary" disabled={busy}>
+                {downloading === 'domestic' ? <Loader2 aria-hidden className="download-spin" /> : <Download aria-hidden />}
+                PDF domestico
+              </button>
+              <button type="button" onClick={() => downloadPdf('print')} className="download-button download-button--print download-button--secondary" disabled={busy}>
+                {downloading === 'print' ? <Loader2 aria-hidden className="download-spin" /> : <Printer aria-hidden />}
+                PDF para grafica
+              </button>
+              <p>PNG no tamanho selecionado, pronto para Instagram, Story e WhatsApp.</p>
+            </>
+          ) : (
+            <>
+              <button type="button" onClick={() => downloadPdf('domestic')} className="download-button" disabled={busy}>
+                {downloading === 'domestic' ? <Loader2 aria-hidden className="download-spin" /> : <Download aria-hidden />}
+                PDF domestico
+              </button>
+              <button type="button" onClick={() => downloadPdf('print')} className="download-button download-button--print" disabled={busy}>
+                {downloading === 'print' ? <Loader2 aria-hidden className="download-spin" /> : <Printer aria-hidden />}
+                PDF para grafica
+              </button>
+              <button type="button" onClick={downloadPng} className="download-button download-button--secondary" disabled={busy}>
+                {downloading === 'png' ? <Loader2 aria-hidden className="download-spin" /> : <ImageIcon aria-hidden />}
+                Baixar imagem (PNG)
+              </button>
+              <p>Para lona, use uma foto principal em alta qualidade. Recomendado: minimo 2000 px de largura.</p>
+            </>
+          )}
         </div>
         <button type="button" onClick={copyLink} className="copy-button">
           {copied ? <Check aria-hidden /> : <Copy aria-hidden />}
