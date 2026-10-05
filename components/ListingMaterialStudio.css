@@ -1114,7 +1114,7 @@
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
-  gap: 7%;
+  gap: 11%;
   min-width: 0;
 }
 
@@ -1131,7 +1131,7 @@
 .campaign-qr-copy {
   position: relative;
   min-width: 0;
-  padding-left: 0.15em;
+  padding: 0.1em 0 0.2em 0.2em;
 }
 
 .campaign-qr-copy p {
@@ -1144,9 +1144,9 @@
 
 .campaign-scan-arrow {
   position: absolute;
-  left: -1.85em;
-  bottom: -0.15em;
-  width: clamp(28px, 5.6cqw, 42px);
+  left: -0.95em;
+  top: 64%;
+  width: clamp(16px, 3.2cqw, 22px);
   height: auto;
   color: var(--green);
   pointer-events: none;
