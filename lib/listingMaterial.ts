@@ -73,6 +73,22 @@ export function getMaterialHeadline(propertyType?: string | null, transaction?: 
   return `${type} à venda`;
 }
 
+function getMaterialSubtitle(title: string, headline: string, transaction?: string | null) {
+  const cleaned = title.trim();
+  if (cleaned && cleaned.toLowerCase() !== headline.toLowerCase() && !headline.toLowerCase().includes(cleaned.toLowerCase())) {
+    return cleaned;
+  }
+  if (transaction === 'Aluguel') return 'Moradia com conforto no Rio Grande do Norte.';
+  if (transaction === 'Temporada') return 'Sua estadia no Rio Grande do Norte.';
+  return 'Conforto e espaço para a sua família.';
+}
+
+function getPriceCaption(city: string, transaction?: string | null) {
+  if (transaction === 'Aluguel') return `Seu novo lar é em ${city}`;
+  if (transaction === 'Temporada') return `Temporada em ${city}`;
+  return `Seu novo lar é em ${city}`;
+}
+
 function plural(count: number, one: string, many: string) {
   return count === 1 ? one : many;
 }
@@ -143,11 +159,11 @@ export function buildListingMaterial(input: {
   return {
     intent: getListingIntent(listing.transaction),
     headline,
-    subtitle: '',
+    subtitle: getMaterialSubtitle(listing.title, headline, listing.transaction),
     location: formatMaterialLocation(listing.location),
     city,
     price: formatListingMaterialPrice(listing.price, listing.price_period),
-    priceCaption: '',
+    priceCaption: getPriceCaption(city, listing.transaction),
     image: input.image,
     images: input.images,
     publicUrl: input.publicUrl,
