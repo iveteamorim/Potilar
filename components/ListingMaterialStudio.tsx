@@ -1,6 +1,6 @@
 'use client';
 
-import { ChangeEvent, useEffect, useRef, useState } from 'react';
+import { ChangeEvent, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import {
   Bath,
   BedDouble,
@@ -153,6 +153,7 @@ export default function ListingMaterialStudio({ material }: { material: ListingM
   const [selectedImage, setSelectedImage] = useState(material.image);
   const [imagePosition, setImagePosition] = useState(50);
   const [sizeIndex, setSizeIndex] = useState(0);
+  const [previewScale, setPreviewScale] = useState(0.48);
   const [contactChannel, setContactChannel] = useState<ContactChannel>(() =>
     hasWhatsapp || (!hasPhone && Boolean(fallbackContact)) ? 'whatsapp' : 'phone'
   );
@@ -163,26 +164,6 @@ export default function ListingMaterialStudio({ material }: { material: ListingM
   const isCampaign = model === 'premium' || model === 'agency';
   const isDigital = target === 'social';
   const busy = downloading !== null;
-
-  const displayContact =
-    contactChannel === 'whatsapp'
-      ? whatsappNumber || phoneNumber || '(84) 99999-9999'
-      : phoneNumber || whatsappNumber || '(84) 99999-9999';
-  const showWhatsappIcon = contactChannel === 'whatsapp' && (hasWhatsapp || !hasPhone);
-
-  useEffect(() => {
-    previewStageRef.current?.scrollTo({ top: 0, left: 0 });
-  }, [previewKey]);
-
-  async function copyLink() {
-    try {
-      await navigator.clipboard.writeText(material.publicUrl);
-      setCopied(true);
-      window.setTimeout(() => setCopied(false), 1800);
-    } catch {
-      setCopied(false);
-    }
-  }
 
   function getExportPixels() {
     if (size.widthPx && size.heightPx) {
@@ -197,36 +178,63 @@ export default function ListingMaterialStudio({ material }: { material: ListingM
     return { width: Math.round(width * scale), height: Math.round(height * scale) };
   }
 
+  const exportPixels = getExportPixels();
+
+  const displayContact =
+    contactChannel === 'whatsapp'
+      ? whatsappNumber || phoneNumber || '(84) 99999-9999'
+      : phoneNumber || whatsappNumber || '(84) 99999-9999';
+  const showWhatsappIcon = contactChannel === 'whatsapp' && (hasWhatsapp || !hasPhone);
+
+  useEffect(() => {
+    previewStageRef.current?.scrollTo({ top: 0, left: 0 });
+  }, [previewKey]);
+
+  useLayoutEffect(() => {
+    const stage = previewStageRef.current;
+    if (!stage) return;
+
+    const updateScale = () => {
+      const padding = 48;
+      const availableWidth = Math.max(stage.clientWidth - padding, 120);
+      const availableHeight = Math.max(stage.clientHeight - padding, 120);
+      const next = Math.min(availableWidth / exportPixels.width, availableHeight / exportPixels.height, 1);
+      setPreviewScale(Number.isFinite(next) && next > 0 ? next : 1);
+    };
+
+    updateScale();
+    const observer = new ResizeObserver(updateScale);
+    observer.observe(stage);
+    return () => observer.disconnect();
+  }, [previewKey, exportPixels.width, exportPixels.height]);
+
+  async function copyLink() {
+    try {
+      await navigator.clipboard.writeText(material.publicUrl);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1800);
+    } catch {
+      setCopied(false);
+    }
+  }
+
   async function capturePosterPng() {
-    const node = document.getElementById('printable-poster');
+    const node = document.getElementById('export-canvas');
     if (!node) return null;
 
     const { toPng } = await import('html-to-image');
-    const { width, height } = getExportPixels();
+    const { width, height } = exportPixels;
 
     if (document.fonts?.ready) {
       await document.fonts.ready;
     }
 
     return toPng(node, {
-      cacheBust: true,
-      pixelRatio: 1,
       width,
       height,
-      canvasWidth: width,
-      canvasHeight: height,
-      backgroundColor: '#ffffff',
-      preferredFontFormat: 'woff2',
-      skipAutoScale: true,
-      style: {
-        width: `${width}px`,
-        height: `${height}px`,
-        transform: 'none',
-        margin: '0',
-        inset: 'auto',
-        boxShadow: 'none',
-        border: '0'
-      }
+      pixelRatio: 1,
+      cacheBust: true,
+      backgroundColor: '#ffffff'
     });
   }
 
@@ -251,8 +259,7 @@ export default function ListingMaterialStudio({ material }: { material: ListingM
   }
 
   async function downloadPdf(mode: PdfMode) {
-    const node = document.getElementById('printable-poster');
-    if (!node || busy) return;
+    if (busy) return;
 
     setDownloading(mode);
 
@@ -478,20 +485,33 @@ export default function ListingMaterialStudio({ material }: { material: ListingM
         <div ref={previewStageRef} className="preview-stage">
           <div
             key={previewKey}
-            className={`poster-preview poster-preview--${target}`}
-            style={
-              {
-                '--poster-ratio': `${size.widthMm} / ${size.heightMm}`
-              } as React.CSSProperties
-            }
+            className="preview-wrapper"
+            style={{
+              width: exportPixels.width * previewScale,
+              height: exportPixels.height * previewScale
+            }}
           >
+            <div
+              className="preview-scale"
+              style={
+                {
+                  '--preview-scale': previewScale,
+                  width: exportPixels.width,
+                  height: exportPixels.height
+                } as React.CSSProperties
+              }
+            >
             <article
-              id="printable-poster"
+              id="export-canvas"
               className={`property-poster property-poster--${target} property-poster--${model}${isCampaign ? ' property-poster--campaign' : ''}`}
               style={
                 {
+                  width: exportPixels.width,
+                  height: exportPixels.height,
                   '--print-width': `${size.widthMm}mm`,
-                  '--print-height': `${size.heightMm}mm`
+                  '--print-height': `${size.heightMm}mm`,
+                  '--export-width': `${exportPixels.width}px`,
+                  '--export-height': `${exportPixels.height}px`
                 } as React.CSSProperties
               }
             >
@@ -592,6 +612,7 @@ export default function ListingMaterialStudio({ material }: { material: ListingM
                 </>
               )}
             </article>
+            </div>
           </div>
         </div>
       </section>

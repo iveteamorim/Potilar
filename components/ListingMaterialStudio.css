@@ -399,31 +399,35 @@
   overflow: auto;
 }
 
-.poster-preview {
-  width: min(100%, 430px);
-  aspect-ratio: var(--poster-ratio);
+.preview-wrapper {
+  position: relative;
   flex: 0 0 auto;
+  overflow: hidden;
+  background: var(--paper);
+  box-shadow: 0 28px 70px rgba(8, 17, 40, 0.18);
 }
 
-.poster-preview--banner,
-.poster-preview--facade {
-  width: min(100%, 400px);
+.preview-scale {
+  transform: scale(var(--preview-scale, 1));
+  transform-origin: top left;
 }
 
-.poster-preview--social {
-  width: min(100%, 520px);
+#export-canvas {
+  width: var(--export-width, 1080px);
+  height: var(--export-height, 1080px);
+  position: relative;
+  transform: none;
+  zoom: 1;
 }
 
 .property-poster {
   container-type: inline-size;
-  width: 100%;
-  height: 100%;
   display: grid;
   overflow: hidden;
   color: var(--navy);
   background: var(--paper);
-  border: 1px solid rgba(8, 17, 40, 0.08);
-  box-shadow: 0 28px 70px rgba(8, 17, 40, 0.18);
+  border: 0;
+  box-shadow: none;
 }
 
 .property-poster--classic {
@@ -1240,15 +1244,16 @@
     visibility: hidden !important;
   }
 
-  #printable-poster,
-  #printable-poster * {
+  #export-canvas,
+  #export-canvas * {
     visibility: visible !important;
   }
 
   .poster-tool,
   .preview-panel,
   .preview-stage,
-  .poster-preview {
+  .preview-wrapper,
+  .preview-scale {
     width: var(--print-width) !important;
     height: var(--print-height) !important;
     min-height: 0 !important;
@@ -1259,6 +1264,8 @@
     background: white !important;
     border: 0 !important;
     border-radius: 0 !important;
+    transform: none !important;
+    box-shadow: none !important;
   }
 
   .no-print,
@@ -1267,7 +1274,7 @@
     display: none !important;
   }
 
-  #printable-poster {
+  #export-canvas {
     position: absolute !important;
     inset: 0 !important;
     width: var(--print-width) !important;
@@ -1275,6 +1282,8 @@
     margin: 0 !important;
     border: 0 !important;
     box-shadow: none !important;
+    transform: none !important;
+    zoom: 1 !important;
     print-color-adjust: exact;
     -webkit-print-color-adjust: exact;
   }
