@@ -44,9 +44,15 @@ function WhatsAppGlyph({ className = '' }: { className?: string }) {
 
 function ScanArrow() {
   return (
-    <svg className="campaign-scan-arrow" viewBox="0 0 64 48" aria-hidden>
-      <path d="M53 38C42 38 32 30 32 18" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
-      <path d="M24 23l8-12 8 12" fill="currentColor" />
+    <svg className="campaign-scan-arrow" viewBox="0 0 72 40" aria-hidden>
+      <path
+        d="M58 7c-7 16-24 24-46 18"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="4"
+        strokeLinecap="round"
+      />
+      <path d="M22 15 6 26l16 3z" fill="currentColor" />
     </svg>
   );
 }

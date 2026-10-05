@@ -1129,8 +1129,9 @@
 }
 
 .campaign-qr-copy {
-  position: static;
+  position: relative;
   min-width: 0;
+  padding-left: 0.15em;
 }
 
 .campaign-qr-copy p {
@@ -1143,11 +1144,12 @@
 
 .campaign-scan-arrow {
   position: absolute;
-  left: clamp(58px, 13.5cqw, 100px);
-  bottom: -0.95em;
-  width: clamp(22px, 4.6cqw, 34px);
+  left: -1.85em;
+  bottom: -0.15em;
+  width: clamp(28px, 5.6cqw, 42px);
   height: auto;
   color: var(--green);
+  pointer-events: none;
 }
 
 .campaign-foot {
