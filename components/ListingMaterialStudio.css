@@ -1184,30 +1184,19 @@
 .campaign-logo {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
-  gap: clamp(8px, 1.5cqw, 14px);
-  min-width: clamp(170px, 31cqw, 260px);
+  justify-content: center;
+  min-width: clamp(180px, 32cqw, 240px);
+  padding-inline: clamp(8px, 1.5cqw, 16px);
   flex: 0 0 auto;
 }
 
 .campaign-logo img {
   display: block;
-  width: clamp(96px, 17cqw, 152px);
+  width: clamp(180px, 20cqw, 220px);
   max-width: 100%;
   height: auto;
+  object-fit: contain;
   flex: 0 0 auto;
-}
-
-.campaign-logo p {
-  margin: 0;
-  max-width: 6.8em;
-  flex: 0 0 auto;
-  color: #061b45;
-  border-left: 2px solid #d5deea;
-  padding-left: clamp(8px, 1.4cqw, 13px);
-  font-size: clamp(8px, 1.55cqw, 12px);
-  font-weight: 750;
-  line-height: 1.12;
 }
 
 @media print {

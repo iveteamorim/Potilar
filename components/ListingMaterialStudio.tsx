@@ -486,8 +486,7 @@ export default function ListingMaterialStudio({ material }: { material: ListingM
                         </span>
                       )}
                       <div className="campaign-logo">
-                        <img src="/images/potilar-logo-horizontal.svg" alt="PotiLar" />
-                        <p>Seu próximo imóvel está aqui.</p>
+                        <img src="/images/logobanner2.png" alt="PotiLar" />
                       </div>
                     </div>
                   </div>
