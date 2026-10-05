@@ -4,9 +4,9 @@ import { ChangeEvent, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Bath,
   BedDouble,
-  Camera,
   Car,
   Check,
+  ChevronRight,
   Copy,
   Download,
   Hash,
@@ -17,9 +17,7 @@ import {
   Phone,
   Printer,
   Share2,
-  ShieldCheck,
-  Square,
-  Users
+  Square
 } from 'lucide-react';
 import ListingQrCode from '@/components/ListingQrCode';
 import type { ListingMaterialPayload, ListingMaterialSpec } from '@/lib/listingMaterial';
@@ -44,13 +42,11 @@ function WhatsAppGlyph({ className = '' }: { className?: string }) {
   );
 }
 
-function PalmsMark() {
+function ScanArrow() {
   return (
-    <svg className="campaign-palms" viewBox="0 0 220 110" aria-hidden>
-      <path d="M18 102c18-8 38-10 58-6 22 4 44 3 64-6 16-7 32-9 52-6" fill="none" stroke="#9bb7a8" strokeWidth="3" />
-      <path d="M168 96c-2-22 6-38 22-52 8 14 8 28 4 44 12-16 18-22 32-28-10 18-12 32-10 46" fill="#8eaa9a" />
-      <path d="M132 98c4-24-8-40-28-52 14 10 18 26 16 46 10-18 22-26 40-28-14 14-18 28-16 42" fill="#7d9b8b" />
-      <path d="M188 70c-18-6-28-18-30-34 12 6 22 4 34-4-2 14 4 24 16 30-10 2-18 6-20 8Z" fill="#6f9080" />
+    <svg className="campaign-scan-arrow" viewBox="0 0 72 48" aria-hidden>
+      <path d="M8 8c18 2 28 18 26 32" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+      <path d="M46 30l8 12-14-2" fill="currentColor" />
     </svg>
   );
 }
@@ -70,12 +66,6 @@ function formatWhatsappPoster(value: string) {
   if (digits.length === 11) return `${digits.slice(0, 2)} ${digits.slice(2, 7)}-${digits.slice(7)}`;
   if (digits.length === 10) return `${digits.slice(0, 2)} ${digits.slice(2, 6)}-${digits.slice(6)}`;
   return value;
-}
-
-function formatPhonePoster(value: string) {
-  const local = formatWhatsappPoster(value);
-  const digits = nationalDigits(value);
-  return digits.length >= 10 ? `+55 ${local}` : value;
 }
 
 function getFeatureIcon(item: string) {
@@ -440,28 +430,16 @@ export default function ListingMaterialStudio({ material }: { material: ListingM
                     )}
                     <div className="campaign-hero-shade" />
                     <div className="campaign-hero-top">
-                      <div className="campaign-brand">
-                        <img src="/images/potilar-logo-horizontal.svg" alt="PotiLar" />
-                        <p>
-                          Aqui o RN encontra
-                          <br />
-                          o seu próximo lar
-                        </p>
-                      </div>
-                      <div className="campaign-badges">
-                        <span className="campaign-intent">
-                          <Home aria-hidden />
-                          {material.intent}
-                        </span>
-                        <span className="campaign-place">
-                          <MapPin aria-hidden />
-                          {material.location}
-                        </span>
-                      </div>
+                      <span className="campaign-intent">{material.intent}</span>
+                      <span className="campaign-place">
+                        <MapPin aria-hidden />
+                        {material.location}
+                      </span>
                     </div>
                     <div className="campaign-hero-copy">
                       <h2>{material.headline}</h2>
                       <p>{material.subtitle}</p>
+                      <i className="campaign-underline" aria-hidden />
                     </div>
                   </div>
 
@@ -492,48 +470,26 @@ export default function ListingMaterialStudio({ material }: { material: ListingM
                         <div className="campaign-qr-frame">
                           <ListingQrCode value={material.publicUrl} size={model === 'agency' ? 420 : 360} />
                         </div>
-                        <p>
-                          <Camera aria-hidden />
-                          Escaneie e veja todas as fotos, planta e vídeo deste imóvel.
-                        </p>
+                        <div className="campaign-qr-copy">
+                          <p>Escaneie e veja todas as fotos, planta e vídeo deste imóvel.</p>
+                          <ScanArrow />
+                        </div>
                       </div>
                     </div>
 
-                    {(hasWhatsapp || hasPhone) && (
-                      <div className="campaign-contacts">
-                        {hasWhatsapp ? (
-                          <span className="campaign-wa">
-                            <WhatsAppGlyph />
-                            {formatWhatsappPoster(whatsappNumber)}
-                          </span>
-                        ) : null}
-                        {hasPhone ? (
-                          <span className="campaign-phone">
-                            <Phone aria-hidden />
-                            {formatPhonePoster(phoneNumber)}
-                          </span>
-                        ) : null}
+                    <div className="campaign-foot">
+                      {(hasWhatsapp || hasPhone) && (
+                        <span className="campaign-wa">
+                          <WhatsAppGlyph />
+                          {formatWhatsappPoster(whatsappNumber || phoneNumber)}
+                          <ChevronRight aria-hidden />
+                        </span>
+                      )}
+                      <div className="campaign-logo">
+                        <img src="/images/potilar-logo-horizontal.svg" alt="PotiLar" />
+                        <p>Seu próximo imóvel está aqui.</p>
                       </div>
-                    )}
-
-                    <footer className="campaign-foot">
-                      <ul>
-                        <li>
-                          <ShieldCheck aria-hidden />
-                          Anúncio seguro
-                        </li>
-                        <li>
-                          <Users aria-hidden />
-                          Contato direto
-                        </li>
-                        <li>
-                          <MapPin aria-hidden />
-                          Focado no Rio Grande do Norte
-                        </li>
-                      </ul>
-                      <p>Mais que imóveis, conexões no RN.</p>
-                      <PalmsMark />
-                    </footer>
+                    </div>
                   </div>
                 </>
               )}

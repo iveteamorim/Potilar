@@ -84,9 +84,9 @@ function getMaterialSubtitle(title: string, headline: string, transaction?: stri
 }
 
 function getPriceCaption(city: string, transaction?: string | null) {
-  if (transaction === 'Aluguel') return `Disponível para aluguel em ${city}`;
+  if (transaction === 'Aluguel') return `Seu novo lar é em ${city}`;
   if (transaction === 'Temporada') return `Temporada em ${city}`;
-  return `Excelente oportunidade em ${city}`;
+  return `Seu novo lar é em ${city}`;
 }
 
 function plural(count: number, one: string, many: string) {
