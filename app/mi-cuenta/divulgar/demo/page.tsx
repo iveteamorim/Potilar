@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import ListingMaterialStudio from '@/components/ListingMaterialStudio';
+import { buildListingMaterial } from '@/lib/listingMaterial';
 
 export default function ListingShareKitDemoPage() {
   const demoImages = [
@@ -25,16 +26,24 @@ export default function ListingShareKitDemoPage() {
         </div>
 
         <ListingMaterialStudio
-          material={{
-            intent: 'VENDE-SE',
-            price: 'R$ 420.000',
+          material={buildListingMaterial({
+            listing: {
+              title: 'Conforto e espaço para a sua família.',
+              property_type: 'Casa',
+              transaction: 'Compra',
+              price: 270000,
+              bedrooms: 3,
+              bathrooms: 2,
+              parking: 1,
+              area_sqm: 88,
+              location: "Lagoa d'Anta, RN"
+            },
+            publicUrl: 'https://potilar.com.br/imoveis/casa-em-lagoa-danta-demo',
             image: demoImages[0],
             images: demoImages,
-            publicUrl: 'https://potilar.com.br/imoveis/casa-em-ponta-negra-demo',
-            contactWhatsapp: '(84) 99999-9999',
-            contactPhone: '(84) 98888-7777',
-            compactFeatures: 'Casa - 3 quartos - 2 vagas - 180 m2'
-          }}
+            contactWhatsapp: '84909090909',
+            contactPhone: '84909090909'
+          })}
         />
       </div>
     </main>

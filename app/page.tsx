@@ -163,7 +163,7 @@ export default async function HomePage() {
       <HeroSearch />
 
       <section className="border-b border-sand-200 bg-white py-8 dark:border-slate-800 dark:bg-slate-950">
-        <div className="mx-auto grid max-w-6xl gap-6 px-4 sm:px-6 lg:grid-cols-[1fr_auto] lg:items-center">
+        <div className="mx-auto grid max-w-6xl gap-6 px-4 sm:px-6 md:grid-cols-[1fr_auto] md:items-center">
           <div className="hidden md:block">
             <h2 className="mt-2 text-2xl font-semibold leading-tight text-slate-950 dark:text-white sm:text-3xl">
               Tem um imóvel no Rio Grande do Norte?

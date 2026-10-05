@@ -1,8 +1,28 @@
 'use client';
 
 import { ChangeEvent, useEffect, useMemo, useRef, useState } from 'react';
-import { BedDouble, Car, Check, Copy, Download, Hash, Home, Loader2, PanelTop, Phone, Printer, Share2, Square } from 'lucide-react';
+import {
+  Bath,
+  BedDouble,
+  Camera,
+  Car,
+  Check,
+  Copy,
+  Download,
+  Hash,
+  Home,
+  Loader2,
+  MapPin,
+  PanelTop,
+  Phone,
+  Printer,
+  Share2,
+  ShieldCheck,
+  Square,
+  Users
+} from 'lucide-react';
 import ListingQrCode from '@/components/ListingQrCode';
+import type { ListingMaterialPayload, ListingMaterialSpec } from '@/lib/listingMaterial';
 import './ListingMaterialStudio.css';
 
 type MaterialTarget = 'window' | 'gate' | 'facade' | 'banner' | 'post' | 'social';
@@ -16,19 +36,6 @@ type PosterSize = {
   heightMm: number;
 };
 
-type ListingMaterial = {
-  intent: string;
-  price: string;
-  image: string;
-  images?: string[];
-  publicUrl: string;
-  /** @deprecated use contactWhatsapp / contactPhone */
-  contact?: string;
-  contactWhatsapp?: string | null;
-  contactPhone?: string | null;
-  compactFeatures: string;
-};
-
 function WhatsAppGlyph({ className = '' }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" aria-hidden fill="currentColor">
@@ -37,16 +44,54 @@ function WhatsAppGlyph({ className = '' }: { className?: string }) {
   );
 }
 
+function PalmsMark() {
+  return (
+    <svg className="campaign-palms" viewBox="0 0 220 110" aria-hidden>
+      <path d="M18 102c18-8 38-10 58-6 22 4 44 3 64-6 16-7 32-9 52-6" fill="none" stroke="#9bb7a8" strokeWidth="3" />
+      <path d="M168 96c-2-22 6-38 22-52 8 14 8 28 4 44 12-16 18-22 32-28-10 18-12 32-10 46" fill="#8eaa9a" />
+      <path d="M132 98c4-24-8-40-28-52 14 10 18 26 16 46 10-18 22-26 40-28-14 14-18 28-16 42" fill="#7d9b8b" />
+      <path d="M188 70c-18-6-28-18-30-34 12 6 22 4 34-4-2 14 4 24 16 30-10 2-18 6-20 8Z" fill="#6f9080" />
+    </svg>
+  );
+}
+
 function cleanContact(value?: string | null) {
   return value?.trim() || '';
+}
+
+function nationalDigits(value: string) {
+  let digits = value.replace(/\D/g, '');
+  if (digits.startsWith('55') && digits.length >= 12) digits = digits.slice(2);
+  return digits;
+}
+
+function formatWhatsappPoster(value: string) {
+  const digits = nationalDigits(value);
+  if (digits.length === 11) return `${digits.slice(0, 2)} ${digits.slice(2, 7)}-${digits.slice(7)}`;
+  if (digits.length === 10) return `${digits.slice(0, 2)} ${digits.slice(2, 6)}-${digits.slice(6)}`;
+  return value;
+}
+
+function formatPhonePoster(value: string) {
+  const local = formatWhatsappPoster(value);
+  const digits = nationalDigits(value);
+  return digits.length >= 10 ? `+55 ${local}` : value;
 }
 
 function getFeatureIcon(item: string) {
   const value = item.toLowerCase();
   if (value.includes('quarto')) return BedDouble;
+  if (value.includes('banheiro')) return Bath;
   if (value.includes('vaga')) return Car;
   if (value.includes('m2') || value.includes('m²')) return Square;
   if (value.includes('codigo') || value.includes('código')) return Hash;
+  return Home;
+}
+
+function getSpecIcon(id: ListingMaterialSpec['id']) {
+  if (id === 'beds') return BedDouble;
+  if (id === 'baths') return Bath;
+  if (id === 'parking') return Car;
   return Home;
 }
 
@@ -85,24 +130,24 @@ const targets: Array<{
   recommendation: string;
   icon: typeof PanelTop;
 }> = [
+  { id: 'social', label: 'Redes sociais', description: 'Instagram, Story, Facebook e WhatsApp.', recommendation: '1080px', icon: Share2 },
   { id: 'window', label: 'Janela', description: 'Apartamento, vitrine ou janela pequena.', recommendation: 'A4 ou A3', icon: PanelTop },
   { id: 'gate', label: 'Reja', description: 'Portao, grade ou frente da casa.', recommendation: 'A2 recomendado', icon: Home },
   { id: 'facade', label: 'Fachada', description: 'Alta leitura desde a rua.', recommendation: 'A1 recomendado', icon: Home },
   { id: 'banner', label: 'Lona', description: 'Material para grafica e grande impacto.', recommendation: '80 x 120 cm', icon: Printer },
-  { id: 'post', label: 'Poste', description: 'Texto maximo, informacao minima.', recommendation: 'A3 ou A2', icon: PanelTop },
-  { id: 'social', label: 'Redes sociais', description: 'Instagram, Story, Facebook e WhatsApp.', recommendation: '1080px', icon: Share2 }
+  { id: 'post', label: 'Poste', description: 'Texto maximo, informacao minima.', recommendation: 'A3 ou A2', icon: PanelTop }
 ];
 
-export default function ListingMaterialStudio({ material }: { material: ListingMaterial }) {
+export default function ListingMaterialStudio({ material }: { material: ListingMaterialPayload }) {
   const previewStageRef = useRef<HTMLDivElement>(null);
   const whatsappNumber = cleanContact(material.contactWhatsapp);
   const phoneNumber = cleanContact(material.contactPhone);
-  const fallbackContact = cleanContact(material.contact);
+  const fallbackContact = '';
   const hasWhatsapp = Boolean(whatsappNumber);
   const hasPhone = Boolean(phoneNumber);
   const canChooseContact = hasWhatsapp && hasPhone;
 
-  const [target, setTarget] = useState<MaterialTarget>('gate');
+  const [target, setTarget] = useState<MaterialTarget>('social');
   const [model, setModel] = useState<PosterModel>('premium');
   const [copied, setCopied] = useState(false);
   const [downloading, setDownloading] = useState(false);
@@ -115,12 +160,13 @@ export default function ListingMaterialStudio({ material }: { material: ListingM
   const allSizes = sizesByTarget[target];
   const featureItems = material.compactFeatures.split(' - ').filter(Boolean).slice(0, 4);
   const previewKey = `${target}-${model}-${size.widthMm}x${size.heightMm}`;
+  const isCampaign = model === 'premium' || model === 'agency';
 
   const displayContact =
     contactChannel === 'whatsapp'
-      ? whatsappNumber || fallbackContact || phoneNumber || '(84) 99999-9999'
-      : phoneNumber || fallbackContact || whatsappNumber || '(84) 99999-9999';
-  const showWhatsappIcon = contactChannel === 'whatsapp' && (hasWhatsapp || (!hasPhone && Boolean(fallbackContact)));
+      ? whatsappNumber || phoneNumber || '(84) 99999-9999'
+      : phoneNumber || whatsappNumber || '(84) 99999-9999';
+  const showWhatsappIcon = contactChannel === 'whatsapp' && (hasWhatsapp || !hasPhone);
 
   useEffect(() => {
     previewStageRef.current?.scrollTo({ top: 0, left: 0 });
@@ -185,6 +231,10 @@ export default function ListingMaterialStudio({ material }: { material: ListingM
     setImagePosition(50);
   }
 
+  const campaignSpecs = material.specs.length
+    ? material.specs
+    : featureItems.map((item) => ({ id: 'area' as const, value: item, label: '' }));
+
   return (
     <main className="poster-tool">
       <aside className="poster-options no-print">
@@ -203,7 +253,7 @@ export default function ListingMaterialStudio({ material }: { material: ListingM
                 onClick={() => {
                   setTarget(item.id);
                   if (item.id === 'window' || item.id === 'social') {
-                    setModel('agency');
+                    setModel('premium');
                   } else if (model !== 'premium' && model !== 'agency') {
                     setModel('classic');
                   }
@@ -229,15 +279,15 @@ export default function ListingMaterialStudio({ material }: { material: ListingM
           </button>
           <button type="button" className={model === 'premium' ? 'active' : ''} onClick={() => setModel('premium')}>
             B. Premium com foto
-            <span>Alto padrao</span>
+            <span>Campanha PotiLar</span>
           </button>
           <button type="button" className={model === 'agency' ? 'active' : ''} onClick={() => setModel('agency')}>
             C. Imobiliaria com foto
-            <span>Vitrine / escritorio</span>
+            <span>Mesmo layout, mais QR</span>
           </button>
         </div>
 
-        {(canChooseContact || hasWhatsapp || hasPhone || fallbackContact) && (
+        {!isCampaign && (canChooseContact || hasWhatsapp || hasPhone) && (
           <div className="poster-models contact-channel">
             <p>Contato no cartaz</p>
             {canChooseContact ? (
@@ -348,7 +398,7 @@ export default function ListingMaterialStudio({ material }: { material: ListingM
           >
             <article
               id="printable-poster"
-              className={`property-poster property-poster--${target} property-poster--${model}`}
+              className={`property-poster property-poster--${target} property-poster--${model}${isCampaign ? ' property-poster--campaign' : ''}`}
               style={
                 {
                   '--print-width': `${size.widthMm}mm`,
@@ -380,95 +430,111 @@ export default function ListingMaterialStudio({ material }: { material: ListingM
                 </>
               )}
 
-              {model === 'premium' && (
+              {isCampaign && (
                 <>
-                  <header className="model-head">{material.intent}</header>
-                  <div className="model-price model-price--compact">{material.price}</div>
-                  <div className="model-photo">
+                  <div className="campaign-hero">
                     {selectedImage ? (
                       <img src={selectedImage} alt="Imovel anunciado" style={{ objectPosition: `${imagePosition}% center` }} />
                     ) : (
                       <span>Foto do imovel</span>
                     )}
-                  </div>
-                  <section className="premium-info">
-                    <div className="qr-block">
-                      <div className="qr-wrap">
-                        <ListingQrCode value={material.publicUrl} size={360} />
+                    <div className="campaign-hero-shade" />
+                    <div className="campaign-hero-top">
+                      <div className="campaign-brand">
+                        <img src="/images/potilar-logo-horizontal.svg" alt="PotiLar" />
+                        <p>
+                          Aqui o RN encontra
+                          <br />
+                          o seu próximo lar
+                        </p>
                       </div>
-                      <p>Veja 25 fotos + video da casa</p>
+                      <div className="campaign-badges">
+                        <span className="campaign-intent">
+                          <Home aria-hidden />
+                          {material.intent}
+                        </span>
+                        <span className="campaign-place">
+                          <MapPin aria-hidden />
+                          {material.location}
+                        </span>
+                      </div>
                     </div>
-                    <ul>
-                      {featureItems.map((item) => {
-                        const Icon = getFeatureIcon(item);
-                        return (
-                          <li key={item}>
-                            <Icon aria-hidden className="feature-icon" />
-                            <span>{item}</span>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  </section>
-                  <div className="model-whatsapp">
-                    {showWhatsappIcon ? (
-                      <WhatsAppGlyph className="wa-icon" />
-                    ) : (
-                      <Phone aria-hidden className="wa-icon" />
-                    )}
-                    <strong>{displayContact}</strong>
+                    <div className="campaign-hero-copy">
+                      <h2>{material.headline}</h2>
+                      <p>{material.subtitle}</p>
+                    </div>
                   </div>
-                  <footer className="model-brand">
-                    <img src="/images/logobanner2.png" alt="PotiLar - Imoveis no Rio Grande do Norte" />
-                  </footer>
-                </>
-              )}
 
-              {model === 'agency' && (
-                <>
-                  <header className="model-head">{material.intent}</header>
-                  <div className="model-photo">
-                    {selectedImage ? (
-                      <img src={selectedImage} alt="Imovel anunciado" style={{ objectPosition: `${imagePosition}% center` }} />
-                    ) : (
-                      <span>Foto do imovel</span>
-                    )}
-                  </div>
-                  <div className="agency-price">
-                    <strong>{material.price}</strong>
-                  </div>
-                  <section className="agency-info">
-                    <div className="qr-block">
-                      <div className="qr-wrap">
-                        <ListingQrCode value={material.publicUrl} size={360} />
-                      </div>
-                      <p>Escaneie e veja todas as fotos, planta e video</p>
-                    </div>
-                    <ul>
-                      {featureItems
-                        .filter((item) => !item.toLowerCase().startsWith('codigo'))
-                        .map((item) => {
-                          const Icon = getFeatureIcon(item);
+                  <div className="campaign-body">
+                    {campaignSpecs.length ? (
+                      <ul className="campaign-specs">
+                        {campaignSpecs.map((spec) => {
+                          const Icon = getSpecIcon(spec.id);
                           return (
-                            <li key={item}>
-                              <Icon aria-hidden className="feature-icon" />
-                              <span>{item}</span>
+                            <li key={`${spec.id}-${spec.value}-${spec.label}`}>
+                              <Icon aria-hidden />
+                              <span>
+                                <strong>{spec.value}</strong>
+                                {spec.label ? ` ${spec.label}` : ''}
+                              </span>
                             </li>
                           );
                         })}
-                    </ul>
-                  </section>
-                  <div className="model-whatsapp">
-                    {showWhatsappIcon ? (
-                      <WhatsAppGlyph className="wa-icon" />
-                    ) : (
-                      <Phone aria-hidden className="wa-icon" />
+                      </ul>
+                    ) : null}
+
+                    <div className="campaign-mid">
+                      <div className="campaign-price">
+                        <strong>{material.price}</strong>
+                        <span>{material.priceCaption}</span>
+                      </div>
+                      <div className="campaign-qr">
+                        <div className="campaign-qr-frame">
+                          <ListingQrCode value={material.publicUrl} size={model === 'agency' ? 420 : 360} />
+                        </div>
+                        <p>
+                          <Camera aria-hidden />
+                          Escaneie e veja todas as fotos, planta e vídeo deste imóvel.
+                        </p>
+                      </div>
+                    </div>
+
+                    {(hasWhatsapp || hasPhone) && (
+                      <div className="campaign-contacts">
+                        {hasWhatsapp ? (
+                          <span className="campaign-wa">
+                            <WhatsAppGlyph />
+                            {formatWhatsappPoster(whatsappNumber)}
+                          </span>
+                        ) : null}
+                        {hasPhone ? (
+                          <span className="campaign-phone">
+                            <Phone aria-hidden />
+                            {formatPhonePoster(phoneNumber)}
+                          </span>
+                        ) : null}
+                      </div>
                     )}
-                    <strong>{displayContact}</strong>
+
+                    <footer className="campaign-foot">
+                      <ul>
+                        <li>
+                          <ShieldCheck aria-hidden />
+                          Anúncio seguro
+                        </li>
+                        <li>
+                          <Users aria-hidden />
+                          Contato direto
+                        </li>
+                        <li>
+                          <MapPin aria-hidden />
+                          Focado no Rio Grande do Norte
+                        </li>
+                      </ul>
+                      <p>Mais que imóveis, conexões no RN.</p>
+                      <PalmsMark />
+                    </footer>
                   </div>
-                  <footer className="model-brand">
-                    <img src="/images/logobanner2.png" alt="PotiLar - Imoveis no Rio Grande do Norte" />
-                  </footer>
                 </>
               )}
             </article>

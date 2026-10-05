@@ -409,36 +409,27 @@
   grid-template-rows: 14% 11% 47% 12% 16%;
 }
 
-.property-poster--premium {
-  grid-template-rows: 12% 8% 27% 29% 10% 14%;
-}
-
-.property-poster--agency {
-  grid-template-rows: 11% 25% 9% 30% 10% 15%;
+.property-poster--premium,
+.property-poster--agency,
+.property-poster--campaign {
+  display: flex;
+  flex-direction: column;
+  grid-template-rows: none;
 }
 
 .property-poster--banner.property-poster--premium,
-.property-poster--facade.property-poster--premium {
-  grid-template-rows: 11% 8% 25% 33% 10% 13%;
-}
-
+.property-poster--facade.property-poster--premium,
 .property-poster--banner.property-poster--agency,
-.property-poster--facade.property-poster--agency {
-  grid-template-rows: 10% 24% 8% 35% 10% 13%;
-}
-
+.property-poster--facade.property-poster--agency,
 .property-poster--window.property-poster--agency,
 .property-poster--gate.property-poster--agency,
-.property-poster--post.property-poster--agency {
-  /* head / foto / precio / info+ / wa / brand — info más alta para no tapar texto del QR */
-  grid-template-rows: 11% 21% 8% 35% 10% 15%;
-}
-
+.property-poster--post.property-poster--agency,
 .property-poster--window.property-poster--premium,
 .property-poster--gate.property-poster--premium,
 .property-poster--post.property-poster--premium {
-  /* head / precio / foto / info+ / wa / brand */
-  grid-template-rows: 12% 7% 23% 34% 10% 14%;
+  display: flex;
+  flex-direction: column;
+  grid-template-rows: none;
 }
 
 .property-poster--window.property-poster--classic,
@@ -486,14 +477,11 @@
   grid-template-rows: 14% 10% 48% 12% 16%;
 }
 
-.property-poster--social.property-poster--premium {
-  /* head / precio / foto / info+ (QR+iconos) / wa baja / brand- */
-  grid-template-rows: 11% 6% 28% 34% 8% 13%;
-}
-
+.property-poster--social.property-poster--premium,
 .property-poster--social.property-poster--agency {
-  /* head / foto / precio / info+ (QR+iconos) / wa baja / brand- */
-  grid-template-rows: 11% 27% 7% 34% 8% 13%;
+  display: flex;
+  flex-direction: column;
+  grid-template-rows: none;
 }
 
 /* Redes: QR e iconos con más aire; WhatsApp más abajo */
@@ -906,6 +894,342 @@
     height: auto;
     min-height: 650px;
   }
+}
+
+.campaign-hero {
+  position: relative;
+  flex: 1.08 1 0;
+  min-height: 0;
+  overflow: hidden;
+  background: #d7dde4;
+}
+
+.property-poster--social .campaign-hero {
+  flex: 1.18 1 0;
+}
+
+.campaign-hero img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.campaign-hero > span {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  color: #64748b;
+  font-weight: 800;
+}
+
+.campaign-hero-shade {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.42) 0%, rgba(255, 255, 255, 0.08) 22%, rgba(7, 25, 74, 0) 42%),
+    linear-gradient(0deg, rgba(7, 25, 74, 0.55) 0%, rgba(7, 25, 74, 0.08) 38%, transparent 58%);
+  pointer-events: none;
+}
+
+.campaign-hero-top,
+.campaign-hero-copy {
+  position: absolute;
+  left: 4.5%;
+  right: 4.5%;
+  z-index: 2;
+}
+
+.campaign-hero-top {
+  top: 4.2%;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 3%;
+}
+
+.campaign-brand img {
+  display: block;
+  width: auto;
+  height: clamp(28px, 7.4cqw, 54px);
+}
+
+.campaign-brand p {
+  margin: 6px 0 0;
+  color: #16325a;
+  font-size: clamp(8px, 1.85cqw, 13px);
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.campaign-badges {
+  display: grid;
+  justify-items: end;
+  gap: 8px;
+}
+
+.campaign-intent,
+.campaign-place {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45em;
+  color: white;
+  font-weight: 900;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.campaign-intent {
+  padding: 0.55em 0.9em;
+  border-radius: 0.7em;
+  background: var(--green);
+  font-size: clamp(12px, 3.1cqw, 22px);
+  letter-spacing: 0.04em;
+}
+
+.campaign-intent svg,
+.campaign-place svg {
+  width: 1.05em;
+  height: 1.05em;
+}
+
+.campaign-place {
+  color: #16325a;
+  font-size: clamp(10px, 2.3cqw, 16px);
+}
+
+.campaign-hero-copy {
+  bottom: 5.5%;
+  color: white;
+}
+
+.campaign-hero-copy h2 {
+  margin: 0;
+  font-size: clamp(26px, 7.6cqw, 58px);
+  font-weight: 900;
+  line-height: 0.95;
+  letter-spacing: -0.04em;
+}
+
+.campaign-hero-copy p {
+  margin: 0.35em 0 0;
+  display: -webkit-box;
+  overflow: hidden;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(13px, 3.15cqw, 24px);
+  font-style: italic;
+  font-weight: 500;
+  line-height: 1.15;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.campaign-body {
+  position: relative;
+  flex: 0.92 1 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 2.6% 4.5% 2.2%;
+  background: #fff;
+}
+
+.campaign-specs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(18%, 1fr));
+  gap: 1.5%;
+  margin: 0;
+  padding: 0 0 2.2%;
+  list-style: none;
+}
+
+.campaign-specs li {
+  display: flex;
+  align-items: center;
+  gap: 0.45em;
+  min-width: 0;
+  color: #16325a;
+  font-size: clamp(10px, 2.35cqw, 16px);
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.campaign-specs svg {
+  width: 1.45em;
+  height: 1.45em;
+  flex: 0 0 auto;
+  color: var(--green);
+  stroke-width: 2.2;
+}
+
+.campaign-specs strong {
+  font-weight: 950;
+}
+
+.campaign-mid {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 3%;
+  align-items: stretch;
+  min-height: 0;
+  flex: 1 1 auto;
+}
+
+.campaign-price {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+  padding: 4.5% 5.5%;
+  color: white;
+  background: var(--navy);
+  border-radius: 1.1em;
+}
+
+.campaign-price strong {
+  font-size: clamp(22px, 7.4cqw, 52px);
+  font-weight: 950;
+  line-height: 0.9;
+  letter-spacing: -0.04em;
+  white-space: nowrap;
+}
+
+.campaign-price span {
+  margin-top: 0.7em;
+  max-width: 16em;
+  font-size: clamp(8px, 1.85cqw, 13px);
+  font-weight: 850;
+  letter-spacing: 0.12em;
+  line-height: 1.25;
+  text-transform: uppercase;
+}
+
+.campaign-qr {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 8%;
+  min-width: 0;
+}
+
+.campaign-qr-frame {
+  width: clamp(64px, 16.5cqw, 118px);
+  height: clamp(64px, 16.5cqw, 118px);
+  padding: 4px;
+  border: 2px solid #d7e0ea;
+  border-radius: 12px;
+  background: white;
+}
+
+.campaign-qr p {
+  margin: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4em;
+  color: #4b5d73;
+  font-size: clamp(9px, 2.05cqw, 14px);
+  font-weight: 750;
+  line-height: 1.25;
+}
+
+.campaign-qr svg {
+  width: 1.15em;
+  height: 1.15em;
+  margin-top: 0.1em;
+  flex: 0 0 auto;
+  color: var(--green);
+}
+
+.campaign-contacts {
+  display: flex;
+  align-items: center;
+  gap: 3.5%;
+  margin-top: 2.2%;
+}
+
+.campaign-wa,
+.campaign-phone {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45em;
+  font-weight: 900;
+  white-space: nowrap;
+  line-height: 1;
+}
+
+.campaign-wa {
+  padding: 0.55em 0.9em;
+  color: white;
+  background: var(--green);
+  border-radius: 999px;
+  font-size: clamp(13px, 3.3cqw, 24px);
+}
+
+.campaign-phone {
+  color: #16325a;
+  font-size: clamp(12px, 2.8cqw, 20px);
+}
+
+.campaign-wa svg,
+.campaign-phone svg {
+  width: 1em;
+  height: 1em;
+}
+
+.campaign-foot {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 3%;
+  margin-top: auto;
+  padding-top: 2%;
+}
+
+.campaign-foot ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.9em 1.1em;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: #5b6b80;
+  font-size: clamp(8px, 1.7cqw, 12px);
+  font-weight: 800;
+}
+
+.campaign-foot li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+}
+
+.campaign-foot li svg {
+  width: 1.15em;
+  height: 1.15em;
+  color: var(--green);
+}
+
+.campaign-foot p {
+  margin: 0 18% 0 0;
+  color: #16325a;
+  font-family: 'Segoe Script', 'Lucida Handwriting', cursive;
+  font-size: clamp(12px, 2.7cqw, 20px);
+  line-height: 1.1;
+  text-align: right;
+}
+
+.campaign-palms {
+  position: absolute;
+  right: -2%;
+  bottom: -8%;
+  width: 28%;
+  height: auto;
+  opacity: 0.55;
+  pointer-events: none;
 }
 
 @media print {

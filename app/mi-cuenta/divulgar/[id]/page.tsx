@@ -4,6 +4,7 @@ import { ArrowLeft, ExternalLink } from 'lucide-react';
 import ListingMaterialStudio from '@/components/ListingMaterialStudio';
 import { BASE_URL } from '@/lib/config';
 import { normalizeListingImageUrl } from '@/lib/imageUrls';
+import { buildListingMaterial } from '@/lib/listingMaterial';
 import { slugify } from '@/lib/slugify';
 import { createClient } from '@/lib/supabase/server';
 
@@ -16,6 +17,7 @@ type ListingShareRow = {
   price?: number | null;
   price_period?: string | null;
   bedrooms?: number | null;
+  bathrooms?: number | null;
   parking?: number | null;
   area_sqm?: number | null;
   location?: string | null;
@@ -25,38 +27,10 @@ type ListingShareRow = {
 };
 
 const LISTING_SELECT =
-  'id,owner_id,title,property_type,transaction,price,price_period,bedrooms,parking,area_sqm,location,images,contact_phone,contact_whatsapp';
-
-function formatPrice(price?: number | null, period?: string | null) {
-  if (!price) return 'CONSULTE';
-  const formatted = new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-    maximumFractionDigits: 0
-  }).format(price);
-
-  return period ? `${formatted}/${period}` : formatted;
-}
-
-function getIntent(transaction?: string | null) {
-  if (transaction === 'Aluguel') return 'ALUGA-SE';
-  if (transaction === 'Temporada') return 'TEMPORADA';
-  return 'VENDE-SE';
-}
+  'id,owner_id,title,property_type,transaction,price,price_period,bedrooms,bathrooms,parking,area_sqm,location,images,contact_phone,contact_whatsapp';
 
 function getListingHref(listing: ListingShareRow) {
   return `/imoveis/${slugify(`${listing.title}-${listing.location ?? ''}-${listing.id}`)}`;
-}
-
-function getCompactFeatures(listing: ListingShareRow) {
-  return [
-    listing.property_type ?? 'Imovel',
-    listing.bedrooms ? `${listing.bedrooms} quartos` : null,
-    listing.parking ? `${listing.parking} vagas` : null,
-    listing.area_sqm ? `${listing.area_sqm} m2` : null
-  ]
-    .filter(Boolean)
-    .join(' - ');
 }
 
 export default async function ListingShareKitPage({ params }: { params: { id: string } }) {
@@ -105,16 +79,14 @@ export default async function ListingShareKitPage({ params }: { params: { id: st
         </div>
 
         <ListingMaterialStudio
-          material={{
-            intent: getIntent(listing.transaction),
-            price: formatPrice(listing.price, listing.price_period),
+          material={buildListingMaterial({
+            listing,
+            publicUrl,
             image,
             images,
-            publicUrl,
             contactWhatsapp: listing.contact_whatsapp ?? profilePhone,
-            contactPhone: listing.contact_phone ?? profilePhone,
-            compactFeatures: getCompactFeatures(listing)
-          }}
+            contactPhone: listing.contact_phone ?? profilePhone
+          })}
         />
       </div>
     </main>
