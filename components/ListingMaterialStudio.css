@@ -1185,14 +1185,14 @@
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: clamp(10px, 1.8cqw, 18px);
-  min-width: clamp(210px, 38cqw, 330px);
+  gap: clamp(8px, 1.5cqw, 14px);
+  min-width: clamp(170px, 31cqw, 260px);
   flex: 0 0 auto;
 }
 
 .campaign-logo img {
   display: block;
-  width: clamp(128px, 23cqw, 205px);
+  width: clamp(96px, 17cqw, 152px);
   max-width: 100%;
   height: auto;
   flex: 0 0 auto;
@@ -1200,12 +1200,12 @@
 
 .campaign-logo p {
   margin: 0;
-  max-width: 7.1em;
+  max-width: 6.8em;
   flex: 0 0 auto;
   color: #061b45;
   border-left: 2px solid #d5deea;
-  padding-left: clamp(10px, 1.7cqw, 16px);
-  font-size: clamp(9px, 1.8cqw, 14px);
+  padding-left: clamp(8px, 1.4cqw, 13px);
+  font-size: clamp(8px, 1.55cqw, 12px);
   font-weight: 750;
   line-height: 1.12;
 }
