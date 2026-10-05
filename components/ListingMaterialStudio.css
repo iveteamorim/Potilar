@@ -4,9 +4,10 @@
 }
 
 .poster-tool {
-  --navy: #07194a;
-  --green: #44b536;
-  --green-dark: #2f9629;
+  --navy: #061b45;
+  --green: #159447;
+  --green-dark: #08723a;
+  --green-bright: #2fbf4c;
   --orange: #ffa800;
   --paper: #ffffff;
   --background: #f4f7fb;
@@ -927,7 +928,9 @@
 .campaign-hero-shade {
   position: absolute;
   inset: 0;
-  background: linear-gradient(0deg, rgba(8, 18, 40, 0.62) 0%, rgba(8, 18, 40, 0.12) 36%, transparent 58%);
+  background:
+    linear-gradient(0deg, rgba(7, 15, 28, 0.68) 0%, rgba(7, 15, 28, 0.28) 25%, rgba(7, 15, 28, 0.04) 55%, transparent 78%),
+    linear-gradient(90deg, rgba(7, 15, 28, 0.18) 0%, transparent 28%, rgba(7, 15, 28, 0.08) 100%);
   pointer-events: none;
 }
 
@@ -960,17 +963,20 @@
 .campaign-intent {
   padding: 0.62em 1em 0.58em;
   color: white;
-  background: var(--navy);
-  border-radius: 0.55em;
+  background: linear-gradient(135deg, #06183d 0%, #08265d 100%);
+  border-bottom: 0.12em solid var(--green-bright);
+  border-radius: 0.55em 0.55em 0.18em 0.18em;
+  box-shadow: 0 0.22em 0.55em rgba(4, 20, 50, 0.18);
   font-size: clamp(16px, 4.4cqw, 32px);
   letter-spacing: -0.03em;
 }
 
 .campaign-place {
   padding: 0.4em 0.7em;
-  color: #16325a;
-  background: rgba(255, 255, 255, 0.88);
+  color: #061b45;
+  background: rgba(255, 255, 255, 0.93);
   border-radius: 999px;
+  box-shadow: 0 0.18em 0.45em rgba(6, 27, 69, 0.12);
   font-size: clamp(10px, 2.2cqw, 15px);
 }
 
@@ -991,6 +997,7 @@
   font-weight: 900;
   line-height: 0.95;
   letter-spacing: -0.04em;
+  text-shadow: 0 0.08em 0.18em rgba(0, 0, 0, 0.42);
 }
 
 .campaign-hero-copy p {
@@ -1002,6 +1009,7 @@
   font-style: italic;
   font-weight: 500;
   line-height: 1.15;
+  text-shadow: 0 0.08em 0.18em rgba(0, 0, 0, 0.42);
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
 }
@@ -1011,7 +1019,7 @@
   width: 2.4em;
   height: 0.22em;
   margin-top: 0.45em;
-  background: var(--green);
+  background: var(--green-bright);
   border-radius: 999px;
 }
 
@@ -1039,7 +1047,11 @@
   align-items: center;
   gap: 0.45em;
   min-width: 0;
-  color: #16325a;
+  padding: 0.58em 0.7em;
+  color: #061b45;
+  background: linear-gradient(135deg, #f4fbff 0%, #edf7f8 100%);
+  border-radius: 0.72em;
+  box-shadow: inset 0 0 0 1px rgba(217, 229, 237, 0.72);
   font-size: clamp(10px, 2.35cqw, 16px);
   font-weight: 800;
   line-height: 1.1;
@@ -1073,8 +1085,11 @@
   min-width: 0;
   padding: 4.2% 5.2%;
   color: white;
-  background: var(--green);
+  background:
+    radial-gradient(circle at 28% 8%, rgba(255, 255, 255, 0.14), transparent 30%),
+    linear-gradient(135deg, #159447 0%, #08723a 100%);
   border-radius: 1.15em;
+  box-shadow: 0 0.45em 0.9em rgba(6, 94, 48, 0.18);
 }
 
 .campaign-price strong {
@@ -1107,9 +1122,10 @@
   width: clamp(72px, 17.5cqw, 124px);
   height: clamp(72px, 17.5cqw, 124px);
   padding: 5px;
-  border: 2px solid #d7e0ea;
+  border: 2px solid #dce8ee;
   border-radius: 14px;
   background: white;
+  box-shadow: 0 0.22em 0.65em rgba(6, 27, 69, 0.08);
 }
 
 .campaign-qr-copy {
@@ -1119,7 +1135,7 @@
 
 .campaign-qr-copy p {
   margin: 0;
-  color: #4b5d73;
+  color: #061b45;
   font-size: clamp(10px, 2.2cqw, 15px);
   font-weight: 750;
   line-height: 1.25;
@@ -1149,8 +1165,11 @@
   gap: 0.4em;
   padding: 0.58em 0.75em 0.58em 0.9em;
   color: white;
-  background: var(--green);
+  background:
+    radial-gradient(circle at 25% 10%, rgba(255, 255, 255, 0.16), transparent 30%),
+    linear-gradient(135deg, #16a34a 0%, #07823e 100%);
   border-radius: 999px;
+  box-shadow: 0 0.35em 0.75em rgba(6, 94, 48, 0.16);
   font-size: clamp(13px, 3.3cqw, 24px);
   font-weight: 900;
   line-height: 1;
@@ -1178,7 +1197,7 @@
 .campaign-logo p {
   margin: 0;
   max-width: 7.5em;
-  color: #16325a;
+  color: #061b45;
   border-left: 2px solid #d5deea;
   padding-left: 0.7em;
   font-size: clamp(10px, 2.15cqw, 15px);
