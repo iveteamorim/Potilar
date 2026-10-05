@@ -179,6 +179,12 @@ export default function ListingMaterialStudio({ material }: { material: ListingM
   }
 
   const exportPixels = getExportPixels();
+  const previewCap = target === 'social' ? 520 : target === 'banner' || target === 'facade' ? 400 : 430;
+  const designSize = {
+    width: previewCap,
+    height: Math.round(previewCap * (exportPixels.height / exportPixels.width))
+  };
+  const designScale = exportPixels.width / designSize.width;
 
   const displayContact =
     contactChannel === 'whatsapp'
@@ -198,7 +204,11 @@ export default function ListingMaterialStudio({ material }: { material: ListingM
       const padding = 48;
       const availableWidth = Math.max(stage.clientWidth - padding, 120);
       const availableHeight = Math.max(stage.clientHeight - padding, 120);
-      const next = Math.min(availableWidth / exportPixels.width, availableHeight / exportPixels.height, 1);
+      const next = Math.min(
+        availableWidth / exportPixels.width,
+        availableHeight / exportPixels.height,
+        previewCap / exportPixels.width
+      );
       setPreviewScale(Number.isFinite(next) && next > 0 ? next : 1);
     };
 
@@ -503,7 +513,6 @@ export default function ListingMaterialStudio({ material }: { material: ListingM
             >
             <article
               id="export-canvas"
-              className={`property-poster property-poster--${target} property-poster--${model}${isCampaign ? ' property-poster--campaign' : ''}`}
               style={
                 {
                   width: exportPixels.width,
@@ -515,6 +524,15 @@ export default function ListingMaterialStudio({ material }: { material: ListingM
                 } as React.CSSProperties
               }
             >
+              <div
+                className={`property-poster property-poster--${target} property-poster--${model}${isCampaign ? ' property-poster--campaign' : ''}`}
+                style={{
+                  width: designSize.width,
+                  height: designSize.height,
+                  transform: `scale(${designScale})`,
+                  transformOrigin: 'top left'
+                }}
+              >
               {model === 'classic' && (
                 <>
                   <header className="model-head">{material.intent}</header>
@@ -611,6 +629,7 @@ export default function ListingMaterialStudio({ material }: { material: ListingM
                   </div>
                 </>
               )}
+              </div>
             </article>
             </div>
           </div>
