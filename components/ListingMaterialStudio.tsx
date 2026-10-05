@@ -42,15 +42,6 @@ function WhatsAppGlyph({ className = '' }: { className?: string }) {
   );
 }
 
-function ScanArrow() {
-  return (
-    <svg className="campaign-scan-arrow" viewBox="0 0 72 48" aria-hidden>
-      <path d="M8 8c18 2 28 18 26 32" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
-      <path d="M46 30l8 12-14-2" fill="currentColor" />
-    </svg>
-  );
-}
-
 function cleanContact(value?: string | null) {
   return value?.trim() || '';
 }
@@ -438,8 +429,6 @@ export default function ListingMaterialStudio({ material }: { material: ListingM
                     </div>
                     <div className="campaign-hero-copy">
                       <h2>{material.headline}</h2>
-                      <p>{material.subtitle}</p>
-                      <i className="campaign-underline" aria-hidden />
                     </div>
                   </div>
 
@@ -464,15 +453,13 @@ export default function ListingMaterialStudio({ material }: { material: ListingM
                     <div className="campaign-mid">
                       <div className="campaign-price">
                         <strong>{material.price}</strong>
-                        <span>{material.priceCaption}</span>
                       </div>
                       <div className="campaign-qr">
                         <div className="campaign-qr-frame">
                           <ListingQrCode value={material.publicUrl} size={model === 'agency' ? 420 : 360} />
                         </div>
                         <div className="campaign-qr-copy">
-                          <p>Escaneie e veja todas as fotos, planta e vídeo deste imóvel.</p>
-                          <ScanArrow />
+                          <p>Escaneie e veja fotos, planta e vídeo</p>
                         </div>
                       </div>
                     </div>
@@ -487,7 +474,6 @@ export default function ListingMaterialStudio({ material }: { material: ListingM
                       )}
                       <div className="campaign-logo">
                         <img src="/images/potilar-logo-horizontal.svg" alt="PotiLar" />
-                        <p>Seu próximo imóvel está aqui.</p>
                       </div>
                     </div>
                   </div>
