@@ -1,7 +1,7 @@
 import { formatPlaceName } from '@/lib/textFormat';
 
 export type ListingMaterialSpec = {
-  id: 'beds' | 'baths' | 'parking' | 'area';
+  id: 'beds' | 'baths' | 'parking' | 'area' | 'type';
   value: string;
   label: string;
 };
@@ -190,6 +190,21 @@ export function getMaterialSpecs(listing: ListingMaterialSource): ListingMateria
   const specs: ListingMaterialSpec[] = [];
   const kind = detectKind(listing);
   const isLand = kind === 'terreno' || kind === 'lote';
+  const showTypeChip =
+    kind === 'ponto' ||
+    kind === 'loja' ||
+    kind === 'sala' ||
+    kind === 'galpao' ||
+    kind === 'terreno' ||
+    kind === 'lote';
+
+  if (showTypeChip) {
+    specs.push({
+      id: 'type',
+      value: KIND_LABEL[kind],
+      label: ''
+    });
+  }
 
   if (!isLand && listing.bedrooms) {
     specs.push({
@@ -272,7 +287,12 @@ export function buildListingMaterial(input: {
   const { listing } = input;
   const headline = getMaterialHeadline(listing.property_type, listing.transaction, listing);
   const city = cityFromLocation(listing.location);
-  const period = listing.transaction === 'Temporada' ? listing.price_period : null;
+  const period =
+    listing.transaction === 'Temporada'
+      ? listing.price_period || 'dia'
+      : listing.transaction === 'Aluguel'
+        ? listing.price_period || 'mes'
+        : null;
 
   return {
     intent: getListingIntent(listing.transaction),

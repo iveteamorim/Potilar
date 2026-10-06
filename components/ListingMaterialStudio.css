@@ -928,14 +928,14 @@
 
 .campaign-hero {
   position: relative;
-  flex: 1.08 1 0;
+  flex: 1 1 auto;
   min-height: 0;
   overflow: hidden;
   background: #d7dde4;
 }
 
 .property-poster--social .campaign-hero {
-  flex: 1.18 1 0;
+  flex: 1 1 auto;
 }
 
 .campaign-hero img {
@@ -1058,18 +1058,19 @@
 
 .campaign-body {
   position: relative;
-  flex: 0.92 1 0;
+  flex: 0 0 auto;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: flex-start;
+  gap: clamp(10px, 2.6cqw, 18px);
   min-height: 0;
-  padding: 3.2% 4.4% 3.2%;
+  padding: 3% 4.4% 3.4%;
   background: #fff;
 }
 
 .campaign-specs {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(18%, 1fr));
+  display: flex;
+  flex-wrap: wrap;
   gap: 1.5%;
   margin: 0;
   padding: 0;
@@ -1081,8 +1082,10 @@
   display: flex;
   align-items: center;
   gap: 0.45em;
+  width: max-content;
+  max-width: 100%;
   min-width: 0;
-  padding: 0.58em 0.7em;
+  padding: 0.58em 0.85em;
   color: #061b45;
   background: linear-gradient(135deg, #f4fbff 0%, #edf7f8 100%);
   border-radius: 0.72em;
@@ -1102,6 +1105,13 @@
 
 .campaign-specs strong {
   font-weight: 950;
+}
+
+.campaign-stack {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(12px, 2.8cqw, 22px);
+  flex: 0 0 auto;
 }
 
 .campaign-mid {

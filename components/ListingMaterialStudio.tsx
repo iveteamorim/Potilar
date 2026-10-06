@@ -16,7 +16,8 @@ import {
   PanelTop,
   Phone,
   Printer,
-  Share2
+  Share2,
+  Store
 } from 'lucide-react';
 import ListingQrCode from '@/components/ListingQrCode';
 import type { ListingMaterialPayload, ListingMaterialSpec } from '@/lib/listingMaterial';
@@ -79,6 +80,7 @@ function getSpecIcon(id: ListingMaterialSpec['id']) {
   if (id === 'beds') return BedDouble;
   if (id === 'baths') return Bath;
   if (id === 'parking') return Car;
+  if (id === 'type') return Store;
   return Home;
 }
 
@@ -584,6 +586,7 @@ export default function ListingMaterialStudio({ material }: { material: ListingM
                       </ul>
                     ) : null}
 
+                    <div className="campaign-stack">
                     <div className="campaign-mid">
                       <div className="campaign-price">
                         <strong>
@@ -614,6 +617,7 @@ export default function ListingMaterialStudio({ material }: { material: ListingM
                       <div className="campaign-logo">
                         <img src="/images/logobanner2.png" alt="PotiLar" />
                       </div>
+                    </div>
                     </div>
                   </div>
                 </>
