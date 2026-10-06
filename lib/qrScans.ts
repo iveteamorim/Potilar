@@ -12,34 +12,39 @@ export type QrCardContent = (typeof QR_CARD_CONTENT)[keyof typeof QR_CARD_CONTEN
 type HeaderReader = Pick<Headers, 'get'>;
 
 const BOT_USER_AGENT_PATTERN =
-  /bot|crawl|spider|slurp|facebookexternalhit|telegrambot|preview|linkchecker|monitor|uptime|curl|wget|python-requests|go-http-client|headless|lighthouse|pagespeed/i;
+  /bot|crawler|spider|slurp|facebookexternalhit|telegrambot|bingpreview|linkchecker|uptimerobot|pingdom|curl|wget|python-requests|go-http-client|headless|lighthouse|pagespeed/i;
 
-function getQrScanSkipReason(headers: HeaderReader) {
+function getQrScanSkipReason(headers: HeaderReader, method = 'GET') {
+  if (method.toUpperCase() === 'HEAD') return 'head_request';
+
   const userAgent = headers.get('user-agent') ?? '';
   const purpose = headers.get('purpose') ?? headers.get('sec-purpose') ?? '';
   const fetchMode = headers.get('sec-fetch-mode') ?? '';
+  const nextRouterPrefetch = headers.get('next-router-prefetch') ?? '';
 
-  if (!userAgent) return 'missing_user_agent';
-  if (BOT_USER_AGENT_PATTERN.test(userAgent)) return 'bot_user_agent';
   if (purpose.toLowerCase().includes('prefetch')) return 'prefetch_purpose';
+  if (purpose.toLowerCase().includes('prerender')) return 'prerender_purpose';
   if (fetchMode.toLowerCase() === 'prefetch') return 'prefetch_fetch_mode';
+  if (nextRouterPrefetch === '1') return 'next_router_prefetch';
+  if (userAgent && BOT_USER_AGENT_PATTERN.test(userAgent)) return 'bot_user_agent';
   return null;
 }
 
 export function isObviousBot(request: NextRequest) {
-  return Boolean(getQrScanSkipReason(request.headers));
+  return Boolean(getQrScanSkipReason(request.headers, request.method));
 }
 
 export async function recordQrScan(request: NextRequest, content: QrCardContent) {
-  return recordQrScanFromHeaders(request.headers, content);
+  return recordQrScanFromHeaders(request.headers, content, request.method);
 }
 
-export async function recordQrScanFromHeaders(headers: HeaderReader, content: QrCardContent) {
-  const skipReason = getQrScanSkipReason(headers);
+export async function recordQrScanFromHeaders(headers: HeaderReader, content: QrCardContent, method = 'GET') {
+  const skipReason = getQrScanSkipReason(headers, method);
   if (skipReason) {
     console.info('[Potilar QR] Scan skipped before insert', {
       campaign: QR_CARD_CAMPAIGN,
       content,
+      method,
       reason: skipReason
     });
     return;

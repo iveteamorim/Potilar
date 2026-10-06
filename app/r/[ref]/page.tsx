@@ -9,12 +9,12 @@ export default async function ReferralPage({ params }: { params: { ref: string }
 
   if (referralCode === 'cartao-anunciar') {
     console.info('[Potilar QR] cartao-anunciar fallback hit before insert');
-    await recordQrScanFromHeaders(headers(), QR_CARD_CONTENT.anunciar);
+    await recordQrScanFromHeaders(headers(), QR_CARD_CONTENT.anunciar, 'GET');
     redirect('/anunciar');
   }
 
   if (referralCode === 'cartao-imoveis') {
-    await recordQrScanFromHeaders(headers(), QR_CARD_CONTENT.imoveis);
+    await recordQrScanFromHeaders(headers(), QR_CARD_CONTENT.imoveis, 'GET');
     redirect('/imoveis');
   }
 
