@@ -8,6 +8,7 @@ export default async function ReferralPage({ params }: { params: { ref: string }
   const referralCode = params.ref.trim().toLowerCase();
 
   if (referralCode === 'cartao-anunciar') {
+    console.info('[Potilar QR] cartao-anunciar fallback hit before insert');
     await recordQrScanFromHeaders(headers(), QR_CARD_CONTENT.anunciar);
     redirect('/anunciar');
   }
