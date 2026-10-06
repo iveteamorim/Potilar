@@ -18,14 +18,7 @@ function getQrScanSkipReason(headers: HeaderReader, method = 'GET') {
   if (method.toUpperCase() === 'HEAD') return 'head_request';
 
   const userAgent = headers.get('user-agent') ?? '';
-  const purpose = headers.get('purpose') ?? headers.get('sec-purpose') ?? '';
-  const fetchMode = headers.get('sec-fetch-mode') ?? '';
-  const nextRouterPrefetch = headers.get('next-router-prefetch') ?? '';
 
-  if (purpose.toLowerCase().includes('prefetch')) return 'prefetch_purpose';
-  if (purpose.toLowerCase().includes('prerender')) return 'prerender_purpose';
-  if (fetchMode.toLowerCase() === 'prefetch') return 'prefetch_fetch_mode';
-  if (nextRouterPrefetch === '1') return 'next_router_prefetch';
   if (userAgent && BOT_USER_AGENT_PATTERN.test(userAgent)) return 'bot_user_agent';
   return null;
 }
@@ -61,10 +54,6 @@ export async function recordQrScanFromHeaders(headers: HeaderReader, content: Qr
       },
       matched: {
         headRequest: method.toUpperCase() === 'HEAD',
-        prefetchPurpose: `${purpose ?? ''} ${secPurpose ?? ''}`.toLowerCase().includes('prefetch'),
-        prerenderPurpose: `${purpose ?? ''} ${secPurpose ?? ''}`.toLowerCase().includes('prerender'),
-        prefetchFetchMode: secFetchMode?.toLowerCase() === 'prefetch',
-        nextRouterPrefetch: nextRouterPrefetch === '1',
         botUserAgent: Boolean(userAgent && BOT_USER_AGENT_PATTERN.test(userAgent))
       }
     });
