@@ -1070,8 +1070,8 @@
 
 .campaign-specs {
   display: flex;
-  flex-wrap: wrap;
-  gap: 1.5%;
+  flex-wrap: nowrap;
+  gap: 1.2%;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -1081,18 +1081,32 @@
 .campaign-specs li {
   display: flex;
   align-items: center;
-  gap: 0.45em;
-  width: max-content;
-  max-width: 100%;
+  gap: 0.4em;
+  flex: 1 1 0;
   min-width: 0;
-  padding: 0.58em 0.85em;
+  padding: 0.52em 0.55em;
   color: #061b45;
   background: linear-gradient(135deg, #f4fbff 0%, #edf7f8 100%);
   border-radius: 0.72em;
   box-shadow: inset 0 0 0 1px rgba(217, 229, 237, 0.72);
-  font-size: clamp(10px, 2.35cqw, 16px);
+  font-size: clamp(9px, 2.15cqw, 15px);
   font-weight: 800;
   line-height: 1.1;
+}
+
+.campaign-specs li:only-child {
+  flex: 0 0 auto;
+  width: max-content;
+  max-width: 100%;
+  padding: 0.58em 0.85em;
+  font-size: clamp(10px, 2.35cqw, 16px);
+}
+
+.campaign-specs span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .campaign-specs svg {
