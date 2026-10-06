@@ -9,7 +9,6 @@ import {
   ChevronRight,
   Copy,
   Download,
-  Hash,
   Home,
   Image as ImageIcon,
   Loader2,
@@ -17,8 +16,7 @@ import {
   PanelTop,
   Phone,
   Printer,
-  Share2,
-  Square
+  Share2
 } from 'lucide-react';
 import ListingQrCode from '@/components/ListingQrCode';
 import type { ListingMaterialPayload, ListingMaterialSpec } from '@/lib/listingMaterial';
@@ -75,16 +73,6 @@ function formatWhatsappPoster(value: string) {
   if (digits.length === 11) return `${digits.slice(0, 2)} ${digits.slice(2, 7)}-${digits.slice(7)}`;
   if (digits.length === 10) return `${digits.slice(0, 2)} ${digits.slice(2, 6)}-${digits.slice(6)}`;
   return value;
-}
-
-function getFeatureIcon(item: string) {
-  const value = item.toLowerCase();
-  if (value.includes('quarto')) return BedDouble;
-  if (value.includes('banheiro')) return Bath;
-  if (value.includes('vaga')) return Car;
-  if (value.includes('m2') || value.includes('m²')) return Square;
-  if (value.includes('codigo') || value.includes('código')) return Hash;
-  return Home;
 }
 
 function getSpecIcon(id: ListingMaterialSpec['id']) {
@@ -159,7 +147,6 @@ export default function ListingMaterialStudio({ material }: { material: ListingM
   );
   const allSizes = sizesByTarget[target];
   const size = allSizes[Math.min(sizeIndex, allSizes.length - 1)] ?? allSizes[0];
-  const featureItems = material.compactFeatures.split(' - ').filter(Boolean).slice(0, 4);
   const previewKey = `${target}-${model}-${size.widthMm}x${size.heightMm}`;
   const isCampaign = model === 'premium' || model === 'agency';
   const isDigital = target === 'social';
@@ -305,9 +292,7 @@ export default function ListingMaterialStudio({ material }: { material: ListingM
     setImagePosition(50);
   }
 
-  const campaignSpecs = material.specs.length
-    ? material.specs
-    : featureItems.map((item) => ({ id: 'area' as const, value: item, label: '' }));
+  const campaignSpecs = material.specs;
 
   return (
     <main className="poster-tool">
@@ -538,7 +523,7 @@ export default function ListingMaterialStudio({ material }: { material: ListingM
                   <header className="model-head">{material.intent}</header>
                   <div className="model-price">{material.price}</div>
                   <section className="classic-main">
-                    <p>Escaneie e veja todas as fotos e video</p>
+                    <p>{material.qrText}</p>
                     <div className="qr-wrap">
                       <ListingQrCode value={material.publicUrl} size={280} />
                     </div>
@@ -575,7 +560,7 @@ export default function ListingMaterialStudio({ material }: { material: ListingM
                     </div>
                     <div className="campaign-hero-copy">
                       <h2>{material.headline}</h2>
-                      <p>{material.subtitle}</p>
+                      {material.subtitle ? <p>{material.subtitle}</p> : null}
                       <i className="campaign-underline" aria-hidden />
                     </div>
                   </div>
@@ -601,14 +586,14 @@ export default function ListingMaterialStudio({ material }: { material: ListingM
                     <div className="campaign-mid">
                       <div className="campaign-price">
                         <strong>{material.price}</strong>
-                        <span>{material.priceCaption}</span>
+                        {material.priceCaption ? <span>{material.priceCaption}</span> : null}
                       </div>
                       <div className="campaign-qr">
                         <div className="campaign-qr-frame">
                           <ListingQrCode value={material.publicUrl} size={model === 'agency' ? 420 : 360} />
                         </div>
                         <div className="campaign-qr-copy">
-                          <p>Escaneie e veja todas as fotos, planta e vídeo deste imóvel.</p>
+                          <p>{material.qrText}</p>
                           <ScanArrow />
                         </div>
                       </div>

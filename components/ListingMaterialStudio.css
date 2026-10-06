@@ -1029,6 +1029,10 @@
   text-shadow: 0 0.08em 0.18em rgba(0, 0, 0, 0.42);
 }
 
+.campaign-hero-copy p:empty {
+  display: none;
+}
+
 .campaign-hero-copy p {
   margin: 0.4em 0 0;
   display: -webkit-box;

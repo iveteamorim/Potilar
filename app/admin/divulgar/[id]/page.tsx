@@ -21,13 +21,15 @@ type ListingShareRow = {
   parking?: number | null;
   area_sqm?: number | null;
   location?: string | null;
+  features?: string[] | null;
+  video_url?: string | null;
   images?: string[] | null;
   contact_phone?: string | null;
   contact_whatsapp?: string | null;
 };
 
 const LISTING_SELECT =
-  'id,owner_id,title,property_type,transaction,price,price_period,bedrooms,bathrooms,parking,area_sqm,location,images,contact_phone,contact_whatsapp';
+  'id,owner_id,title,property_type,transaction,price,price_period,bedrooms,bathrooms,parking,area_sqm,location,features,video_url,images,contact_phone,contact_whatsapp';
 
 function getListingHref(listing: ListingShareRow) {
   return `/imoveis/${slugify(`${listing.title}-${listing.location ?? ''}-${listing.id}`)}`;
