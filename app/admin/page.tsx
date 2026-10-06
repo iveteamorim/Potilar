@@ -248,6 +248,9 @@ export default async function AdminPage({
           <Link href="/admin/leads" className="inline-flex rounded-2xl border border-ocean-200 px-4 py-2 text-sm font-semibold text-ocean-700">
             Leads e importações
           </Link>
+          <Link href="/admin/qr-scans" className="inline-flex rounded-2xl border border-ocean-200 px-4 py-2 text-sm font-semibold text-ocean-700">
+            QR fisicos
+          </Link>
           <Link href="/admin/news" className="inline-flex rounded-2xl border border-ocean-200 px-4 py-2 text-sm font-semibold text-ocean-700">
             Gerenciar notícias
           </Link>
