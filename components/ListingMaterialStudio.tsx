@@ -293,6 +293,7 @@ export default function ListingMaterialStudio({ material }: { material: ListingM
   }
 
   const campaignSpecs = material.specs;
+  const [priceMain, priceSuffix] = material.price.split(' / ');
 
   return (
     <main className="poster-tool">
@@ -585,7 +586,10 @@ export default function ListingMaterialStudio({ material }: { material: ListingM
 
                     <div className="campaign-mid">
                       <div className="campaign-price">
-                        <strong>{material.price}</strong>
+                        <strong>
+                          {priceMain}
+                          {priceSuffix ? <em> / {priceSuffix}</em> : null}
+                        </strong>
                         {material.priceCaption ? <span>{material.priceCaption}</span> : null}
                       </div>
                       <div className="campaign-qr">
