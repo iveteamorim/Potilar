@@ -1061,8 +1061,9 @@
   flex: 0.92 1 0;
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
   min-height: 0;
-  padding: 2.8% 4.2% 2.4%;
+  padding: 3.2% 4.4% 3.2%;
   background: #fff;
 }
 
@@ -1071,8 +1072,9 @@
   grid-template-columns: repeat(auto-fit, minmax(18%, 1fr));
   gap: 1.5%;
   margin: 0;
-  padding: 0 0 2.4%;
+  padding: 0;
   list-style: none;
+  flex: 0 0 auto;
 }
 
 .campaign-specs li {
@@ -1105,45 +1107,44 @@
 .campaign-mid {
   display: grid;
   grid-template-columns: 1.12fr 0.88fr;
-  gap: 3%;
-  align-items: start;
+  gap: 4.5%;
+  align-items: center;
   min-height: 0;
-  flex: 1 1 auto;
+  flex: 0 0 auto;
 }
 
 .campaign-price {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  align-self: start;
   width: 100%;
   min-width: 0;
-  padding: 3.1% 5%;
+  padding: 4.6% 6.2%;
   color: white;
   background:
     radial-gradient(circle at 28% 8%, rgba(255, 255, 255, 0.14), transparent 30%),
     linear-gradient(135deg, #159447 0%, #08723a 100%);
-  border-radius: 1.05em;
+  border-radius: 1.15em;
   box-shadow: 0 0.35em 0.75em rgba(6, 94, 48, 0.16);
 }
 
 .campaign-price strong {
   display: flex;
   align-items: baseline;
-  gap: 0.16em;
-  font-size: clamp(20px, 6.2cqw, 44px);
+  gap: 0.2em;
+  font-size: clamp(22px, 6.9cqw, 50px);
   font-weight: 950;
-  line-height: 0.95;
-  letter-spacing: -0.04em;
+  line-height: 0.92;
+  letter-spacing: -0.045em;
   white-space: nowrap;
 }
 
 .campaign-price strong em {
   font-style: normal;
-  font-size: 0.42em;
+  font-size: 0.4em;
   font-weight: 750;
   letter-spacing: 0;
-  opacity: 0.92;
+  opacity: 0.9;
 }
 
 .campaign-price span {
@@ -1199,19 +1200,23 @@
 }
 
 .campaign-foot {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1.12fr 0.88fr;
+  gap: 4.5%;
   align-items: center;
-  justify-content: space-between;
-  gap: 3.8%;
-  margin-top: auto;
-  padding-top: 3.6%;
+  margin-top: 0;
+  padding-top: 0;
+  flex: 0 0 auto;
 }
 
 .campaign-wa {
-  display: inline-flex;
+  display: flex;
   align-items: center;
+  justify-content: flex-start;
   gap: 0.4em;
-  padding: 0.58em 0.75em 0.58em 0.9em;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.62em 0.85em 0.62em 0.95em;
   color: white;
   background:
     radial-gradient(circle at 25% 10%, rgba(255, 255, 255, 0.16), transparent 30%),
@@ -1232,16 +1237,15 @@
 .campaign-logo {
   display: flex;
   align-items: center;
-  justify-content: center;
-  min-width: clamp(180px, 32cqw, 240px);
-  padding-inline: clamp(8px, 1.5cqw, 16px);
+  justify-content: flex-end;
+  min-width: 0;
+  padding-inline: 0;
   flex: 0 0 auto;
 }
 
 .campaign-logo img {
   display: block;
-  width: clamp(180px, 20cqw, 220px);
-  max-width: 100%;
+  width: min(100%, clamp(160px, 28cqw, 220px));
   height: auto;
   object-fit: contain;
   flex: 0 0 auto;
