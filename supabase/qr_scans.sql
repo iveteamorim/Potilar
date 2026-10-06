@@ -11,6 +11,30 @@ create table if not exists public.qr_scans (
 
 alter table public.qr_scans enable row level security;
 
+create or replace function public.can_read_qr_scans()
+returns boolean
+language sql
+security definer
+set search_path = public
+stable
+as $$
+  select exists (
+    select 1
+    from public.profiles
+    where profiles.id = auth.uid()
+      and profiles.role = 'admin'
+  );
+$$;
+
+revoke all on public.qr_scans from public, anon, authenticated;
+grant usage on schema public to anon, authenticated, service_role;
+grant insert on public.qr_scans to anon, authenticated;
+grant select on public.qr_scans to authenticated;
+grant all on public.qr_scans to service_role;
+revoke all on function public.can_read_qr_scans() from public, anon;
+grant execute on function public.can_read_qr_scans() to authenticated, service_role;
+grant usage, select on sequence public.qr_scans_id_seq to anon, authenticated, service_role;
+
 drop policy if exists "Public can insert physical card QR scans" on public.qr_scans;
 create policy "Public can insert physical card QR scans"
 on public.qr_scans for insert
@@ -24,18 +48,7 @@ drop policy if exists "Admin can read physical card QR scans" on public.qr_scans
 create policy "Admin can read physical card QR scans"
 on public.qr_scans for select
 to authenticated
-using (
-  exists (
-    select 1
-    from public.profiles
-    where profiles.id = auth.uid()
-      and profiles.role = 'admin'
-  )
-);
-
-grant insert on public.qr_scans to anon, authenticated;
-grant select on public.qr_scans to authenticated;
-grant usage, select on sequence public.qr_scans_id_seq to anon, authenticated;
+using (public.can_read_qr_scans());
 
 create index if not exists qr_scans_campaign_created_at_idx
 on public.qr_scans (campaign, created_at desc);

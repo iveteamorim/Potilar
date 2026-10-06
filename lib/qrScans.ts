@@ -1,4 +1,5 @@
 import type { NextRequest } from 'next/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
 
 export const QR_CARD_CAMPAIGN = 'cartao_rn_2026';
@@ -28,23 +29,21 @@ export function isObviousBot(request: NextRequest) {
 export async function recordQrScan(request: NextRequest, content: QrCardContent) {
   if (isObviousBot(request)) return;
 
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 700);
-
   try {
-    const supabase = createClient();
-    await supabase
-      .from('qr_scans')
-      .insert({
-        campaign: QR_CARD_CAMPAIGN,
-        content
-      })
-      .abortSignal(controller.signal);
+    const supabase = (() => {
+      try {
+        return createAdminClient();
+      } catch {
+        // Local/dev can still rely on the public insert policy when service_role is absent.
+        return createClient();
+      }
+    })();
+
+    await supabase.from('qr_scans').insert({
+      campaign: QR_CARD_CAMPAIGN,
+      content
+    });
   } catch (error) {
-    if (!(error instanceof Error && error.name === 'AbortError')) {
-      console.error('[Potilar] Failed to record QR scan:', error);
-    }
-  } finally {
-    clearTimeout(timeout);
+    console.error('[Potilar] Failed to record QR scan:', error);
   }
 }
