@@ -41,11 +41,32 @@ export async function recordQrScan(request: NextRequest, content: QrCardContent)
 export async function recordQrScanFromHeaders(headers: HeaderReader, content: QrCardContent, method = 'GET') {
   const skipReason = getQrScanSkipReason(headers, method);
   if (skipReason) {
+    const userAgent = headers.get('user-agent') ?? null;
+    const purpose = headers.get('purpose') ?? null;
+    const secPurpose = headers.get('sec-purpose') ?? null;
+    const secFetchMode = headers.get('sec-fetch-mode') ?? null;
+    const nextRouterPrefetch = headers.get('next-router-prefetch') ?? null;
+
     console.info('[Potilar QR] Scan skipped before insert', {
       campaign: QR_CARD_CAMPAIGN,
       content,
       method,
-      reason: skipReason
+      reason: skipReason,
+      headers: {
+        userAgent,
+        purpose,
+        secPurpose,
+        secFetchMode,
+        nextRouterPrefetch
+      },
+      matched: {
+        headRequest: method.toUpperCase() === 'HEAD',
+        prefetchPurpose: `${purpose ?? ''} ${secPurpose ?? ''}`.toLowerCase().includes('prefetch'),
+        prerenderPurpose: `${purpose ?? ''} ${secPurpose ?? ''}`.toLowerCase().includes('prerender'),
+        prefetchFetchMode: secFetchMode?.toLowerCase() === 'prefetch',
+        nextRouterPrefetch: nextRouterPrefetch === '1',
+        botUserAgent: Boolean(userAgent && BOT_USER_AGENT_PATTERN.test(userAgent))
+      }
     });
     return;
   }
