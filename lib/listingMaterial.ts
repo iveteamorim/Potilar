@@ -180,10 +180,7 @@ function plural(count: number, one: string, many: string) {
 
 function areaLabel(kind: MaterialKind) {
   if (kind === 'sitio' || kind === 'chacara') return 'área total';
-  if (kind === 'terreno' || kind === 'lote' || kind === 'galpao' || kind === 'ponto' || kind === 'loja' || kind === 'sala') {
-    return '';
-  }
-  return 'área construída';
+  return '';
 }
 
 export function getMaterialSpecs(listing: ListingMaterialSource): ListingMaterialSpec[] {
