@@ -9,41 +9,92 @@ export const QR_CARD_CONTENT = {
 } as const;
 
 export type QrCardContent = (typeof QR_CARD_CONTENT)[keyof typeof QR_CARD_CONTENT];
+type HeaderReader = Pick<Headers, 'get'>;
 
 const BOT_USER_AGENT_PATTERN =
   /bot|crawl|spider|slurp|facebookexternalhit|telegrambot|preview|linkchecker|monitor|uptime|curl|wget|python-requests|go-http-client|headless|lighthouse|pagespeed/i;
 
-export function isObviousBot(request: NextRequest) {
-  const userAgent = request.headers.get('user-agent') ?? '';
-  const purpose = request.headers.get('purpose') ?? request.headers.get('sec-purpose') ?? '';
-  const fetchMode = request.headers.get('sec-fetch-mode') ?? '';
+function getQrScanSkipReason(headers: HeaderReader) {
+  const userAgent = headers.get('user-agent') ?? '';
+  const purpose = headers.get('purpose') ?? headers.get('sec-purpose') ?? '';
+  const fetchMode = headers.get('sec-fetch-mode') ?? '';
 
-  return (
-    !userAgent ||
-    BOT_USER_AGENT_PATTERN.test(userAgent) ||
-    purpose.toLowerCase().includes('prefetch') ||
-    fetchMode.toLowerCase() === 'prefetch'
-  );
+  if (!userAgent) return 'missing_user_agent';
+  if (BOT_USER_AGENT_PATTERN.test(userAgent)) return 'bot_user_agent';
+  if (purpose.toLowerCase().includes('prefetch')) return 'prefetch_purpose';
+  if (fetchMode.toLowerCase() === 'prefetch') return 'prefetch_fetch_mode';
+  return null;
+}
+
+export function isObviousBot(request: NextRequest) {
+  return Boolean(getQrScanSkipReason(request.headers));
 }
 
 export async function recordQrScan(request: NextRequest, content: QrCardContent) {
-  if (isObviousBot(request)) return;
+  return recordQrScanFromHeaders(request.headers, content);
+}
+
+export async function recordQrScanFromHeaders(headers: HeaderReader, content: QrCardContent) {
+  const skipReason = getQrScanSkipReason(headers);
+  if (skipReason) {
+    console.info('[Potilar QR] Scan skipped before insert', {
+      campaign: QR_CARD_CAMPAIGN,
+      content,
+      reason: skipReason
+    });
+    return;
+  }
 
   try {
+    let clientType = 'service_role';
     const supabase = (() => {
       try {
         return createAdminClient();
-      } catch {
+      } catch (error) {
+        clientType = 'public_server_client';
+        console.error('[Potilar QR] Service role unavailable, falling back to public insert client', {
+          campaign: QR_CARD_CAMPAIGN,
+          content,
+          message: error instanceof Error ? error.message : String(error)
+        });
         // Local/dev can still rely on the public insert policy when service_role is absent.
         return createClient();
       }
     })();
 
-    await supabase.from('qr_scans').insert({
+    const { data, error } = await supabase
+      .from('qr_scans')
+      .insert({
+        campaign: QR_CARD_CAMPAIGN,
+        content
+      })
+      .select();
+
+    if (error) {
+      console.error('[Potilar QR] Insert failed before redirect', {
+        campaign: QR_CARD_CAMPAIGN,
+        content,
+        clientType,
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint
+      });
+      return;
+    }
+
+    console.info('[Potilar QR] Insert result before redirect', {
       campaign: QR_CARD_CAMPAIGN,
-      content
+      content,
+      clientType,
+      rowCount: data?.length ?? 0,
+      data
     });
   } catch (error) {
-    console.error('[Potilar] Failed to record QR scan:', error);
+    console.error('[Potilar QR] Unexpected insert exception before redirect', {
+      campaign: QR_CARD_CAMPAIGN,
+      content,
+      message: error instanceof Error ? error.message : String(error)
+    });
   }
 }
