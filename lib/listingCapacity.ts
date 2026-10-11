@@ -88,7 +88,7 @@ export function normalizeAccountType(value?: string | null): CapacityAccountType
 
 export function getFreeActiveLimit(accountType?: string | null): number {
   const normalized = normalizeAccountType(accountType);
-  if (normalized === 'corretor') return 3;
+  if (normalized === 'corretor') return 5;
   if (normalized === 'imobiliaria') return 10;
   return 2;
 }
@@ -196,6 +196,7 @@ export function resolvePlanRecommendation(input: {
   accountType?: string | null;
   professionalPlan?: string | null;
   extrasAfterPublish: number;
+  activeCountAfterPublish?: number;
 }) {
   const recommendedPlan = getRecommendedCapacityPlan(input.accountType, input.professionalPlan);
   if (!recommendedPlan) {
@@ -206,10 +207,16 @@ export function resolvePlanRecommendation(input: {
   const currentPlanPrice = currentPlan?.price ?? 0;
   const planPrice = Math.max(0, PLANS.professional[recommendedPlan].price - currentPlanPrice);
   const avulsoPrice = PLANS.listing.avulsoPrice;
-  const extrasNeeded = extrasNeededToBeatPlan(planPrice, avulsoPrice);
   const avulsoTotal = input.extrasAfterPublish * avulsoPrice;
-  const highlightPlan = avulsoTotal >= planPrice;
-  const nearPlan = !highlightPlan && input.extrasAfterPublish === extrasNeeded - 1;
+  const recommendedPlanLimit = getPaidActiveLimit(recommendedPlan) ?? 0;
+  const extraAvulsosWithRecommendedPlan =
+    input.activeCountAfterPublish == null
+      ? 0
+      : Math.max(0, input.activeCountAfterPublish - recommendedPlanLimit);
+  const planTotal = planPrice + extraAvulsosWithRecommendedPlan * avulsoPrice;
+  const savingsWithPlan = avulsoTotal - planTotal;
+  const highlightPlan = savingsWithPlan > 0;
+  const nearPlan = !highlightPlan && planTotal > avulsoTotal && planTotal - avulsoTotal <= avulsoPrice;
 
   return {
     recommendedPlan,
@@ -305,7 +312,8 @@ export function buildCapacitySnapshot(input: CapacityInput & { listings?: Capaci
   const planRecommendation = resolvePlanRecommendation({
     accountType,
     professionalPlan,
-    extrasAfterPublish
+    extrasAfterPublish,
+    activeCountAfterPublish: input.activeCount + 1
   });
 
   return {

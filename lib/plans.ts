@@ -55,9 +55,9 @@ export const PLANS = {
       minAgencyListings: 15,
       validUntilLabel: 'campanha de lancamento'
     },
-    corretor: { label: 'Plano Corretor', price: 199.9, listingLimit: 10, aiCredits: 5 },
-    imobiliaria: { label: 'Plano Imobiliaria', price: 349.9, listingLimit: 30, aiCredits: 15 },
-    plus: { label: 'Plano Imobiliaria Pro', price: 599.9, listingLimit: 75, aiCredits: 30 }
+    corretor: { label: 'Plano Corretor', price: 199.9, listingLimit: 15, aiCredits: 5 },
+    imobiliaria: { label: 'Plano Imobiliaria', price: 349.9, listingLimit: 40, aiCredits: 15 },
+    plus: { label: 'Plano Imobiliaria Pro', price: 599.9, listingLimit: 80, aiCredits: 30 }
   } satisfies Record<ProfessionalPlanId, { label: string; price: number; listingLimit: number; aiCredits: number }> & {
     portfolioTrial: {
       freeMonths: number;

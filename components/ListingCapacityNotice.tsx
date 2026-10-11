@@ -27,7 +27,7 @@ export default function ListingCapacityNotice({ snapshot, onChooseAvulso }: Prop
         <p className="font-semibold text-slate-950 dark:text-white">
           {snapshot.hasPlan
             ? `Seu Plano Corretor cobre ${snapshot.paidLimit} imóveis. Este extra continua na conta de Corretor.`
-            : 'Você já publicou seus 3 imóveis grátis.'}
+            : `Você já publicou seus ${snapshot.freeLimit} imóveis grátis.`}
         </p>
       ) : snapshot.accountType === 'imobiliaria' ? (
         <p className="font-semibold text-slate-950 dark:text-white">
@@ -74,7 +74,7 @@ export default function ListingCapacityNotice({ snapshot, onChooseAvulso }: Prop
             </p>
           )}
           <p className="font-semibold text-slate-950 dark:text-white">Plano Corretor</p>
-          <p className="mt-1 text-slate-600 dark:text-slate-300">Até 10 imóveis ativos · {formatPlanPrice(PLANS.professional.corretor.price, { perMonth: true })}</p>
+          <p className="mt-1 text-slate-600 dark:text-slate-300">Até {PLANS.professional.corretor.listingLimit} imóveis ativos · {formatPlanPrice(PLANS.professional.corretor.price, { perMonth: true })}</p>
           <div className="mt-3">
             <ProfessionalPlanCheckoutButton planId="corretor" fallbackHref="/planos#planos">
               Assinar Plano Corretor
@@ -91,7 +91,7 @@ export default function ListingCapacityNotice({ snapshot, onChooseAvulso }: Prop
             </p>
           )}
           <p className="font-semibold text-slate-950 dark:text-white">Plano Imobiliária</p>
-          <p className="mt-1 text-slate-600 dark:text-slate-300">Até 30 imóveis ativos · {formatPlanPrice(PLANS.professional.imobiliaria.price, { perMonth: true })}</p>
+          <p className="mt-1 text-slate-600 dark:text-slate-300">Até {PLANS.professional.imobiliaria.listingLimit} imóveis ativos · {formatPlanPrice(PLANS.professional.imobiliaria.price, { perMonth: true })}</p>
           <div className="mt-3">
             <ProfessionalPlanCheckoutButton planId="imobiliaria" fallbackHref="/planos#planos">
               Assinar Plano Imobiliária
@@ -103,7 +103,7 @@ export default function ListingCapacityNotice({ snapshot, onChooseAvulso }: Prop
       {showImobiliariaPro && (
         <div className="rounded-2xl border border-sand-200 bg-sand-50 px-4 py-3 dark:border-slate-800 dark:bg-slate-950">
           <p className="font-semibold text-slate-950 dark:text-white">Plano Imobiliária Pro</p>
-          <p className="mt-1 text-slate-600 dark:text-slate-300">Até 75 imóveis ativos · {formatPlanPrice(PLANS.professional.plus.price, { perMonth: true })}</p>
+          <p className="mt-1 text-slate-600 dark:text-slate-300">Até {PLANS.professional.plus.listingLimit} imóveis ativos · {formatPlanPrice(PLANS.professional.plus.price, { perMonth: true })}</p>
           <div className="mt-3">
             <ProfessionalPlanCheckoutButton planId="plus" fallbackHref="/planos#planos">
               Assinar Imobiliária Pro

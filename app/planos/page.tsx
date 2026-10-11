@@ -115,7 +115,7 @@ const faqs = [
   ],
   [
     'Preciso pagar para criar conta de Corretor ou Imobiliária?',
-    'Não. A conta é grátis. Corretor começa com 3 imóveis ativos grátis. Imobiliária começa com 10. O plano mensal só entra quando você quiser mais capacidade.'
+    `Não. A conta é grátis. Corretor começa com ${getFreeActiveLimit('corretor')} imóveis ativos grátis. Imobiliária começa com ${getFreeActiveLimit('imobiliaria')}. O plano mensal só entra quando você quiser mais capacidade.`
   ],
   [
     'O plano tem fidelidade?',

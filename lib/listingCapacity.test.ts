@@ -23,16 +23,16 @@ import { PLANS } from './plans';
 
 test('free limits by account type', () => {
   assert.equal(getFreeActiveLimit('particular'), 2);
-  assert.equal(getFreeActiveLimit('corretor'), 3);
+  assert.equal(getFreeActiveLimit('corretor'), 5);
   assert.equal(getFreeActiveLimit('imobiliaria'), 10);
 });
 
 test('covered limits use plan when present without stacking free quota', () => {
-  assert.equal(getCoveredActiveLimit('corretor', null), 3);
-  assert.equal(getCoveredActiveLimit('corretor', 'corretor'), 10);
+  assert.equal(getCoveredActiveLimit('corretor', null), 5);
+  assert.equal(getCoveredActiveLimit('corretor', 'corretor'), 15);
   assert.equal(getCoveredActiveLimit('imobiliaria', null), 10);
-  assert.equal(getCoveredActiveLimit('imobiliaria', 'imobiliaria'), 30);
-  assert.equal(getCoveredActiveLimit('imobiliaria', 'plus'), 75);
+  assert.equal(getCoveredActiveLimit('imobiliaria', 'imobiliaria'), 40);
+  assert.equal(getCoveredActiveLimit('imobiliaria', 'plus'), 80);
 });
 
 test('paused and needs_renewal do not consume capacity', () => {
@@ -57,36 +57,34 @@ test('proprietario third listing uses the shared avulso', () => {
 });
 
 test('corretor can create account capacity without paying a plan', () => {
-  const withinFree = resolveListingCapacity({ accountType: 'corretor', activeCount: 2 });
-  const fourth = resolveListingCapacity({ accountType: 'corretor', activeCount: 3 });
+  const withinFree = resolveListingCapacity({ accountType: 'corretor', activeCount: 4 });
+  const sixth = resolveListingCapacity({ accountType: 'corretor', activeCount: 5 });
   assert.equal(withinFree.action, 'allow_free');
-  assert.equal(fourth.action, 'require_avulso');
-  if (fourth.action === 'require_avulso') {
-    assert.equal(fourth.amount, 29.9);
-    assert.equal(fourth.durationDays, 30);
+  assert.equal(sixth.action, 'require_avulso');
+  if (sixth.action === 'require_avulso') {
+    assert.equal(sixth.amount, 29.9);
+    assert.equal(sixth.durationDays, 30);
   }
 });
 
-test('corretor with plan covers 10 and then charges avulsos without changing account type', () => {
+test('corretor with plan covers 15 and then charges avulsos without changing account type', () => {
   const covered = resolveListingCapacity({ accountType: 'corretor', professionalPlan: 'corretor', activeCount: 6 });
-  const tenth = resolveListingCapacity({ accountType: 'corretor', professionalPlan: 'corretor', activeCount: 9 });
-  const eleventh = resolveListingCapacity({ accountType: 'corretor', professionalPlan: 'corretor', activeCount: 10 });
-  const twelfth = resolveListingCapacity({ accountType: 'corretor', professionalPlan: 'corretor', activeCount: 11 });
   const fifteenth = resolveListingCapacity({ accountType: 'corretor', professionalPlan: 'corretor', activeCount: 14 });
+  const sixteenth = resolveListingCapacity({ accountType: 'corretor', professionalPlan: 'corretor', activeCount: 15 });
+  const seventeenth = resolveListingCapacity({ accountType: 'corretor', professionalPlan: 'corretor', activeCount: 16 });
   assert.equal(covered.action, 'allow_plan');
-  assert.equal(tenth.action, 'allow_plan');
-  assert.equal(eleventh.action, 'require_avulso');
-  assert.equal(twelfth.action, 'require_avulso');
-  assert.equal(fifteenth.action, 'require_avulso');
-  if (eleventh.action === 'require_avulso') {
-    assert.equal(eleventh.amount, 29.9);
-    assert.equal(eleventh.durationDays, 30);
+  assert.equal(fifteenth.action, 'allow_plan');
+  assert.equal(sixteenth.action, 'require_avulso');
+  assert.equal(seventeenth.action, 'require_avulso');
+  if (sixteenth.action === 'require_avulso') {
+    assert.equal(sixteenth.amount, 29.9);
+    assert.equal(sixteenth.durationDays, 30);
   }
 
   const snapshot = buildCapacitySnapshot({
     accountType: 'corretor',
     professionalPlan: 'corretor',
-    activeCount: 12
+    activeCount: 17
   });
   assert.equal(snapshot.accountType, 'corretor');
   assert.equal(snapshot.extraActiveCount, 2);
@@ -108,17 +106,17 @@ test('imobiliaria plan and pro allow avulsos above the plan quota', () => {
   const needsExtra = resolveListingCapacity({
     accountType: 'imobiliaria',
     professionalPlan: 'imobiliaria',
-    activeCount: 30
+    activeCount: 40
   });
   const proOk = resolveListingCapacity({
     accountType: 'imobiliaria',
     professionalPlan: 'plus',
-    activeCount: 30
+    activeCount: 40
   });
   const proExtra = resolveListingCapacity({
     accountType: 'imobiliaria',
     professionalPlan: 'plus',
-    activeCount: 75
+    activeCount: 80
   });
   assert.equal(needsExtra.action, 'require_avulso');
   assert.equal(proOk.action, 'allow_plan');
@@ -129,12 +127,12 @@ test('imobiliaria plan and pro allow avulsos above the plan quota', () => {
 });
 
 test('import never opens paid slots', () => {
-  assert.equal(getImportableSlotCount({ accountType: 'corretor', activeCount: 1 }), 2);
-  assert.equal(getImportableSlotCount({ accountType: 'corretor', activeCount: 3 }), 0);
-  assert.equal(getImportableSlotCount({ accountType: 'corretor', professionalPlan: 'corretor', activeCount: 3 }), 7);
+  assert.equal(getImportableSlotCount({ accountType: 'corretor', activeCount: 1 }), 4);
+  assert.equal(getImportableSlotCount({ accountType: 'corretor', activeCount: 5 }), 0);
+  assert.equal(getImportableSlotCount({ accountType: 'corretor', professionalPlan: 'corretor', activeCount: 5 }), 10);
   assert.equal(getImportableSlotCount({ accountType: 'imobiliaria', activeCount: 10 }), 0);
-  assert.equal(getImportableSlotCount({ accountType: 'imobiliaria', professionalPlan: 'imobiliaria', activeCount: 10 }), 20);
-  assert.equal(getImportableSlotCount({ accountType: 'corretor', professionalPlan: 'corretor', activeCount: 10 }), 0);
+  assert.equal(getImportableSlotCount({ accountType: 'imobiliaria', professionalPlan: 'imobiliaria', activeCount: 10 }), 30);
+  assert.equal(getImportableSlotCount({ accountType: 'corretor', professionalPlan: 'corretor', activeCount: 15 }), 0);
 });
 
 test('plan recommendation is derived from avulso total versus plan price', () => {
@@ -144,15 +142,16 @@ test('plan recommendation is derived from avulso total versus plan price', () =>
   assert.equal(extrasNeededToBeatPlan(PLANS.professional.corretor.price), 7);
   assert.equal(extrasNeededToBeatPlan(PLANS.professional.imobiliaria.price), 12);
 
-  const ninth = buildCapacitySnapshot({ accountType: 'corretor', activeCount: 8 });
-  const tenth = buildCapacitySnapshot({ accountType: 'corretor', activeCount: 9 });
-  assert.equal(ninth.avulsoCostAfterPublish, 6 * 29.9);
-  assert.equal(ninth.nearPlan, true);
-  assert.equal(ninth.highlightPlan, false);
-  assert.equal(ninth.recommendPlan, true);
-  assert.equal(tenth.avulsoCostAfterPublish, 7 * 29.9);
-  assert.equal(tenth.highlightPlan, true);
-  assert.equal(tenth.nearPlan, false);
+  const eleventh = buildCapacitySnapshot({ accountType: 'corretor', activeCount: 10 });
+  const twelfth = buildCapacitySnapshot({ accountType: 'corretor', activeCount: 11 });
+  assert.equal(eleventh.avulsoCostAfterPublish, 6 * 29.9);
+  assert.equal(eleventh.nearPlan, true);
+  assert.equal(eleventh.highlightPlan, false);
+  assert.equal(eleventh.recommendPlan, true);
+  assert.equal(twelfth.avulsoCostAfterPublish, 7 * 29.9);
+  assert.equal(twelfth.highlightPlan, true);
+  assert.equal(twelfth.nearPlan, false);
+  assert.equal(twelfth.recommendPlan, true);
 
   const imobiliariaNear = resolvePlanRecommendation({
     accountType: 'imobiliaria',
@@ -207,51 +206,51 @@ test('dashboard labels follow the commercial matrix', () => {
       activeCount: 2,
       paidLimit: null,
       freeUsed: 2,
-      freeLimit: 3,
+      freeLimit: 5,
       avulsoActiveCount: 0,
       extraActiveCount: 0,
-      coveredLimit: 3
+      coveredLimit: 5
     }),
-    '2 de 3 imóveis grátis utilizados'
+    '2 de 5 imóveis grátis utilizados'
   );
   assert.equal(
     getDashboardUsageLabel({
       hasPlan: false,
-      activeCount: 5,
+      activeCount: 7,
       paidLimit: null,
-      freeUsed: 3,
-      freeLimit: 3,
+      freeUsed: 5,
+      freeLimit: 5,
       avulsoActiveCount: 2,
       extraActiveCount: 2,
-      coveredLimit: 3
+      coveredLimit: 5
     }),
-    '3 grátis + 2 anúncios avulsos ativos'
+    '5 grátis + 2 anúncios avulsos ativos'
   );
   assert.equal(
     getDashboardUsageLabel({
       hasPlan: true,
       activeCount: 7,
-      paidLimit: 10,
-      freeUsed: 3,
-      freeLimit: 3,
+      paidLimit: 15,
+      freeUsed: 5,
+      freeLimit: 5,
       avulsoActiveCount: 0,
       extraActiveCount: 0,
-      coveredLimit: 10
+      coveredLimit: 15
     }),
-    '7 de 10 imóveis utilizados'
+    '7 de 15 imóveis utilizados'
   );
   assert.equal(
     getDashboardUsageLabel({
       hasPlan: true,
-      activeCount: 12,
-      paidLimit: 10,
-      freeUsed: 3,
-      freeLimit: 3,
+      activeCount: 17,
+      paidLimit: 15,
+      freeUsed: 5,
+      freeLimit: 5,
       avulsoActiveCount: 2,
       extraActiveCount: 2,
-      coveredLimit: 10
+      coveredLimit: 15
     }),
-    '10 do plano + 2 anúncios avulsos ativos'
+    '15 do plano + 2 anúncios avulsos ativos'
   );
 });
 

@@ -44,7 +44,7 @@ language sql
 immutable
 as $$
   select case
-    when account_type = 'corretor' then 3
+    when account_type = 'corretor' then 5
     when account_type = 'imobiliaria' then 10
     else 2
   end;
@@ -56,9 +56,9 @@ language sql
 immutable
 as $$
   select case
-    when plan_id = 'corretor' then 10
-    when plan_id = 'imobiliaria' then 30
-    when plan_id = 'plus' then 75
+    when plan_id = 'corretor' then 15
+    when plan_id = 'imobiliaria' then 40
+    when plan_id = 'plus' then 80
     else null
   end;
 $$;

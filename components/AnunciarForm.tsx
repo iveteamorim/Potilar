@@ -606,7 +606,7 @@ export default function AnunciarForm({
         setStatus(
           liveCapacity?.hasPlan
             ? `Seu Plano Corretor cobre ${liveCapacity.paidLimit} imóveis. Este extra pode ser publicado com um anúncio avulso, sem mudar o tipo de conta.`
-            : 'Você já publicou seus 3 imóveis grátis. Escolha avulso ou o Plano Corretor.'
+            : `Você já publicou seus ${liveCapacity?.freeLimit ?? 5} imóveis grátis. Escolha avulso ou o Plano Corretor.`
         );
         setIsPublishing(false);
         return;
