@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { BellPlus, CheckCircle2 } from 'lucide-react';
+import { Bell, CheckCircle2 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { SEARCH_ALERTS_ENABLED } from '@/lib/config';
 import { buildAlertLabel, searchParamsToFilters } from '@/lib/searchAlerts';
@@ -12,13 +12,12 @@ export default function SaveSearchAlert() {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const filters = searchParamsToFilters(searchParams);
-  const hasFilters = Object.keys(filters).length > 0;
   const [status, setStatus] = useState('');
   const [loading, setLoading] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 
   const returnPath = `${pathname}${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
-  const loginHref = `/login?next=${encodeURIComponent(returnPath)}`;
+  const loginHref = `/login?mode=signup&intent=alert&next=${encodeURIComponent(returnPath)}`;
 
   useEffect(() => {
     const supabase = createClient();
@@ -27,7 +26,7 @@ export default function SaveSearchAlert() {
     });
   }, []);
 
-  if (!SEARCH_ALERTS_ENABLED || !hasFilters) return null;
+  if (!SEARCH_ALERTS_ENABLED) return null;
 
   async function saveAlert() {
     if (!isAuthenticated) {
@@ -69,37 +68,39 @@ export default function SaveSearchAlert() {
   }
 
   return (
-    <div className="rounded-2xl border border-ocean-200 bg-white px-4 py-4 text-sm shadow-soft dark:border-ocean-900 dark:bg-slate-900">
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-3">
-          <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-ocean-50 text-ocean-700 dark:bg-ocean-950/50 dark:text-ocean-200">
-            <BellPlus className="h-5 w-5" aria-hidden="true" />
-          </span>
-          <p className="font-semibold text-slate-950 dark:text-white">Criar alerta para esta busca</p>
-        </div>
-        <div className="shrink-0">
-          {isAuthenticated === false ? (
-            <Link
-              href={loginHref}
-              className="inline-flex items-center gap-2 rounded-xl bg-ocean-700 px-4 py-2 text-xs font-semibold text-white"
-            >
-              <BellPlus className="h-4 w-4" aria-hidden="true" />
-              Criar alerta
-            </Link>
-          ) : (
-            <button
-              type="button"
-              onClick={saveAlert}
-              disabled={loading || isAuthenticated === null}
-              className="inline-flex items-center gap-2 rounded-xl bg-ocean-700 px-4 py-2 text-xs font-semibold text-white disabled:opacity-60"
-            >
-              {status.startsWith('Alerta') ? <CheckCircle2 className="h-4 w-4" aria-hidden="true" /> : <BellPlus className="h-4 w-4" aria-hidden="true" />}
-              {loading ? 'Salvando...' : 'Salvar busca'}
-            </button>
-          )}
+    <div className="rounded-2xl border border-emerald-200 bg-emerald-50/80 px-4 py-4 text-center text-sm shadow-sm dark:border-emerald-900 dark:bg-emerald-950/25">
+      <div className="flex items-start gap-3 text-left">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-200">
+          <Bell className="h-5 w-5" aria-hidden="true" />
+        </span>
+        <div className="min-w-0">
+          <p className="text-base font-extrabold leading-tight text-slate-950 dark:text-white">Novos imóveis na sua busca</p>
+          <p className="mt-1 text-sm font-medium leading-5 text-slate-700 dark:text-slate-200">
+            Receba um aviso quando aparecer um imóvel que combine com o que você procura.
+          </p>
         </div>
       </div>
-      {status && <p className="mt-3 text-xs font-semibold text-ocean-800 dark:text-ocean-200">{status}</p>}
+      {isAuthenticated === false ? (
+        <Link
+          href={loginHref}
+          className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 text-sm font-extrabold text-white shadow-sm transition hover:bg-emerald-700"
+        >
+          <Bell className="h-4 w-4" aria-hidden="true" />
+          Salvar busca
+        </Link>
+      ) : (
+        <button
+          type="button"
+          onClick={saveAlert}
+          disabled={loading || isAuthenticated === null}
+          className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 text-sm font-extrabold text-white shadow-sm transition hover:bg-emerald-700 disabled:opacity-60"
+        >
+          {status.startsWith('Alerta') ? <CheckCircle2 className="h-4 w-4" aria-hidden="true" /> : <Bell className="h-4 w-4" aria-hidden="true" />}
+          {loading ? 'Salvando...' : 'Salvar busca'}
+        </button>
+      )}
+      <p className="mt-2 text-xs font-semibold text-slate-700 dark:text-slate-300">Grátis. Você pode cancelar quando quiser.</p>
+      {status && <p className="mt-2 text-xs font-semibold text-emerald-800 dark:text-emerald-200">{status}</p>}
     </div>
   );
 }
