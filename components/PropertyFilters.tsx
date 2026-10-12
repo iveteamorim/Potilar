@@ -126,6 +126,7 @@ export default function PropertyFilters() {
 
   const activeChips = [
     filters.city && `Cidade: ${filters.city}`,
+    filters.transaction && `Finalidade: ${filters.transaction}`,
     filters.propertyType && `Tipo: ${filters.propertyType}`,
     filters.minPrice && `Min: R$ ${filters.minPrice}`,
     filters.maxPrice && `Max: R$ ${filters.maxPrice}`,
@@ -185,6 +186,20 @@ export default function PropertyFilters() {
             ))}
           </div>
         )}
+      </div>
+
+      <div>
+        <label className="mb-2 block text-sm font-bold text-slate-900 dark:text-white">Finalidade</label>
+        <select
+          value={filters.transaction}
+          onChange={(event) => updateParam('transaction', event.target.value)}
+          className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-900"
+        >
+          <option value="">Todas</option>
+          <option value="Aluguel">Aluguel</option>
+          <option value="Compra">Compra</option>
+          <option value="Temporada">Temporada</option>
+        </select>
       </div>
 
       <div>
@@ -250,7 +265,7 @@ export default function PropertyFilters() {
           onChange={(event) => updateParam('parking', event.target.value)}
           className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-900"
         >
-          <option value="">Garagem</option>
+          <option value="">Vagas de garagem</option>
           <option value="1">1+</option>
           <option value="2">2+</option>
         </select>

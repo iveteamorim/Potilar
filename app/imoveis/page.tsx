@@ -135,7 +135,7 @@ function applyFilters(items: Property[], searchParams: { [key: string]: string |
 
 function buildTransactionHref(
   searchParams: { [key: string]: string | string[] | undefined },
-  transaction: '' | 'Compra' | 'Aluguel'
+  transaction: '' | 'Compra' | 'Aluguel' | 'Temporada'
 ) {
   const params = new URLSearchParams();
 
@@ -158,16 +158,16 @@ function TransactionTabs({
   const tabs = [
     ['', 'Todos'],
     ['Aluguel', 'Alugar'],
-    ['Compra', 'Comprar']
+    ['Compra', 'Comprar'],
+    ['Temporada', 'Temporada']
   ] as const;
 
   return (
-    <div className="grid grid-cols-3 rounded-2xl border border-sand-200 bg-white p-1 text-center shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:inline-flex sm:gap-8 sm:border-0 sm:bg-transparent sm:p-0 sm:text-left sm:shadow-none">
+    <div className="grid grid-cols-4 rounded-2xl border border-sand-200 bg-white p-1 text-center shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:inline-flex sm:gap-8 sm:border-0 sm:bg-transparent sm:p-0 sm:text-left sm:shadow-none">
       {tabs.map(([value, label]) => {
         const active =
           current === value ||
-          (!current && value === '') ||
-          (value === 'Aluguel' && current === 'Temporada');
+          (!current && value === '');
         return (
           <Link
             key={label}
