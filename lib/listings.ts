@@ -37,7 +37,7 @@ export type ListingRow = {
   video_url?: string | null;
   tour_url?: string | null;
   featured_plan?: '7_days' | '15_days' | '30_days' | 'super_30_days' | null;
-  featured_payment_status?: 'not_requested' | 'pix_pending' | 'confirmed' | null;
+  featured_payment_status?: 'not_requested' | 'pix_pending' | 'confirmed' | 'paused' | null;
   featured_starts_at?: string | null;
   featured_expires_at?: string | null;
   contact_name?: string | null;

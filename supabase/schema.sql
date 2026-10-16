@@ -45,7 +45,7 @@ create table if not exists public.listings (
   payment_confirmed_at timestamptz,
   listing_expires_at timestamptz,
   featured_plan text check (featured_plan in ('7_days', '15_days', '30_days', 'super_30_days')),
-  featured_payment_status text not null default 'not_requested' check (featured_payment_status in ('not_requested', 'pix_pending', 'confirmed')),
+  featured_payment_status text not null default 'not_requested' check (featured_payment_status in ('not_requested', 'pix_pending', 'confirmed', 'paused')),
   featured_payment_amount numeric(10,2),
   featured_starts_at timestamptz,
   featured_expires_at timestamptz,
@@ -162,7 +162,7 @@ begin
   ) then
     alter table public.listings
     add constraint listings_featured_payment_status_check
-    check (featured_payment_status in ('not_requested', 'pix_pending', 'confirmed'));
+    check (featured_payment_status in ('not_requested', 'pix_pending', 'confirmed', 'paused'));
   end if;
 end $$;
 

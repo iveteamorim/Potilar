@@ -549,68 +549,63 @@ export default async function AdminPage({
                     <p className="text-xs font-semibold text-slate-500">{formatAdminListingFacts(listing)}</p>
                   </div>
 
-                  {listing.status === 'approved' && (
+                  {(listing.status === 'approved' || listing.featured_plan) && (
                     <div className="rounded-xl border border-violet-200 bg-violet-50 p-3 dark:border-violet-900 dark:bg-slate-900">
                       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                         <div>
                           <p className="text-sm font-semibold text-violet-900 dark:text-violet-100">
-                            Dar destaque grátis (admin)
+                            Destaque (admin)
                           </p>
                           <p className="mt-1 text-xs text-violet-800 dark:text-violet-200">
-                            Cortesia admin: entra no carrossel da home e no topo das buscas, mesmo sem Pix. Vale para anúncios novos após o corte de destaque pago.
+                            O admin pode dar, pausar ou quitar o destaque a qualquer momento. Só entram no carrossel da home os destaques ativos.
                           </p>
-                          {listing.featured_payment_status === 'confirmed' && listing.featured_plan && (
+                          {listing.featured_plan && listing.featured_payment_status !== 'not_requested' ? (
                             <p className="mt-2 text-xs font-semibold text-violet-700 dark:text-violet-200">
-                              Ativo: {getHighlightLabel(listing.featured_plan)}
-                              {listing.featured_expires_at ? ` ate ${formatDate(listing.featured_expires_at)}` : ''}
-                              {Number(listing.featured_payment_amount ?? 0) === 0 ? ' (cortesia)' : ''}
+                              Status: {getHighlightLabel(listing.featured_plan)}
+                              {Number(listing.featured_payment_amount ?? 0) === 0 ? ' (cortesia)' : ` - R$ ${formatMoney(listing.featured_payment_amount)}`}
+                              {listing.featured_payment_status === 'pix_pending'
+                                ? ' - pendente'
+                                : listing.featured_payment_status === 'paused'
+                                  ? ' - pausado'
+                                : listing.featured_expires_at && new Date(listing.featured_expires_at).getTime() <= Date.now()
+                                  ? ' - vencido'
+                                : listing.featured_expires_at
+                                  ? ` ate ${formatDate(listing.featured_expires_at)}`
+                                  : ' - ativo'}
+                            </p>
+                          ) : (
+                            <p className="mt-2 text-xs font-semibold text-violet-700 dark:text-violet-200">
+                              Status: sem destaque
                             </p>
                           )}
-                        </div>
-                        <form action={grantHighlight} className="flex flex-wrap items-end gap-2">
-                          <input type="hidden" name="id" value={listing.id} />
-                          <label className="text-xs font-semibold text-violet-900 dark:text-violet-100">
-                            Plano
-                            <select
-                              name="featured_plan"
-                              defaultValue={listing.featured_plan ?? '7_days'}
-                              className="mt-1 block min-w-[11rem] rounded-xl border border-violet-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 dark:border-violet-800 dark:bg-slate-950 dark:text-slate-200"
-                            >
-                              <option value="7_days">Destaque 7 dias</option>
-                              <option value="15_days">Destaque 15 dias</option>
-                              <option value="30_days">Destaque 30 dias</option>
-                              <option value="super_30_days">Super destaque 30 dias</option>
-                            </select>
-                          </label>
-                          <button className="rounded-2xl bg-violet-600 px-4 py-2 text-xs font-semibold text-white hover:bg-violet-700">
-                            Ativar destaque grátis
-                          </button>
-                        </form>
-                      </div>
-                    </div>
-                  )}
-
-                  {listing.featured_plan && (
-                    <div className="rounded-xl border border-ocean-100 bg-ocean-50 p-3 dark:border-ocean-900 dark:bg-slate-900">
-                      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                        <div>
-                          <p className="text-sm font-semibold text-ocean-900 dark:text-ocean-100">
-                            Pedido de destaque
-                          </p>
-                          <p className="mt-1 text-xs font-semibold text-ocean-700 dark:text-ocean-200">
-                            {getHighlightLabel(listing.featured_plan)} -{' '}
-                            {Number(listing.featured_payment_amount ?? 0) === 0
-                              ? 'Cortesia admin'
-                              : `R$ ${formatMoney(listing.featured_payment_amount)}`}{' '}
-                            - {listing.featured_payment_status}
-                          </p>
                           {listing.featured_payment_status === 'pix_pending' && (
-                            <p className="mt-2 text-xs font-semibold text-ocean-700 dark:text-ocean-200">
-                              Codigo: {getPaymentCode(listing.id)}
+                            <p className="mt-1 text-xs font-semibold text-ocean-700 dark:text-ocean-200">
+                              Codigo Pix: {getPaymentCode(listing.id)}
                             </p>
                           )}
                         </div>
-                        <div className="flex flex-wrap gap-2">
+                        <div className="flex flex-wrap items-end gap-2">
+                          {listing.status === 'approved' && (
+                            <form action={grantHighlight} className="flex flex-wrap items-end gap-2">
+                              <input type="hidden" name="id" value={listing.id} />
+                              <label className="text-xs font-semibold text-violet-900 dark:text-violet-100">
+                                Plano
+                                <select
+                                  name="featured_plan"
+                                  defaultValue={listing.featured_plan ?? '7_days'}
+                                  className="mt-1 block min-w-[11rem] rounded-xl border border-violet-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 dark:border-violet-800 dark:bg-slate-950 dark:text-slate-200"
+                                >
+                                  <option value="7_days">Destaque 7 dias</option>
+                                  <option value="15_days">Destaque 15 dias</option>
+                                  <option value="30_days">Destaque 30 dias</option>
+                                  <option value="super_30_days">Super destaque 30 dias</option>
+                                </select>
+                              </label>
+                              <button className="rounded-2xl bg-violet-600 px-4 py-2 text-xs font-semibold text-white hover:bg-violet-700">
+                                Destacar
+                              </button>
+                            </form>
+                          )}
                           {listing.featured_payment_status === 'pix_pending' && (
                             <form action={updateHighlightStatus}>
                               <input type="hidden" name="id" value={listing.id} />
@@ -620,12 +615,26 @@ export default async function AdminPage({
                               </button>
                             </form>
                           )}
-                          {listing.featured_payment_status !== 'not_requested' && (
+                          {listing.featured_plan && listing.featured_payment_status === 'confirmed' && (
+                            <form action={updateHighlightStatus}>
+                              <input type="hidden" name="id" value={listing.id} />
+                              <input type="hidden" name="action" value="pause" />
+                              <button className="rounded-xl border border-violet-200 px-4 py-2 text-xs font-semibold text-violet-700">Pausar destaque</button>
+                            </form>
+                          )}
+                          {listing.status === 'approved' && listing.featured_payment_status === 'paused' && listing.featured_expires_at && new Date(listing.featured_expires_at).getTime() > Date.now() && (
+                            <form action={updateHighlightStatus}>
+                              <input type="hidden" name="id" value={listing.id} />
+                              <input type="hidden" name="action" value="activate" />
+                              <button className="rounded-xl bg-violet-600 px-4 py-2 text-xs font-semibold text-white">Ativar destaque</button>
+                            </form>
+                          )}
+                          {listing.featured_plan && listing.featured_payment_status !== 'not_requested' && (
                             <form action={updateHighlightStatus}>
                               <input type="hidden" name="id" value={listing.id} />
                               <input type="hidden" name="action" value="cancel" />
-                              <button className="rounded-2xl border border-red-200 px-4 py-2 text-xs font-semibold text-red-700">
-                                Pausar destaque
+                              <button className="rounded-2xl border border-red-200 bg-white px-4 py-2 text-xs font-semibold text-red-700">
+                                Remover destaque
                               </button>
                             </form>
                           )}
@@ -670,7 +679,7 @@ export default async function AdminPage({
                     <Link href={`/admin/divulgar/${listing.id}`} className="rounded-xl border border-green-200 px-4 py-2 text-xs font-semibold text-green-700">
                       Criar banner
                     </Link>
-                    {listing.status !== 'approved' && (
+                    {listing.status !== 'approved' && listing.status !== 'paused' && (
                       <form action={updateListingStatus}>
                         <input type="hidden" name="id" value={listing.id} />
                         <input type="hidden" name="status" value="approved" />
@@ -688,7 +697,14 @@ export default async function AdminPage({
                       <form action={updateListingStatus}>
                         <input type="hidden" name="id" value={listing.id} />
                         <input type="hidden" name="status" value="paused" />
-                        <button className="rounded-xl border border-sand-200 px-4 py-2 text-xs font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">Pausar</button>
+                        <button className="rounded-xl border border-sand-200 px-4 py-2 text-xs font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">Pausar anúncio</button>
+                      </form>
+                    )}
+                    {listing.status === 'paused' && (
+                      <form action={updateListingStatus}>
+                        <input type="hidden" name="id" value={listing.id} />
+                        <input type="hidden" name="status" value="approved" />
+                        <button className="rounded-xl bg-green-600 px-4 py-2 text-xs font-semibold text-white">Despausar anúncio</button>
                       </form>
                     )}
                     {listing.status === 'approved' && (

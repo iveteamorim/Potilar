@@ -259,14 +259,14 @@ export async function updateHighlightStatus(formData: FormData) {
     const id = String(formData.get('id') || '');
     const action = String(formData.get('action') || '');
 
-    if (!id || !['confirm', 'cancel'].includes(action)) {
+    if (!id || !['confirm', 'cancel', 'pause', 'activate'].includes(action)) {
       throw new Error('Destaque invalido');
     }
 
     const supabase = await ensureAdmin();
     const { data: listing, error: listingError } = await supabase
       .from('listings')
-      .select('id,featured_plan')
+      .select('id,status,featured_plan,featured_payment_status,featured_expires_at')
       .eq('id', id)
       .single();
 
@@ -275,8 +275,23 @@ export async function updateHighlightStatus(formData: FormData) {
     }
 
     const now = new Date();
+    if (action === 'pause' && listing.featured_payment_status !== 'confirmed') {
+      throw new Error('Somente destaques confirmados podem ser pausados.');
+    }
+    if (action === 'activate' && (
+      listing.status !== 'approved' || !listing.featured_plan ||
+      listing.featured_payment_status !== 'paused' || !listing.featured_expires_at ||
+      new Date(listing.featured_expires_at).getTime() <= now.getTime()
+    )) {
+      throw new Error('O destaque precisa estar pausado e dentro do prazo para ser ativado.');
+    }
     const update =
-      action === 'confirm'
+      action === 'pause' || action === 'activate'
+        ? {
+            featured_payment_status: action === 'pause' ? 'paused' : 'confirmed',
+            updated_at: now.toISOString()
+          }
+        : action === 'confirm'
         ? {
             featured_payment_status: 'confirmed',
             featured_starts_at: now.toISOString(),

@@ -1,5 +1,4 @@
 import type { Property } from '@/data/properties';
-import { isLegacyAdminGiftFeatured } from '@/lib/legacyHomeFeatured';
 
 function getListingTimestamp(property: Property) {
   const value = property.updatedAt ?? property.createdAt;
@@ -17,13 +16,11 @@ export function orderListingsForDisplay(items: Property[]) {
   const paidFeatured = items.filter(
     (item) => item.isFeatured && item.featuredPlan !== 'super_30_days'
   );
-  const legacyGifts = items.filter((item) => isLegacyAdminGiftFeatured(item) && !item.isFeatured);
-  const regular = items.filter((item) => !item.isFeatured && !isLegacyAdminGiftFeatured(item));
+  const regular = items.filter((item) => !item.isFeatured);
 
   return [
     ...sortByRecency(superFeatured),
     ...sortByRecency(paidFeatured),
-    ...sortByRecency(legacyGifts),
     ...sortByRecency(regular)
   ];
 }

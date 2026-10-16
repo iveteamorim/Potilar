@@ -26,12 +26,12 @@ export function isPaidOrGrantedFeatured(property: Property) {
 
 /** Debe aparecer en el carrusel "Imoveis em destaque" de la home. */
 export function showsInHomeFeaturedCarousel(property: Property) {
-  return isPaidOrGrantedFeatured(property) || isLegacyAdminGiftFeatured(property);
+  return isPaidOrGrantedFeatured(property);
 }
 
 /** Borde / badge de destaque en tarjetas. */
 export function showsDestaquePresentation(property: Property) {
-  return isPaidOrGrantedFeatured(property) || isLegacyAdminGiftFeatured(property);
+  return isPaidOrGrantedFeatured(property);
 }
 
 export function getFeaturedPaymentsStartLabel() {
