@@ -7,7 +7,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
 import { getPaymentCode } from '@/lib/pix';
 import { PLANS } from '@/lib/plans';
-import { getResolvedFeaturedExpiresAt } from '@/lib/listingLifecycle';
+import { getHighlightLifecycleState, getResolvedFeaturedExpiresAt, showsInPublicFeaturedCarousel } from '@/lib/listingLifecycle';
 import { PROPERTY_TYPES, usesResidentialLayoutFields } from '@/lib/propertyTypes';
 import { ensureApprovedListingExpiries, setMainImage, grantHighlight, updateCreciVerification, updateHighlightStatus, updateListingPaymentStatus, updateListingPropertyType, updateListingStatus } from './actions';
 import LogoutButton from '@/components/LogoutButton';
@@ -70,20 +70,30 @@ function getHighlightLabel(plan?: string | null) {
 }
 
 function getDestaqueStatusSuffix(listing: {
+  status?: string | null;
+  listing_expires_at?: string | null;
   featured_plan?: string | null;
   featured_payment_status?: string | null;
   featured_starts_at?: string | null;
   featured_expires_at?: string | null;
 }) {
-  if (listing.featured_payment_status === 'pix_pending') return 'pendente';
-  if (listing.featured_payment_status === 'paused') return 'pausado';
+  const state = getHighlightLifecycleState(listing);
+
+  if (state === 'pending') return 'pendente';
+  if (state === 'paused') return 'pausado';
+  if (state === 'expired') return 'vencido';
+  if (state === 'scheduled' && listing.featured_starts_at) {
+    return `a partir de ${formatDate(listing.featured_starts_at)}`;
+  }
+  if (state !== 'active') return 'Não';
+
+  if (!showsInPublicFeaturedCarousel(listing)) {
+    if (listing.status !== 'approved') return `ativo · anuncio ${listing.status}`;
+    return 'ativo · anuncio vencido';
+  }
 
   const resolvedExpiresAt = getResolvedFeaturedExpiresAt(listing);
-  if (resolvedExpiresAt && new Date(resolvedExpiresAt).getTime() <= Date.now()) {
-    return 'vencido';
-  }
-  if (resolvedExpiresAt) return `ate ${formatDate(resolvedExpiresAt)}`;
-  return 'ativo';
+  return resolvedExpiresAt ? `ativo ate ${formatDate(resolvedExpiresAt)}` : 'ativo';
 }
 
 function getDestaqueBadgeText(listing: {
@@ -142,6 +152,23 @@ export default async function AdminPage({
     .select(ADMIN_LISTING_SELECT)
     .in('status', ['pending', 'approved', 'paused', 'rejected', 'needs_renewal'])
     .order('created_at', { ascending: false });
+
+  if (listingsError) {
+    try {
+      const admin = createAdminClient();
+      const adminSelect = await admin
+        .from('listings')
+        .select(ADMIN_LISTING_SELECT)
+        .in('status', ['pending', 'approved', 'paused', 'rejected', 'needs_renewal'])
+        .order('created_at', { ascending: false });
+      if (!adminSelect.error && adminSelect.data) {
+        listings = adminSelect.data;
+        listingsError = null;
+      }
+    } catch {
+      // Keep the user-client fallback below if service role is not configured.
+    }
+  }
 
   if (listingsError) {
     const fallback = await supabase
@@ -229,7 +256,10 @@ export default async function AdminPage({
       if (!((listing.is_paid && listing.payment_status !== 'confirmed') || listing.featured_payment_status === 'pix_pending')) return false;
     }
     if (searchParams?.filtro === 'featured') {
-      if (!listing.featured_plan) return false;
+      if (!showsInPublicFeaturedCarousel(listing)) return false;
+    }
+    if (searchParams?.filtro === 'featured_expired') {
+      if (getHighlightLifecycleState(listing) !== 'expired') return false;
     }
     if (searchParams?.filtro && ['pending', 'approved', 'paused', 'rejected', 'needs_renewal'].includes(searchParams.filtro) && listing.status !== searchParams.filtro) {
       return false;
@@ -262,6 +292,14 @@ export default async function AdminPage({
       return acc;
     },
     {} as Record<string, number>
+  );
+  const highlightCounts = (listings ?? []).reduce(
+    (acc, listing) => {
+      if (showsInPublicFeaturedCarousel(listing)) acc.active += 1;
+      else if (getHighlightLifecycleState(listing) === 'expired') acc.expired += 1;
+      return acc;
+    },
+    { active: 0, expired: 0 }
   );
 
   return (
@@ -336,7 +374,8 @@ export default async function AdminPage({
             ['', 'Todos'],
             ['pending', 'Pendentes'],
             ['pix', 'Pagamentos pendentes'],
-            ['featured', 'Destaques'],
+            ['featured', `Destaques ativos (${highlightCounts.active})`],
+            ['featured_expired', `Destaques vencidos (${highlightCounts.expired})`],
             ['approved', 'Publicados'],
             ['paused', 'Pausados'],
             ['rejected', 'Rejeitados']
@@ -354,6 +393,13 @@ export default async function AdminPage({
             </Link>
           ))}
         </div>
+
+        {(searchParams?.filtro === 'featured' || searchParams?.filtro === 'featured_expired') && (
+          <p className="text-sm text-slate-600 dark:text-slate-300">
+            Pagamento confirmado não significa destaque vigente. A home mostra só os {highlightCounts.active} ativos;
+            {highlightCounts.expired > 0 ? ` ${highlightCounts.expired} estão vencidos.` : ''}
+          </p>
+        )}
 
         <div className="grid gap-3">
           {orderedListings.map((listing) => (
@@ -623,7 +669,7 @@ export default async function AdminPage({
                               </button>
                             </form>
                           )}
-                          {listing.featured_plan && listing.featured_payment_status === 'confirmed' && (
+                          {listing.featured_plan && showsInPublicFeaturedCarousel(listing) && (
                             <form action={updateHighlightStatus}>
                               <input type="hidden" name="id" value={listing.id} />
                               <input type="hidden" name="action" value="pause" />

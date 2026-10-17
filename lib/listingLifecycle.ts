@@ -40,25 +40,42 @@ export function getResolvedFeaturedExpiresAt(row: FeaturedListingFields) {
   return expiryMs === null ? null : new Date(expiryMs).toISOString();
 }
 
-/** Destaque ativo com Pix/cortesia confirmada. Sem data de fim, usa o prazo do plano. */
-export function isActiveFeaturedListing(row: FeaturedListingFields, now = Date.now()) {
-  if (!row.featured_plan || row.featured_payment_status !== 'confirmed') {
-    return false;
+export type HighlightLifecycleState = 'none' | 'pending' | 'paused' | 'scheduled' | 'expired' | 'active';
+
+export function getHighlightLifecycleState(row: FeaturedListingFields, now = Date.now()): HighlightLifecycleState {
+  if (!row.featured_plan || !row.featured_payment_status || row.featured_payment_status === 'not_requested') {
+    return 'none';
   }
+
+  if (row.featured_payment_status === 'pix_pending') return 'pending';
+  if (row.featured_payment_status === 'paused') return 'paused';
+  if (row.featured_payment_status !== 'confirmed') return 'none';
 
   const expiryMs = getFeaturedExpiryMs(row);
   if (expiryMs !== null && expiryMs <= now) {
-    return false;
+    return 'expired';
   }
 
   if (row.featured_starts_at) {
     const startsAt = new Date(row.featured_starts_at).getTime();
     if (Number.isFinite(startsAt) && startsAt > now) {
-      return false;
+      return 'scheduled';
     }
   }
 
-  return true;
+  return 'active';
+}
+
+/** Destaque vigente na home: plano + confirmado e ainda dentro do prazo. */
+export function isActiveFeaturedListing(row: FeaturedListingFields, now = Date.now()) {
+  return getHighlightLifecycleState(row, now) === 'active';
+}
+
+export function showsInPublicFeaturedCarousel(
+  row: FeaturedListingFields & { status?: string | null; listing_expires_at?: string | null },
+  now = Date.now()
+) {
+  return row.status === 'approved' && !isListingExpired(row.listing_expires_at, now) && isActiveFeaturedListing(row, now);
 }
 
 export const CLEARED_HIGHLIGHT_FIELDS = {
