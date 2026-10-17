@@ -19,7 +19,7 @@ type FeaturedListingFields = {
   featured_expires_at?: string | null;
 };
 
-function getFeaturedExpiryMs(row: FeaturedListingFields) {
+export function getFeaturedExpiryMs(row: FeaturedListingFields) {
   if (row.featured_expires_at) {
     const expiresAt = new Date(row.featured_expires_at).getTime();
     return Number.isFinite(expiresAt) ? expiresAt : null;
@@ -32,6 +32,12 @@ function getFeaturedExpiryMs(row: FeaturedListingFields) {
   }
 
   return null;
+}
+
+export function getResolvedFeaturedExpiresAt(row: FeaturedListingFields) {
+  if (row.featured_expires_at) return row.featured_expires_at;
+  const expiryMs = getFeaturedExpiryMs(row);
+  return expiryMs === null ? null : new Date(expiryMs).toISOString();
 }
 
 /** Destaque ativo com Pix/cortesia confirmada. Sem data de fim, usa o prazo do plano. */

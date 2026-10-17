@@ -7,6 +7,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
 import { getPaymentCode } from '@/lib/pix';
 import { PLANS } from '@/lib/plans';
+import { getResolvedFeaturedExpiresAt } from '@/lib/listingLifecycle';
 import { PROPERTY_TYPES, usesResidentialLayoutFields } from '@/lib/propertyTypes';
 import { ensureApprovedListingExpiries, setMainImage, grantHighlight, updateCreciVerification, updateHighlightStatus, updateListingPaymentStatus, updateListingPropertyType, updateListingStatus } from './actions';
 import LogoutButton from '@/components/LogoutButton';
@@ -66,6 +67,36 @@ function getHighlightLabel(plan?: string | null) {
   if (plan === '15_days') return 'Destaque 15 dias';
   if (plan === '30_days') return 'Destaque 30 dias';
   return 'Destaque';
+}
+
+function getDestaqueStatusSuffix(listing: {
+  featured_plan?: string | null;
+  featured_payment_status?: string | null;
+  featured_starts_at?: string | null;
+  featured_expires_at?: string | null;
+}) {
+  if (listing.featured_payment_status === 'pix_pending') return 'pendente';
+  if (listing.featured_payment_status === 'paused') return 'pausado';
+
+  const resolvedExpiresAt = getResolvedFeaturedExpiresAt(listing);
+  if (resolvedExpiresAt && new Date(resolvedExpiresAt).getTime() <= Date.now()) {
+    return 'vencido';
+  }
+  if (resolvedExpiresAt) return `ate ${formatDate(resolvedExpiresAt)}`;
+  return 'ativo';
+}
+
+function getDestaqueBadgeText(listing: {
+  featured_plan?: string | null;
+  featured_payment_status?: string | null;
+  featured_starts_at?: string | null;
+  featured_expires_at?: string | null;
+}) {
+  if (!listing.featured_plan || listing.featured_payment_status === 'not_requested') {
+    return 'Não';
+  }
+
+  return `${getHighlightLabel(listing.featured_plan)} ${getDestaqueStatusSuffix(listing)}`;
 }
 
 function formatDocument(value?: string | null, role?: string | null) {
@@ -350,16 +381,7 @@ export default async function AdminPage({
                             : 'Grátis'}
                     </span>
                     <span className="rounded-full bg-violet-50 px-2.5 py-1 text-[11px] font-semibold text-violet-800">
-                      Destaque:{' '}
-                      {listing.featured_plan && listing.featured_payment_status !== 'not_requested'
-                        ? `${getHighlightLabel(listing.featured_plan)}${
-                            listing.featured_expires_at
-                              ? ` ate ${formatDate(listing.featured_expires_at)}`
-                              : listing.featured_payment_status === 'pix_pending'
-                                ? ' pendente'
-                                : ' ativo'
-                          }`
-                        : 'Não'}
+                      Destaque: {getDestaqueBadgeText(listing)}
                     </span>
                   </div>
                   <p className="line-clamp-1 text-xs text-slate-500">
@@ -394,16 +416,7 @@ export default async function AdminPage({
                                 : 'Grátis'}
                         </span>
                         <span className="rounded-full bg-violet-50 px-3 py-1 text-xs font-semibold text-violet-800">
-                          Destaque:{' '}
-                          {listing.featured_plan && listing.featured_payment_status !== 'not_requested'
-                            ? `${getHighlightLabel(listing.featured_plan)}${
-                                listing.featured_expires_at
-                                  ? ` ate ${formatDate(listing.featured_expires_at)}`
-                                  : listing.featured_payment_status === 'pix_pending'
-                                    ? ' pendente'
-                                    : ' ativo'
-                              }`
-                            : 'Não'}
+                          Destaque: {getDestaqueBadgeText(listing)}
                         </span>
                         {listing.referral_code && (
                           <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-800">
@@ -566,15 +579,7 @@ export default async function AdminPage({
                             <p className="mt-2 text-xs font-semibold text-violet-700 dark:text-violet-200">
                               Status: {getHighlightLabel(listing.featured_plan)}
                               {Number(listing.featured_payment_amount ?? 0) === 0 ? ' (cortesia)' : ` - R$ ${formatMoney(listing.featured_payment_amount)}`}
-                              {listing.featured_payment_status === 'pix_pending'
-                                ? ' - pendente'
-                                : listing.featured_payment_status === 'paused'
-                                  ? ' - pausado'
-                                : listing.featured_expires_at && new Date(listing.featured_expires_at).getTime() <= Date.now()
-                                  ? ' - vencido'
-                                : listing.featured_expires_at
-                                  ? ` ate ${formatDate(listing.featured_expires_at)}`
-                                  : ' - ativo'}
+                              {` - ${getDestaqueStatusSuffix(listing)}`}
                             </p>
                           ) : (
                             <p className="mt-2 text-xs font-semibold text-violet-700 dark:text-violet-200">

@@ -9,7 +9,7 @@ import { createClient } from '@/lib/supabase/server';
 import { fetchApprovedListingRows } from '@/lib/fetchApprovedListings';
 import { listingRowToProperty } from '@/lib/listings';
 import { enrichPublicListings } from '@/lib/advertiserProfiles';
-import { getHomeFeaturedListings } from '@/lib/homeFeaturedListings';
+import { loadHomeFeaturedListings } from '@/lib/homeFeaturedListings';
 import { orderListingsForDisplay } from '@/lib/propertyOrdering';
 import type { Property } from '@/data/properties';
 import Link from 'next/link';
@@ -156,7 +156,13 @@ async function getHomeNews(): Promise<NewsArticle[]> {
 export default async function HomePage() {
   const approvedListings = await getApprovedListings();
   const newsArticles = await getHomeNews();
-  const { items: featured } = getHomeFeaturedListings(approvedListings);
+  const supabase = createClient();
+  let featured = await loadHomeFeaturedListings(supabase, approvedListings);
+  try {
+    featured = await enrichPublicListings(supabase, featured);
+  } catch {
+    // Keep the dedicated featured set even if advertiser enrichment fails.
+  }
 
   return (
     <main>
@@ -194,7 +200,14 @@ export default async function HomePage() {
       <section className="bg-white px-4 pb-5 pt-12 dark:bg-slate-950 sm:px-6 sm:pb-6 sm:pt-16 lg:px-8 lg:pb-8 lg:pt-20">
         <div className="mx-auto max-w-6xl">
           <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">Imóveis em destaque</h2>
+            <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">
+              Imóveis em destaque
+              {featured.length > 0 ? (
+                <span className="ml-2 text-base font-medium text-slate-500 dark:text-slate-400">
+                  {featured.length}
+                </span>
+              ) : null}
+            </h2>
             <Link href="/imoveis" className="text-sm font-semibold text-ocean-700">
               Ver todos
             </Link>
