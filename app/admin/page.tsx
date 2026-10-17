@@ -21,6 +21,66 @@ const ADMIN_LISTING_SELECT =
 const ADMIN_LISTING_SELECT_FALLBACK =
   'id,owner_id,title,location,neighborhood,community,address_extra,price,property_type,transaction,bedrooms,bathrooms,parking,description,features,images,status,is_paid,payment_status,payment_amount,featured_plan,featured_payment_status,featured_payment_amount,created_at';
 
+const ADMIN_HIGHLIGHT_LIFECYCLE_SELECT =
+  'id,status,listing_expires_at,featured_plan,featured_payment_status,featured_starts_at,featured_expires_at';
+
+const ADMIN_LISTING_STATUSES = ['pending', 'approved', 'paused', 'rejected', 'needs_renewal'];
+
+function queryAdminListings(client: ReturnType<typeof createClient>) {
+  return client.from('listings').select(ADMIN_LISTING_SELECT)
+    .in('status', ADMIN_LISTING_STATUSES).order('created_at', { ascending: false });
+}
+
+async function hydrateListingLifecycleFields<
+  T extends {
+    id: string;
+    status?: string | null;
+    listing_expires_at?: string | null;
+    featured_plan?: string | null;
+    featured_payment_status?: string | null;
+    featured_starts_at?: string | null;
+    featured_expires_at?: string | null;
+  }
+>(listings: T[]) {
+  if (listings.length === 0) return listings;
+
+  try {
+    const admin = createAdminClient();
+    const rows: Array<{
+      id: string;
+      status?: string | null;
+      listing_expires_at?: string | null;
+      featured_plan?: string | null;
+      featured_payment_status?: string | null;
+      featured_starts_at?: string | null;
+      featured_expires_at?: string | null;
+    }> = [];
+
+    for (let index = 0; index < listings.length; index += 100) {
+      const { data, error } = await admin
+        .from('listings')
+        .select(ADMIN_HIGHLIGHT_LIFECYCLE_SELECT)
+        .in(
+          'id',
+          listings.slice(index, index + 100).map((listing) => listing.id)
+        );
+
+      if (error) return listings;
+      if (data?.length) rows.push(...data);
+    }
+
+    if (rows.length === 0) return listings;
+
+    const byId = new Map(rows.map((row) => [row.id, row]));
+    return listings.map((listing) => {
+      const row = byId.get(listing.id);
+      return row ? { ...listing, ...row } as T : listing;
+    });
+  } catch {
+    return listings;
+  }
+}
+
 function formatPrice(value: number) {
   return new Intl.NumberFormat('pt-BR', {
     style: 'currency',
@@ -147,44 +207,50 @@ export default async function AdminPage({
     );
   }
 
-  let { data: listings, error: listingsError } = await supabase
-    .from('listings')
-    .select(ADMIN_LISTING_SELECT)
-    .in('status', ['pending', 'approved', 'paused', 'rejected', 'needs_renewal'])
-    .order('created_at', { ascending: false });
+  let listings: NonNullable<Awaited<ReturnType<typeof queryAdminListings>>['data']> | null = null;
 
-  if (listingsError) {
-    try {
-      const admin = createAdminClient();
-      const adminSelect = await admin
+  try {
+    const adminSelect = await createAdminClient()
+      .from('listings')
+      .select(ADMIN_LISTING_SELECT)
+      .in('status', ADMIN_LISTING_STATUSES)
+      .order('created_at', { ascending: false });
+    if (!adminSelect.error && adminSelect.data) {
+      listings = adminSelect.data;
+    }
+  } catch {
+    // Fallback to the signed-in admin session below.
+  }
+
+  if (!listings) {
+    const userSelect = await supabase
+      .from('listings')
+      .select(ADMIN_LISTING_SELECT)
+      .in('status', ADMIN_LISTING_STATUSES)
+      .order('created_at', { ascending: false });
+
+    if (!userSelect.error && userSelect.data) {
+      listings = userSelect.data;
+    } else {
+      const fallback = await supabase
         .from('listings')
-        .select(ADMIN_LISTING_SELECT)
-        .in('status', ['pending', 'approved', 'paused', 'rejected', 'needs_renewal'])
+        .select(ADMIN_LISTING_SELECT_FALLBACK)
+        .in('status', ADMIN_LISTING_STATUSES)
         .order('created_at', { ascending: false });
-      if (!adminSelect.error && adminSelect.data) {
-        listings = adminSelect.data;
-        listingsError = null;
-      }
-    } catch {
-      // Keep the user-client fallback below if service role is not configured.
+      listings = (fallback.data ?? []).map((listing) => ({
+        ...listing,
+        payment_confirmed_at: null,
+        listing_expires_at: null,
+        featured_starts_at: null,
+        featured_expires_at: null,
+        referral_code: null
+      }));
     }
   }
 
-  if (listingsError) {
-    const fallback = await supabase
-      .from('listings')
-      .select(ADMIN_LISTING_SELECT_FALLBACK)
-      .in('status', ['pending', 'approved', 'paused', 'rejected', 'needs_renewal'])
-      .order('created_at', { ascending: false });
-    listings = (fallback.data ?? []).map((listing) => ({
-      ...listing,
-      payment_confirmed_at: null,
-      listing_expires_at: null,
-      featured_starts_at: null,
-      featured_expires_at: null,
-      referral_code: null
-    }));
-  } else if (listings?.length) {
+  listings = await hydrateListingLifecycleFields(listings ?? []);
+
+  if (listings.length) {
     try {
       listings = await ensureApprovedListingExpiries(listings);
     } catch {
@@ -656,7 +722,9 @@ export default async function AdminPage({
                                 </select>
                               </label>
                               <button className="rounded-2xl bg-violet-600 px-4 py-2 text-xs font-semibold text-white hover:bg-violet-700">
-                                Destacar
+                                {getHighlightLifecycleState(listing) === 'expired'
+                                  ? 'Dar novo destaque grátis'
+                                  : 'Dar destaque grátis'}
                               </button>
                             </form>
                           )}

@@ -1,13 +1,15 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Property } from '@/data/properties';
+import { isMissingColumnError } from '@/lib/fetchApprovedListings';
 import { showsInHomeFeaturedCarousel } from '@/lib/legacyHomeFeatured';
-import { getPublicListingExpiryFilterIso, isActiveFeaturedListing, isListingExpired } from '@/lib/listingLifecycle';
+import { showsInPublicFeaturedCarousel } from '@/lib/listingLifecycle';
 import { listingRowToProperty, PUBLIC_LISTING_SELECT, type ListingRow } from '@/lib/listings';
 import { orderListingsForDisplay } from '@/lib/propertyOrdering';
 
-const FEATURED_HOME_SELECT = `${PUBLIC_LISTING_SELECT},listing_expires_at`;
+const FEATURED_HOME_SELECT = `${PUBLIC_LISTING_SELECT},listing_expires_at,status`;
 
 type FeaturedListingRow = ListingRow & {
+  status?: string | null;
   listing_expires_at?: string | null;
 };
 
@@ -23,11 +25,11 @@ export async function loadHomeFeaturedListings(
   supabase: SupabaseClient,
   alreadyLoaded: Property[] = []
 ): Promise<Property[]> {
-  const fromLoaded = getHomeFeaturedListings(alreadyLoaded).items;
   const dedicated = await fetchActiveFeaturedRows(supabase);
+  const fromLoaded = getHomeFeaturedListings(alreadyLoaded).items;
   const byId = new Map<string, Property>();
 
-  for (const listing of [...dedicated, ...fromLoaded]) {
+  for (const listing of [...fromLoaded, ...dedicated]) {
     byId.set(listing.id, listing);
   }
 
@@ -37,16 +39,24 @@ export async function loadHomeFeaturedListings(
 async function fetchActiveFeaturedRows(supabase: SupabaseClient): Promise<Property[]> {
   const now = Date.now();
 
-  async function loadRows(client: SupabaseClient) {
-    const nowIso = getPublicListingExpiryFilterIso(new Date(now));
-    const { data, error } = await client
+  async function run(client: SupabaseClient, select: string) {
+    return client
       .from('listings')
-      .select(FEATURED_HOME_SELECT)
+      .select(select)
       .eq('status', 'approved')
       .eq('featured_payment_status', 'confirmed')
       .not('featured_plan', 'is', null)
-      .or(`listing_expires_at.is.null,listing_expires_at.gt.${nowIso}`)
       .order('featured_starts_at', { ascending: false, nullsFirst: false });
+  }
+
+  async function loadRows(client: SupabaseClient) {
+    let { data, error } = await run(client, FEATURED_HOME_SELECT);
+
+    if (error && isMissingColumnError(error.message ?? '')) {
+      const fallback = await run(client, PUBLIC_LISTING_SELECT);
+      data = fallback.data;
+      error = fallback.error;
+    }
 
     return { data: (data ?? null) as FeaturedListingRow[] | null, error };
   }
@@ -70,9 +80,7 @@ async function fetchActiveFeaturedRows(supabase: SupabaseClient): Promise<Proper
       error = null;
     } else {
       error = userResult.error;
-      if (!data) {
-        data = userResult.data;
-      }
+      if (!data) data = userResult.data;
     }
   }
 
@@ -80,8 +88,5 @@ async function fetchActiveFeaturedRows(supabase: SupabaseClient): Promise<Proper
     return [];
   }
 
-  return data
-    .filter((row) => !isListingExpired(row.listing_expires_at ?? null, now))
-    .filter((row) => isActiveFeaturedListing(row, now))
-    .map(listingRowToProperty);
+  return data.filter((row) => showsInPublicFeaturedCarousel(row, now)).map(listingRowToProperty);
 }
