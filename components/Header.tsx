@@ -65,7 +65,7 @@ export default function Header() {
     <>
     {pathname !== '/' && (
       <div className="bg-[#07194A] text-white desktop:hidden">
-        <div className="mx-auto flex w-full max-w-xl items-center justify-between gap-3 px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
+        <div className="flex w-full items-center justify-between gap-3 px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))] sm:px-6">
           <Link href="/" className="flex min-w-0 items-center" aria-label="Potilar - Imoveis no Rio Grande do Norte">
             <span className="min-w-0">
               <span className="block truncate font-sans text-[1.65rem] font-black leading-none tracking-[-0.04em] max-[359px]:text-[1.4rem]">
