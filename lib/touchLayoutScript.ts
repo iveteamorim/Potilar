@@ -1,0 +1,1 @@
+export const touchLayoutScript = `(function(){try{var touch=navigator.maxTouchPoints>1;var big=window.matchMedia('(min-width:1400px)').matches;document.documentElement.classList.toggle('touch-ui',!!(touch&&!big));}catch(e){}})();`;

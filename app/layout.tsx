@@ -9,7 +9,9 @@ import './globals.css';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import Header from '@/components/Header';
 import RouteFooter from '@/components/RouteFooter';
+import TouchLayout from '@/components/TouchLayout';
 import PwaRegister from '@/components/PwaRegister';
+import { touchLayoutScript } from '@/lib/touchLayoutScript';
 
 const GOOGLE_ADS_ID = 'AW-18334944821';
 
@@ -88,8 +90,10 @@ export default function RootLayout({
   const websiteJsonLd = buildWebsiteJsonLd();
 
   return (
-    <html lang="pt-BR" className={`${jakarta.variable} ${dmSerif.variable}`}>
+    <html lang="pt-BR" className={`${jakarta.variable} ${dmSerif.variable}`} suppressHydrationWarning>
       <body className="flex min-h-screen flex-col font-sans">
+        <script dangerouslySetInnerHTML={{ __html: touchLayoutScript }} />
+        <TouchLayout />
         <Script src={`https://www.googletagmanager.com/gtag/js?id=${GOOGLE_ADS_ID}`} strategy="afterInteractive" />
         <Script id="google-ads-tag" strategy="afterInteractive">
           {`

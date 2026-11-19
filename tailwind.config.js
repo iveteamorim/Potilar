@@ -69,10 +69,17 @@ export default {
   },
   plugins: [
     function ({ addVariant }) {
-      // iPad landscape is wider than 1024px. Keep the touch layout there.
-      // The previous desktop layout stays on a mouse or trackpad.
-      addVariant('desktop', '@media (min-width: 1024px) and (hover: hover) and (pointer: fine)');
-      addVariant('max-desktop', '@media (max-width: 1023px), (hover: none), (pointer: coarse)');
+      // iPad landscape is wider than 1024px and Safari reports a fine pointer.
+      // touch-ui keeps that screen on the mobile layout. A mouse stays on desktop.
+      addVariant(
+        'desktop',
+        '@media (min-width: 1024px) and (hover: hover) and (pointer: fine) and (not (any-pointer: coarse)) { html:not(.touch-ui) & }'
+      );
+      addVariant('max-desktop', [
+        '@media (max-width: 1023px)',
+        '@media (any-pointer: coarse)',
+        'html.touch-ui &'
+      ]);
     }
   ]
 };
