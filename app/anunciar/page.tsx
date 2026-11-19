@@ -96,7 +96,7 @@ export default async function AnunciarPage({
     : 'Publique casas, apartamentos, terrenos e imóveis de temporada em qualquer cidade do Rio Grande do Norte.';
 
   return (
-    <main className="section-padding bg-[#EAF3FF] dark:bg-slate-950 lg:bg-white">
+    <main className="section-padding bg-[#EAF3FF] dark:bg-slate-950 desktop:bg-white">
       <div className="mx-auto flex max-w-4xl flex-col items-center gap-10">
         <div className="mx-auto max-w-2xl space-y-6 text-center">
           <div>
@@ -108,8 +108,8 @@ export default async function AnunciarPage({
             </h1>
             <p className="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300">
               {promoActive
-                ? 'Publique seu primeiro anúncio grátis na Potilar. Cada anúncio fica ativo por 60 dias.'
-                : `Publique seu primeiro anúncio gratuito por 60 dias. ${cityLine}`}
+                ? `Publique até ${freeLimit} anúncios grátis na Potilar. Cada anúncio fica ativo por 60 dias.`
+                : `Publique até ${freeLimit} anúncios grátis por 60 dias. ${cityLine}`}
             </p>
           </div>
         </div>
@@ -133,7 +133,7 @@ export default async function AnunciarPage({
             <p className="mx-auto max-w-2xl text-sm leading-7 text-slate-600 dark:text-slate-300">
               Para publicar e gerenciar seus anúncios, entre ou crie uma conta gratuita. Depois, clique em Anunciar imóvel dentro de Minha conta.
             </p>
-            <Link href="/login" className="inline-flex w-full justify-center rounded-2xl bg-[#C6EF3A] px-5 py-3 text-sm font-bold text-[#07194A] lg:bg-ocean-600 lg:font-semibold lg:text-white">
+            <Link href="/login" className="inline-flex w-full justify-center rounded-2xl bg-[#C6EF3A] px-5 py-3 text-sm font-bold text-[#07194A] desktop:bg-ocean-600 desktop:font-semibold desktop:text-white">
               Entrar ou criar conta
             </Link>
           </div>

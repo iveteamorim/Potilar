@@ -87,9 +87,9 @@ export function getLaunchPromoDeadlineLabel() {
 }
 
 export function getLaunchPromoShortLabel() {
-  return isLaunchPromoActive()
-    ? `1 anúncio grátis até ${getLaunchPromoDeadlineLabel()}`
-    : '2 anúncios grátis';
+  const limit = getFreeListingLimit();
+  const label = limit === 1 ? '1 anúncio grátis' : `${limit} anúncios grátis`;
+  return isLaunchPromoActive() ? `${label} até ${getLaunchPromoDeadlineLabel()}` : label;
 }
 
 export function formatPlanPrice(value: number, options?: { perMonth?: boolean }) {

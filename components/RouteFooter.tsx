@@ -31,7 +31,7 @@ export default function RouteFooter() {
 
   if (pathname === '/login') {
     return (
-      <footer className="border-t border-transparent bg-[#EAF3FF] px-4 py-4 text-xs text-slate-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-400 lg:border-sand-200 lg:bg-white/70">
+      <footer className="border-t border-transparent bg-[#EAF3FF] px-4 py-4 text-xs text-slate-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-400 desktop:border-sand-200 desktop:bg-white/70">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-x-4 gap-y-2">
           <span>Potilar &copy; 2026</span>
           <Link href="/termos-de-uso" className="font-semibold text-ocean-700">
@@ -51,5 +51,5 @@ export default function RouteFooter() {
 
   const lightMobileFooter = pathname === '/' || pathname === '/anunciar' || pathname === '/imoveis';
 
-  return <Footer className={lightMobileFooter ? 'max-lg:border-transparent max-lg:bg-[#EAF3FF]' : ''} />;
+  return <Footer className={lightMobileFooter ? 'max-desktop:border-transparent max-desktop:bg-[#EAF3FF]' : ''} />;
 }

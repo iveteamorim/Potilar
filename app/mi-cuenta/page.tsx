@@ -15,7 +15,7 @@ import ListingMercadoPagoButton from '@/components/ListingMercadoPagoButton';
 import LogoutButton from '@/components/LogoutButton';
 import PropertyCard from '@/components/PropertyCard';
 import type { Property } from '@/data/properties';
-import { PLANS, formatPlanPrice, getFreeListingLimit, getHighlightLabel, getHighlightPrice, getLaunchPromoDeadlineLabel, isLaunchPromoActive } from '@/lib/plans';
+import { PLANS, formatPlanPrice, getFreeListingLimit, getHighlightLabel, getHighlightPrice } from '@/lib/plans';
 import { SEARCH_ALERTS_ENABLED } from '@/lib/config';
 import { getListingHref } from '@/lib/listingUrls';
 import { getPaymentCode } from '@/lib/pix';
@@ -1165,9 +1165,7 @@ export default async function MinhaContaPage({
               <div className="glass-card hidden p-8 text-center sm:block">
                 <p className="text-base font-semibold text-slate-900 dark:text-white">Nenhum anúncio ainda</p>
                 <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-                  {isLaunchPromoActive()
-                    ? 'Publique seu primeiro anúncio grátis.'
-                    : 'Publique seu primeiro anúncio gratuito.'}
+                  {`Publique até ${getFreeListingLimit()} anúncios grátis.`}
                 </p>
                 <Link href="/anunciar" className="mt-5 inline-flex rounded-2xl bg-ocean-600 px-5 py-3 text-sm font-semibold text-white">
                   Anunciar imóvel

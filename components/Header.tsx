@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Calculator, Home, Menu, Plus, ShieldCheck, UserRound, X } from 'lucide-react';
+import { Calculator, Menu, Plus, ShieldCheck, UserRound, X } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Logo from './Logo';
@@ -64,18 +64,15 @@ export default function Header() {
   return (
     <>
     {pathname !== '/' && (
-      <div className="bg-[#07194A] text-white lg:hidden">
-        <div className="flex items-center justify-between gap-3 px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
-          <Link href="/" className="flex min-w-0 items-center gap-2" aria-label="Potilar - Imoveis no Rio Grande do Norte">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center text-white" aria-hidden="true">
-              <Home className="h-8 w-8" strokeWidth={1.75} />
-            </span>
+      <div className="bg-[#07194A] text-white desktop:hidden">
+        <div className="mx-auto flex w-full max-w-xl items-center justify-between gap-3 px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
+          <Link href="/" className="flex min-w-0 items-center" aria-label="Potilar - Imoveis no Rio Grande do Norte">
             <span className="min-w-0">
-              <span className="block font-sans text-[1.65rem] font-black leading-none tracking-[-0.04em]">
+              <span className="block truncate font-sans text-[1.65rem] font-black leading-none tracking-[-0.04em] max-[359px]:text-[1.4rem]">
                 <span className="text-white">Poti</span>
                 <span style={{ color: '#44B536' }}>Lar</span>
               </span>
-              <span className="mt-0.5 block text-[11px] font-medium text-white/75">O portal de imóveis do RN</span>
+              <span className="mt-0.5 block truncate text-[11px] font-medium text-white/75 max-[359px]:text-[10px]">O portal de imóveis do RN</span>
             </span>
           </Link>
           <Link
@@ -88,8 +85,8 @@ export default function Header() {
         </div>
       </div>
     )}
-    <header className="sticky top-0 z-40 w-full border-b border-sand-200 bg-white max-lg:hidden dark:border-slate-800 dark:bg-slate-950">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
+    <header className="sticky top-0 z-40 w-full border-b border-sand-200 bg-white max-desktop:hidden dark:border-slate-800 dark:bg-slate-950">
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 desktop:px-8">
         <Logo />
         <div className="flex items-center gap-3.5 sm:gap-4">
           {isActive('/mi-cuenta') && isParticularAccount ? (

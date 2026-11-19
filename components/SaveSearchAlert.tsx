@@ -83,7 +83,7 @@ export default function SaveSearchAlert() {
       {isAuthenticated === false ? (
         <Link
           href={loginHref}
-          className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#C6EF3A] px-4 py-3 text-sm font-extrabold text-[#07194A] shadow-sm transition hover:bg-[#b6e02a] lg:bg-emerald-600 lg:text-white lg:hover:bg-emerald-700"
+          className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#C6EF3A] px-4 py-3 text-sm font-extrabold text-[#07194A] shadow-sm transition hover:bg-[#b6e02a] desktop:bg-emerald-600 desktop:text-white desktop:hover:bg-emerald-700"
         >
           <Bell className="h-4 w-4" aria-hidden="true" />
           Salvar busca
@@ -93,7 +93,7 @@ export default function SaveSearchAlert() {
           type="button"
           onClick={saveAlert}
           disabled={loading || isAuthenticated === null}
-          className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#C6EF3A] px-4 py-3 text-sm font-extrabold text-[#07194A] shadow-sm transition hover:bg-[#b6e02a] disabled:opacity-60 lg:bg-emerald-600 lg:text-white lg:hover:bg-emerald-700"
+          className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#C6EF3A] px-4 py-3 text-sm font-extrabold text-[#07194A] shadow-sm transition hover:bg-[#b6e02a] disabled:opacity-60 desktop:bg-emerald-600 desktop:text-white desktop:hover:bg-emerald-700"
         >
           {status.startsWith('Alerta') ? <CheckCircle2 className="h-4 w-4" aria-hidden="true" /> : <Bell className="h-4 w-4" aria-hidden="true" />}
           {loading ? 'Salvando...' : 'Salvar busca'}

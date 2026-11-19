@@ -66,17 +66,14 @@ export default function MobileHome() {
 
   return (
     <div className="bg-[#07194A] text-white">
-      <div className="flex items-center justify-between gap-3 px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
-        <Link href="/" className="flex min-w-0 items-center gap-2" aria-label="Potilar - Imoveis no Rio Grande do Norte">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center text-white" aria-hidden="true">
-            <Home className="h-8 w-8" strokeWidth={1.75} />
-          </span>
+      <div className="mx-auto flex w-full max-w-xl items-center justify-between gap-3 px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
+        <Link href="/" className="flex min-w-0 items-center" aria-label="Potilar - Imoveis no Rio Grande do Norte">
           <span className="min-w-0">
-            <span className="block font-sans text-[1.65rem] font-black leading-none tracking-[-0.04em]">
+            <span className="block truncate font-sans text-[1.65rem] font-black leading-none tracking-[-0.04em] max-[359px]:text-[1.4rem]">
               <span className="text-white">Poti</span>
               <span style={{ color: '#44B536' }}>Lar</span>
             </span>
-            <span className="mt-0.5 block text-[11px] font-medium text-white/75">O portal de imóveis do RN</span>
+            <span className="mt-0.5 block truncate text-[11px] font-medium text-white/75 max-[359px]:text-[10px]">O portal de imóveis do RN</span>
           </span>
         </Link>
         <Link
@@ -88,7 +85,7 @@ export default function MobileHome() {
         </Link>
       </div>
 
-      <div className="relative h-52">
+      <div className="relative mx-auto h-52 w-full max-w-xl sm:h-72 md:h-80">
         <div
           className="absolute inset-0 bg-cover bg-center"
           style={{ backgroundImage: "url('/images/ponta-negra-mobile.jpg')" }}
@@ -97,13 +94,13 @@ export default function MobileHome() {
         />
         <div className="absolute inset-0 bg-gradient-to-b from-[#07194A]/25 via-[#07194A]/10 to-[#07194A]" />
         <div className="absolute inset-x-0 bottom-0 px-4 pb-3">
-          <h1 className="max-w-[18rem] font-sans text-[1.7rem] font-semibold leading-snug tracking-[-0.02em] text-white">
+          <h1 className="max-w-[18rem] font-sans text-[1.7rem] font-semibold leading-snug tracking-[-0.02em] text-white max-[359px]:max-w-none max-[359px]:text-[1.45rem]">
             Encontre o seu imóvel no Rio Grande do Norte
           </h1>
         </div>
       </div>
 
-      <div className="space-y-3 px-4 pb-5 pt-4">
+      <div className="mx-auto w-full max-w-xl space-y-3 px-4 pb-5 pt-4">
         <div className="grid grid-cols-3 gap-1 rounded-2xl border border-white/15 bg-[#0c2458] p-1">
           {transactions.map((option) => {
             const selected = transaction === option.value;
@@ -113,11 +110,11 @@ export default function MobileHome() {
                 key={option.value}
                 type="button"
                 onClick={() => setTransaction(option.value)}
-                className={`inline-flex h-11 items-center justify-center gap-1 rounded-xl px-1 text-[13px] font-bold ${
+                className={`inline-flex h-11 min-w-0 items-center justify-center gap-1 rounded-xl px-1 text-[13px] font-bold max-[359px]:gap-0.5 max-[359px]:px-0.5 max-[359px]:text-[11px] ${
                   selected ? 'bg-[#C6EF3A] text-[#07194A]' : 'text-white'
                 }`}
               >
-                <Icon className="h-4 w-4 shrink-0" strokeWidth={2.25} aria-hidden="true" />
+                <Icon className="h-4 w-4 shrink-0 max-[359px]:h-3.5 max-[359px]:w-3.5" strokeWidth={2.25} aria-hidden="true" />
                 {option.label}
               </button>
             );
@@ -176,13 +173,13 @@ export default function MobileHome() {
 
         <div className="grid grid-cols-3 gap-2 pt-2 text-center">
           {[
-            { label: '1º anúncio grátis', Icon: Check },
+            { label: '2 anúncios grátis', Icon: Check },
             { label: 'Mais visibilidade', Icon: Eye },
             { label: 'Leads exclusivos', Icon: ShieldCheck }
           ].map(({ label, Icon }) => (
             <div key={label} className="px-1">
               <Icon className="mx-auto h-5 w-5 text-[#C6EF3A]" aria-hidden="true" />
-              <p className="mt-1 text-[11px] font-semibold leading-tight text-white/85">{label}</p>
+              <p className="mt-1 text-[11px] font-semibold leading-tight text-white/85 max-[359px]:text-[10px]">{label}</p>
             </div>
           ))}
         </div>
@@ -192,11 +189,11 @@ export default function MobileHome() {
         className="fixed inset-x-0 bottom-0 z-50 border-t border-white/10 bg-[#091A49] pb-[env(safe-area-inset-bottom)]"
         aria-label="Navegação principal"
       >
-        <div className="grid grid-cols-5">
+        <div className="mx-auto grid w-full max-w-xl grid-cols-5">
           {nav.map((item) => {
             const active = item.label === 'Chat' ? pathname.startsWith('/mi-cuenta/mensagens') : item.href === '/' ? pathname === '/' : pathname.startsWith(item.href);
             const Icon = item.icon;
-            const className = `flex min-h-11 flex-col items-center justify-center gap-1 py-2 text-[11px] font-semibold ${active ? 'text-[#C6EF3A]' : 'text-white/70'}`;
+            const className = `flex min-h-11 min-w-0 flex-col items-center justify-center gap-1 px-0.5 py-2 text-[11px] font-semibold max-[359px]:text-[10px] ${active ? 'text-[#C6EF3A]' : 'text-white/70'}`;
             if (item.label === 'Chat') {
               return (
                 <button key={item.label} type="button" onClick={openChat} className={className}>
@@ -215,7 +212,7 @@ export default function MobileHome() {
           <button
             type="button"
             onClick={openMenu}
-            className="flex min-h-11 flex-col items-center justify-center gap-1 py-2 text-[11px] font-semibold text-white/70"
+            className="flex min-h-11 min-w-0 flex-col items-center justify-center gap-1 px-0.5 py-2 text-[11px] font-semibold text-white/70 max-[359px]:text-[10px]"
           >
             <Menu className="h-5 w-5" aria-hidden="true" />
             Menu

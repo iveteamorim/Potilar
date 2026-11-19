@@ -483,7 +483,7 @@ export default function AuthForm() {
   }
 
   return (
-    <div className="space-y-3 rounded-[2rem] border border-sand-300/90 bg-white p-4 shadow-[0_24px_70px_rgba(15,23,42,0.08)] ring-1 ring-white/80 sm:space-y-4 sm:p-6 lg:p-7 dark:border-slate-700 dark:bg-slate-900 dark:ring-slate-800">
+    <div className="space-y-3 rounded-[2rem] border border-sand-300/90 bg-white p-4 shadow-[0_24px_70px_rgba(15,23,42,0.08)] ring-1 ring-white/80 sm:space-y-4 sm:p-6 desktop:p-7 dark:border-slate-700 dark:bg-slate-900 dark:ring-slate-800">
       <div className="grid grid-cols-2 border-b border-sand-200 text-sm font-semibold dark:border-slate-800">
         <button type="button" onClick={() => setMode('login')} disabled={isRecovery} className={`border-b-2 px-3 py-2.5 transition sm:px-4 sm:py-3 ${mode === 'login' ? 'border-ocean-600 text-ocean-700' : 'border-transparent text-slate-500 hover:text-slate-800'} disabled:cursor-not-allowed disabled:opacity-60`}>
           Entrar
@@ -691,7 +691,7 @@ export default function AuthForm() {
         </div>
       )}
 
-      <button type="button" onClick={submit} disabled={loading} className="w-full rounded-2xl bg-[#C6EF3A] px-5 py-3 text-sm font-bold text-[#07194A] shadow-sm transition hover:-translate-y-0.5 hover:bg-[#b6e02a] hover:shadow-lg disabled:translate-y-0 disabled:opacity-60 lg:bg-ocean-600 lg:font-semibold lg:text-white lg:hover:bg-ocean-700">
+      <button type="button" onClick={submit} disabled={loading} className="w-full rounded-2xl bg-[#C6EF3A] px-5 py-3 text-sm font-bold text-[#07194A] shadow-sm transition hover:-translate-y-0.5 hover:bg-[#b6e02a] hover:shadow-lg disabled:translate-y-0 disabled:opacity-60 desktop:bg-ocean-600 desktop:font-semibold desktop:text-white desktop:hover:bg-ocean-700">
         {loading
       ? 'Aguarde...'
           : isRecovery

@@ -43,10 +43,10 @@ export default function LoginPage({ searchParams }: Props) {
       ];
 
   return (
-    <div className="flex flex-1 flex-col bg-[#EAF3FF] dark:bg-slate-950 lg:bg-white">
-    <main className="bg-[#EAF3FF] px-4 py-4 dark:bg-slate-950 sm:px-6 sm:py-8 lg:bg-white lg:px-8 lg:py-14">
-      <div className="mx-auto grid max-w-6xl gap-5 lg:grid-cols-[0.9fr_1.1fr] lg:gap-10">
-        <div className="relative hidden overflow-hidden rounded-[2rem] bg-white p-1 lg:block lg:min-h-[520px] dark:bg-slate-950">
+    <div className="flex flex-1 flex-col bg-[#EAF3FF] dark:bg-slate-950 desktop:bg-white">
+    <main className="bg-[#EAF3FF] px-4 py-4 dark:bg-slate-950 sm:px-6 sm:py-8 desktop:bg-white desktop:px-8 desktop:py-14">
+      <div className="mx-auto grid max-w-6xl gap-5 desktop:grid-cols-[0.9fr_1.1fr] desktop:gap-10">
+        <div className="relative hidden overflow-hidden rounded-[2rem] bg-white p-1 desktop:block desktop:min-h-[520px] dark:bg-slate-950">
           <p className="text-xs font-bold uppercase tracking-[0.18em] text-ocean-600 sm:text-sm">
             {professionalFlow ? 'Plano profissional' : 'Conta Potilar'}
           </p>
@@ -58,7 +58,7 @@ export default function LoginPage({ searchParams }: Props) {
               ? 'Crie sua conta profissional grátis. O pagamento só aparece se você quiser publicar acima do limite gratuito.'
               : 'Favoritos, alertas, mensagens e anúncios em um só lugar.'}
           </p>
-          <div className="mt-8 hidden gap-3 text-sm font-semibold text-slate-700 dark:text-slate-200 lg:grid">
+          <div className="mt-8 hidden gap-3 text-sm font-semibold text-slate-700 dark:text-slate-200 desktop:grid">
             {items.map(([Icon, label]) => (
               <div key={label as string} className="flex items-center gap-3">
                 <span className="flex h-9 w-9 items-center justify-center rounded-full bg-ocean-50 text-ocean-700">
@@ -68,7 +68,7 @@ export default function LoginPage({ searchParams }: Props) {
               </div>
             ))}
           </div>
-          <div className="mt-8 hidden flex-wrap gap-3 text-xs font-semibold text-slate-500 lg:flex">
+          <div className="mt-8 hidden flex-wrap gap-3 text-xs font-semibold text-slate-500 desktop:flex">
             <span className="rounded-full border border-ocean-100 bg-white px-3 py-2">+ de 20 imóveis publicados</span>
             <span className="rounded-full border border-ocean-100 bg-white px-3 py-2">100% focado no Rio Grande do Norte</span>
           </div>

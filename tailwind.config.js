@@ -67,5 +67,12 @@ export default {
       }
     }
   },
-  plugins: []
+  plugins: [
+    function ({ addVariant }) {
+      // iPad landscape is wider than 1024px. Keep the touch layout there.
+      // The previous desktop layout stays on a mouse or trackpad.
+      addVariant('desktop', '@media (min-width: 1024px) and (hover: hover) and (pointer: fine)');
+      addVariant('max-desktop', '@media (max-width: 1023px), (hover: none), (pointer: coarse)');
+    }
+  ]
 };

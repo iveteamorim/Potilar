@@ -401,7 +401,7 @@ export default async function PropertyDetailPage({ params }: { params: { slug: s
   );
 
   return (
-    <main className="px-4 py-5 sm:px-6 lg:px-8 lg:py-7">
+    <main className="px-4 py-5 sm:px-6 desktop:px-8 desktop:py-7">
       <ListingViewTracker listingId={property.id} />
       <script
         type="application/ld+json"
@@ -419,7 +419,7 @@ export default async function PropertyDetailPage({ params }: { params: { slug: s
             {breadcrumb.intentLabel}
           </Link>
         </nav>
-        <div className="grid gap-7 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start">
+        <div className="grid gap-7 desktop:grid-cols-[minmax(0,1fr)_340px] desktop:items-start">
           <div className="min-w-0 overflow-x-clip space-y-7">
             <PropertyGallery images={property.images} />
         <div className="space-y-3">
@@ -495,7 +495,7 @@ export default async function PropertyDetailPage({ params }: { params: { slug: s
           <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
             Código do anúncio: {getListingCode(property.id)}
           </p>
-          <div className="lg:hidden">
+          <div className="desktop:hidden">
             {contactCard}
           </div>
           <div className="flex flex-wrap gap-3">
@@ -565,7 +565,7 @@ export default async function PropertyDetailPage({ params }: { params: { slug: s
           </div>
         </section>
           </div>
-          <aside className="hidden min-w-0 lg:sticky lg:top-24 lg:block">
+          <aside className="hidden min-w-0 desktop:sticky desktop:top-24 desktop:block">
             {contactCard}
           </aside>
         </div>

@@ -37,9 +37,10 @@ export type FaqItem = {
 };
 
 export function getFaqItems(now = new Date()): FaqItem[] {
+  const freeLimit = getFreeListingLimit(now);
   const pricingAnswer = isLaunchPromoActive(now)
-    ? `Na promoção de lançamento, cada conta pode publicar seu primeiro anúncio grátis por 60 dias. Depois disso, anúncios adicionais têm taxa via Pix. Veja valores em ${KEY_URLS.plans}.`
-    : `O primeiro anúncio por conta é gratuito por 60 dias. Anúncios adicionais têm taxa via Pix. Veja valores em ${KEY_URLS.plans}.`;
+    ? `Na promoção de lançamento, cada conta pode publicar até ${freeLimit} anúncios grátis por 60 dias. Depois disso, anúncios adicionais têm taxa via Pix. Veja valores em ${KEY_URLS.plans}.`
+    : `Cada conta particular pode publicar até ${freeLimit} anúncios grátis por 60 dias. Anúncios adicionais têm taxa via Pix. Veja valores em ${KEY_URLS.plans}.`;
 
   return [
     {
@@ -165,10 +166,12 @@ export function buildWebsiteJsonLd() {
 }
 
 function pricingSummary(now = new Date()) {
+  const freeLimit = getFreeListingLimit(now);
+  const label = freeLimit === 1 ? '1 anúncio grátis' : `${freeLimit} anúncios grátis`;
   if (isLaunchPromoActive(now)) {
-    return 'Promoção de lançamento: 1 anúncio grátis por conta, 60 dias.';
+    return `Promoção de lançamento: ${label} por conta, 60 dias.`;
   }
-  return '1 anúncio grátis por conta (60 dias); anúncios adicionais com taxa via Pix.';
+  return `${label} por conta (60 dias); anúncios adicionais com taxa via Pix.`;
 }
 
 export function buildLlmsTxt(now = new Date()) {

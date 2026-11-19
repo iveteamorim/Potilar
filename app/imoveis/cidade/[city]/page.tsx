@@ -5,7 +5,7 @@ import FavoriteAwarePropertyList from '@/components/FavoriteAwarePropertyList';
 import PropertyMap from '@/components/PropertyMapLoader';
 import CitySeoContent from '@/components/CitySeoContent';
 import { BASE_URL } from '@/lib/config';
-import { getFreeListingLimit, getLaunchPromoDeadlineLabel, isLaunchPromoActive } from '@/lib/plans';
+import { getFreeListingLimit } from '@/lib/plans';
 import {
   getCityPagePath,
   getCitySeoDescription,
@@ -215,9 +215,7 @@ export default async function CityListingsPage({ params }: { params: { city: str
   const cityName = resolveCityNameFromSlug(params.city)!;
   const listings = await getCityListings(params.city);
   const anunciarHref = `/anunciar?cidade=${encodeURIComponent(cityName)}`;
-  const promoActive = isLaunchPromoActive();
   const freeLimit = getFreeListingLimit();
-  const promoDeadline = getLaunchPromoDeadlineLabel();
 
   return (
     <main className="section-padding">
@@ -257,9 +255,7 @@ export default async function CityListingsPage({ params }: { params: { city: str
                 </h2>
                 <p className="mx-auto max-w-2xl text-sm leading-7 text-slate-600 dark:text-slate-300">
                   Crie um alerta para ser avisado quando surgirem anúncios nesta cidade ou seja o primeiro a anunciar em {cityName}.
-                  {promoActive
-                    ? ' Particulares podem publicar o primeiro anúncio grátis na Potilar.'
-                    : ' Particulares podem publicar o primeiro anúncio grátis na Potilar.'}
+                  {` Particulares podem publicar até ${freeLimit} anúncios grátis na Potilar.`}
                 </p>
                 <Link href={anunciarHref} className="inline-flex rounded-2xl bg-ocean-600 px-6 py-3 text-sm font-semibold text-white">
                   Seja o primeiro a anunciar

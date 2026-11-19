@@ -30,12 +30,12 @@ export default function MobileListingsControls({ items }: Props) {
   }
 
   return (
-    <div className="space-y-3 lg:hidden">
-      <div className="grid grid-cols-3 gap-2">
+    <div className="space-y-3 desktop:hidden">
+      <div className="grid grid-cols-3 gap-2 max-[359px]:gap-1">
         <button
           type="button"
           onClick={() => setShowFilters((current) => !current)}
-          className={`inline-flex h-11 items-center justify-center gap-2 rounded-2xl border px-3 text-xs font-bold ${
+          className={`inline-flex h-11 min-w-0 items-center justify-center gap-2 rounded-2xl border px-3 text-xs font-bold max-[359px]:gap-1 max-[359px]:px-1.5 max-[359px]:text-[11px] ${
             showFilters
               ? 'border-ocean-700 bg-ocean-700 text-white'
               : 'border-sand-200 bg-white text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200'
@@ -52,7 +52,7 @@ export default function MobileListingsControls({ items }: Props) {
           <select
             value={sort}
             onChange={(event) => updateSort(event.target.value)}
-            className="h-11 w-full appearance-none rounded-2xl border border-sand-200 bg-white pl-9 pr-3 text-xs font-bold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+            className="h-11 w-full appearance-none rounded-2xl border border-sand-200 bg-white pl-9 pr-2 text-xs font-bold text-slate-700 max-[359px]:pl-7 max-[359px]:text-[11px] dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
             aria-label="Ordenar anúncios"
           >
             <option value="">Ordenar</option>
@@ -63,7 +63,7 @@ export default function MobileListingsControls({ items }: Props) {
         <button
           type="button"
           onClick={() => setShowMap((current) => !current)}
-          className={`inline-flex h-11 items-center justify-center gap-2 rounded-2xl border px-3 text-xs font-bold ${
+          className={`inline-flex h-11 min-w-0 items-center justify-center gap-2 rounded-2xl border px-3 text-xs font-bold max-[359px]:gap-1 max-[359px]:px-1.5 max-[359px]:text-[11px] ${
             showMap
               ? 'border-ocean-700 bg-ocean-700 text-white'
               : 'border-sand-200 bg-white text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200'

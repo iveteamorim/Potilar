@@ -14,7 +14,7 @@ import { loadHomeFeaturedListings } from '@/lib/homeFeaturedListings';
 import { orderListingsForDisplay } from '@/lib/propertyOrdering';
 import type { Property } from '@/data/properties';
 import Link from 'next/link';
-import { getFreeListingLimit, getLaunchPromoDeadlineLabel, isLaunchPromoActive } from '@/lib/plans';
+import { getFreeListingLimit } from '@/lib/plans';
 import { POTILAR_DEFINITION } from '@/lib/siteIdentity';
 import agencyMatchImage from '@/components/ayudamosencontrarimobiliaria.jpg';
 import NewsShareButtons from '@/components/NewsShareButtons';
@@ -166,24 +166,22 @@ export default async function HomePage() {
   }
 
   return (
-    <main className="bg-[#EAF3FF] lg:bg-white">
-      <div className="lg:hidden">
+    <main className="bg-[#EAF3FF] desktop:bg-white">
+      <div className="desktop:hidden">
         <MobileHome />
       </div>
-      <div className="hidden lg:block">
+      <div className="hidden desktop:block">
         <HeroSearch />
       </div>
 
-      <section className="hidden border-b border-sand-200 bg-white py-8 dark:border-slate-800 dark:bg-slate-950 lg:block">
+      <section className="hidden border-b border-sand-200 bg-white py-8 dark:border-slate-800 dark:bg-slate-950 desktop:block">
         <div className="mx-auto grid max-w-6xl gap-6 px-4 sm:px-6 md:grid-cols-[1fr_auto] md:items-center">
           <div className="hidden md:block">
             <h2 className="mt-2 text-2xl font-semibold leading-tight text-slate-950 dark:text-white sm:text-3xl">
               Tem um imóvel no Rio Grande do Norte?
             </h2>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600 dark:text-slate-300">
-              {isLaunchPromoActive()
-                ? 'Publique seu primeiro anúncio grátis na Potilar.'
-                : 'Anuncie seu primeiro imóvel grátis na Potilar.'}
+              {`Publique até ${getFreeListingLimit()} anúncios grátis na Potilar.`}
             </p>
           </div>
           <div className="space-y-2 text-center sm:text-left">
@@ -203,12 +201,12 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="bg-[#EAF3FF] px-4 pb-5 pt-5 dark:bg-slate-950 sm:px-6 sm:pb-6 sm:pt-16 lg:bg-white lg:px-8 lg:pb-8 lg:pt-20">
+      <section className="bg-[#EAF3FF] px-4 pb-5 pt-5 dark:bg-slate-950 sm:px-6 sm:pb-6 sm:pt-16 desktop:bg-white desktop:px-8 desktop:pb-8 desktop:pt-20">
         <div className="mx-auto max-w-6xl">
           <div className="flex items-center justify-between">
             <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">
-              <span className="text-[#091A49] dark:text-white lg:hidden">Destaques no RN</span>
-              <span className="hidden lg:inline">
+              <span className="text-[#091A49] dark:text-white desktop:hidden">Destaques no RN</span>
+              <span className="hidden desktop:inline">
                 Imóveis em destaque
                 {featured.length > 0 ? (
                   <span className="ml-2 text-base font-medium text-slate-500 dark:text-slate-400">
@@ -218,8 +216,8 @@ export default async function HomePage() {
               </span>
             </h2>
             <Link href="/imoveis" className="text-sm font-semibold text-ocean-700">
-              <span className="text-[#091A49] lg:hidden">Ver todos →</span>
-              <span className="hidden lg:inline">Ver todos</span>
+              <span className="text-[#091A49] desktop:hidden">Ver todos →</span>
+              <span className="hidden desktop:inline">Ver todos</span>
             </Link>
           </div>
           {featured.length > 0 ? (
@@ -253,8 +251,8 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="bg-[#EAF3FF] px-4 pb-4 pt-6 dark:bg-slate-950 sm:px-6 sm:pb-16 sm:pt-8 lg:bg-white lg:px-8 lg:pb-24 lg:pt-10">
-        <div className="mx-auto grid max-w-6xl items-center gap-0 lg:grid-cols-[1.25fr_0.75fr]">
+      <section className="bg-[#EAF3FF] px-4 pb-4 pt-6 dark:bg-slate-950 sm:px-6 sm:pb-16 sm:pt-8 desktop:bg-white desktop:px-8 desktop:pb-24 desktop:pt-10">
+        <div className="mx-auto grid max-w-6xl items-center gap-0 desktop:grid-cols-[1.25fr_0.75fr]">
           <div className="overflow-hidden border border-sand-200 bg-sand-100 dark:border-slate-800 dark:bg-slate-900">
             <img
               src={agencyMatchImage.src}
@@ -262,7 +260,7 @@ export default async function HomePage() {
               className="h-[300px] w-full object-cover object-[50%_30%] sm:h-[380px]"
             />
           </div>
-          <div className="border border-sand-200 bg-white p-7 shadow-[0_18px_45px_rgba(15,23,42,0.12)] dark:border-slate-800 dark:bg-slate-900 lg:-ml-12">
+          <div className="border border-sand-200 bg-white p-7 shadow-[0_18px_45px_rgba(15,23,42,0.12)] dark:border-slate-800 dark:bg-slate-900 desktop:-ml-12">
             <h2 className="text-2xl font-semibold leading-tight text-ocean-700 dark:text-ocean-300 sm:text-3xl">
               Recomendamos as imobiliárias mais adequadas para vender ou alugar seu imóvel
             </h2>
@@ -277,8 +275,8 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="bg-[#EAF3FF] px-4 pb-10 pt-4 dark:bg-slate-950 sm:px-6 sm:py-14 lg:bg-white lg:px-8 lg:py-12">
-        <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[1fr_1.2fr]">
+      <section className="bg-[#EAF3FF] px-4 pb-10 pt-4 dark:bg-slate-950 sm:px-6 sm:py-14 desktop:bg-white desktop:px-8 desktop:py-12">
+        <div className="mx-auto grid max-w-6xl gap-8 desktop:grid-cols-[1fr_1.2fr]">
           <div className="hidden md:block">
             <h2 className="hidden text-3xl font-semibold text-ocean-700 dark:text-ocean-300 md:block">
               Busca por mapa
@@ -368,7 +366,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="bg-[#EAF3FF] px-4 pb-12 pt-6 dark:bg-slate-950 sm:px-6 sm:pb-16 sm:pt-10 lg:bg-white lg:px-8 lg:pb-16 lg:pt-8">
+      <section className="bg-[#EAF3FF] px-4 pb-12 pt-6 dark:bg-slate-950 sm:px-6 sm:pb-16 sm:pt-10 desktop:bg-white desktop:px-8 desktop:pb-16 desktop:pt-8">
         <div className="mx-auto max-w-6xl">
           <div className="border-b border-sand-200 pb-4 dark:border-slate-800">
             <h2 className="text-3xl font-semibold text-slate-950 dark:text-white">
@@ -428,14 +426,14 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="border-y border-transparent bg-[#EAF3FF] py-6 dark:border-slate-800 dark:bg-slate-950 lg:border-sand-200 lg:bg-white">
+      <section className="border-y border-transparent bg-[#EAF3FF] py-6 dark:border-slate-800 dark:bg-slate-950 desktop:border-sand-200 desktop:bg-white">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <h2 className="text-sm font-semibold text-slate-950 dark:text-white">Sobre a Potilar</h2>
           <p className="mt-2 max-w-4xl text-sm leading-7 text-slate-600 dark:text-slate-300">{POTILAR_DEFINITION}</p>
         </div>
       </section>
 
-      <section className="section-padding bg-[#EAF3FF] dark:bg-slate-950 lg:bg-white">
+      <section className="section-padding bg-[#EAF3FF] dark:bg-slate-950 desktop:bg-white">
         <div className="mx-auto max-w-6xl rounded-3xl bg-ocean-700 px-6 py-10 text-white shadow-soft">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
@@ -448,7 +446,7 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
-      <div className="h-16 bg-[#EAF3FF] lg:hidden" aria-hidden="true" />
+      <div className="h-16 bg-[#EAF3FF] desktop:hidden" aria-hidden="true" />
       <PwaInstallBanner />
     </main>
   );

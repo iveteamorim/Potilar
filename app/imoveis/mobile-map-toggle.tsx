@@ -20,7 +20,7 @@ export default function MobileMapToggle({
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="lg:hidden">
+    <div className="desktop:hidden">
       <button
         type="button"
         onClick={() => setOpen((prev) => !prev)}
