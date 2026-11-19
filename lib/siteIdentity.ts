@@ -166,7 +166,7 @@ export function buildWebsiteJsonLd() {
 }
 
 function pricingSummary(now = new Date()) {
-  const freeLimit = getFreeListingLimit(now);
+  const freeLimit: number = getFreeListingLimit(now);
   const label = freeLimit === 1 ? '1 anúncio grátis' : `${freeLimit} anúncios grátis`;
   if (isLaunchPromoActive(now)) {
     return `Promoção de lançamento: ${label} por conta, 60 dias.`;

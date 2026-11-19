@@ -87,7 +87,7 @@ export function getLaunchPromoDeadlineLabel() {
 }
 
 export function getLaunchPromoShortLabel() {
-  const limit = getFreeListingLimit();
+  const limit: number = getFreeListingLimit();
   const label = limit === 1 ? '1 anúncio grátis' : `${limit} anúncios grátis`;
   return isLaunchPromoActive() ? `${label} até ${getLaunchPromoDeadlineLabel()}` : label;
 }
