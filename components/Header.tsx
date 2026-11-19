@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Calculator, Menu, Plus, ShieldCheck, UserRound, X } from 'lucide-react';
+import { Calculator, Home, Menu, Plus, ShieldCheck, UserRound, X } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Logo from './Logo';
@@ -62,7 +62,33 @@ export default function Header() {
   }, [pathname]);
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-sand-200 bg-white dark:border-slate-800 dark:bg-slate-950">
+    <>
+    {pathname !== '/' && (
+      <div className="bg-[#07194A] text-white lg:hidden">
+        <div className="flex items-center justify-between gap-3 px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
+          <Link href="/" className="flex min-w-0 items-center gap-2" aria-label="Potilar - Imoveis no Rio Grande do Norte">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center text-white" aria-hidden="true">
+              <Home className="h-8 w-8" strokeWidth={1.75} />
+            </span>
+            <span className="min-w-0">
+              <span className="block font-sans text-[1.65rem] font-black leading-none tracking-[-0.04em]">
+                <span className="text-white">Poti</span>
+                <span style={{ color: '#44B536' }}>Lar</span>
+              </span>
+              <span className="mt-0.5 block text-[11px] font-medium text-white/75">O portal de imóveis do RN</span>
+            </span>
+          </Link>
+          <Link
+            href="/mi-cuenta"
+            aria-label="Minha conta"
+            className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[#e7c56a] bg-[#fff6df] text-[#07194A]"
+          >
+            <UserRound className="h-6 w-6 shrink-0" strokeWidth={2.25} aria-hidden="true" />
+          </Link>
+        </div>
+      </div>
+    )}
+    <header className="sticky top-0 z-40 w-full border-b border-sand-200 bg-white max-lg:hidden dark:border-slate-800 dark:bg-slate-950">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
         <Logo />
         <div className="flex items-center gap-3.5 sm:gap-4">
@@ -146,5 +172,6 @@ export default function Header() {
         </div>
       )}
     </header>
+    </>
   );
 }

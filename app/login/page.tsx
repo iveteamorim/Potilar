@@ -43,7 +43,8 @@ export default function LoginPage({ searchParams }: Props) {
       ];
 
   return (
-    <main className="bg-white px-4 py-4 sm:px-6 sm:py-8 lg:px-8 lg:py-14 dark:bg-slate-950">
+    <div className="flex flex-1 flex-col bg-[#EAF3FF] dark:bg-slate-950 lg:bg-white">
+    <main className="bg-[#EAF3FF] px-4 py-4 dark:bg-slate-950 sm:px-6 sm:py-8 lg:bg-white lg:px-8 lg:py-14">
       <div className="mx-auto grid max-w-6xl gap-5 lg:grid-cols-[0.9fr_1.1fr] lg:gap-10">
         <div className="relative hidden overflow-hidden rounded-[2rem] bg-white p-1 lg:block lg:min-h-[520px] dark:bg-slate-950">
           <p className="text-xs font-bold uppercase tracking-[0.18em] text-ocean-600 sm:text-sm">
@@ -77,5 +78,6 @@ export default function LoginPage({ searchParams }: Props) {
         </Suspense>
       </div>
     </main>
+    </div>
   );
 }

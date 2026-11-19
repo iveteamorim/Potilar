@@ -691,7 +691,7 @@ export default function AuthForm() {
         </div>
       )}
 
-      <button type="button" onClick={submit} disabled={loading} className="w-full rounded-2xl bg-ocean-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-ocean-700 hover:shadow-lg disabled:translate-y-0 disabled:opacity-60">
+      <button type="button" onClick={submit} disabled={loading} className="w-full rounded-2xl bg-[#C6EF3A] px-5 py-3 text-sm font-bold text-[#07194A] shadow-sm transition hover:-translate-y-0.5 hover:bg-[#b6e02a] hover:shadow-lg disabled:translate-y-0 disabled:opacity-60 lg:bg-ocean-600 lg:font-semibold lg:text-white lg:hover:bg-ocean-700">
         {loading
       ? 'Aguarde...'
           : isRecovery

@@ -174,8 +174,8 @@ function TransactionTabs({
             href={buildTransactionHref(searchParams, value)}
             className={`inline-flex items-center justify-center rounded-xl px-3 py-2.5 text-sm font-extrabold transition sm:min-w-24 sm:rounded-none sm:border-b-4 sm:px-1 sm:pb-4 sm:pt-2 sm:text-base ${
               active
-                ? 'bg-ocean-700 text-white sm:border-ocean-700 sm:bg-transparent sm:text-ocean-700'
-                : 'text-slate-500 hover:bg-ocean-50 hover:text-ocean-700 sm:border-transparent sm:hover:border-ocean-200 sm:hover:bg-transparent dark:text-slate-300'
+                ? 'bg-[#C6EF3A] text-[#07194A] sm:border-ocean-700 sm:bg-transparent sm:text-ocean-700'
+                : 'text-slate-500 hover:bg-[#EAF3FF] hover:text-[#07194A] sm:border-transparent sm:hover:border-ocean-200 sm:hover:bg-transparent sm:hover:text-ocean-700 dark:text-slate-300'
             }`}
           >
             {label}
@@ -240,7 +240,7 @@ export default async function ImoveisPage({
   const filtered = applyFilters(approvedListings, searchParams);
 
   return (
-    <main className="border-t border-sand-200 bg-white dark:border-slate-800 dark:bg-slate-950">
+    <main className="border-t border-transparent bg-[#EAF3FF] dark:border-slate-800 dark:bg-slate-950 lg:border-sand-200 lg:bg-white">
       <div className="mx-auto max-w-[1500px] px-4 py-6 sm:px-6">
         <div className="grid gap-8 lg:grid-cols-[360px_minmax(0,1fr)]">
           <aside className="hidden lg:block">

@@ -109,7 +109,7 @@ export default function RootLayout({
         />
         <ThemeProvider>
           <Header />
-          <div className="flex-1">
+          <div className="flex flex-1 flex-col">
             {children}
           </div>
           <RouteFooter />
