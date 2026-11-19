@@ -69,23 +69,23 @@ export default function MobileHome() {
       <div className="flex w-full items-center justify-between gap-3 px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))] sm:px-6">
         <Link href="/" className="flex min-w-0 items-center" aria-label="Potilar - Imoveis no Rio Grande do Norte">
           <span className="min-w-0">
-            <span className="block truncate font-sans text-[1.65rem] font-black leading-none tracking-[-0.04em] max-[359px]:text-[1.4rem]">
+            <span className="block truncate font-sans text-[1.65rem] font-black leading-none tracking-[-0.04em] max-[359px]:text-[1.4rem] md:text-[2.1rem]">
               <span className="text-white">Poti</span>
               <span style={{ color: '#44B536' }}>Lar</span>
             </span>
-            <span className="mt-0.5 block truncate text-[11px] font-medium text-white/75 max-[359px]:text-[10px]">O portal de imóveis do RN</span>
+            <span className="mt-0.5 block truncate text-[11px] font-medium text-white/75 max-[359px]:text-[10px] md:text-sm">O portal de imóveis do RN</span>
           </span>
         </Link>
         <Link
           href="/mi-cuenta"
           aria-label="Minha conta"
-          className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[#e7c56a] bg-[#fff6df] text-[#07194A]"
+          className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[#e7c56a] bg-[#fff6df] text-[#07194A] md:h-14 md:w-14"
         >
-          <UserRound className="h-6 w-6 shrink-0" strokeWidth={2.25} aria-hidden="true" />
+          <UserRound className="h-6 w-6 shrink-0 md:h-7 md:w-7" strokeWidth={2.25} aria-hidden="true" />
         </Link>
       </div>
 
-      <div className="relative mx-auto h-52 w-full max-w-xl sm:h-72 md:h-80">
+      <div className="relative mx-auto h-52 w-full max-w-xl sm:h-72 md:h-96 md:max-w-none">
         <div
           className="absolute inset-0 bg-cover bg-center"
           style={{ backgroundImage: "url('/images/ponta-negra-mobile.jpg')" }}
@@ -93,15 +93,15 @@ export default function MobileHome() {
           aria-label="Ponta Negra, Natal (RN)"
         />
         <div className="absolute inset-0 bg-gradient-to-b from-[#07194A]/25 via-[#07194A]/10 to-[#07194A]" />
-        <div className="absolute inset-x-0 bottom-0 px-4 pb-3">
-          <h1 className="max-w-[18rem] font-sans text-[1.7rem] font-semibold leading-snug tracking-[-0.02em] text-white max-[359px]:max-w-none max-[359px]:text-[1.45rem]">
+        <div className="absolute inset-x-0 bottom-0 px-4 pb-3 md:px-8 md:pb-6">
+          <h1 className="max-w-[18rem] font-sans text-[1.7rem] font-semibold leading-snug tracking-[-0.02em] text-white max-[359px]:max-w-none max-[359px]:text-[1.45rem] md:max-w-3xl md:text-4xl">
             Encontre o seu imóvel no Rio Grande do Norte
           </h1>
         </div>
       </div>
 
-      <div className="mx-auto w-full max-w-xl space-y-3 px-4 pb-5 pt-4">
-        <div className="grid grid-cols-3 gap-1 rounded-2xl border border-white/15 bg-[#0c2458] p-1">
+      <div className="mx-auto w-full max-w-xl space-y-3 px-4 pb-5 pt-4 md:max-w-none md:space-y-4 md:px-8 md:pb-8 md:pt-6">
+        <div className="grid grid-cols-3 gap-1 rounded-2xl border border-white/15 bg-[#0c2458] p-1 md:p-1.5">
           {transactions.map((option) => {
             const selected = transaction === option.value;
             const Icon = option.Icon;
@@ -110,24 +110,25 @@ export default function MobileHome() {
                 key={option.value}
                 type="button"
                 onClick={() => setTransaction(option.value)}
-                className={`inline-flex h-11 min-w-0 items-center justify-center gap-1 rounded-xl px-1 text-[13px] font-bold max-[359px]:gap-0.5 max-[359px]:px-0.5 max-[359px]:text-[11px] ${
+                className={`inline-flex h-11 min-w-0 items-center justify-center gap-1 rounded-xl px-1 text-[13px] font-bold max-[359px]:gap-0.5 max-[359px]:px-0.5 max-[359px]:text-[11px] md:h-14 md:gap-2 md:text-lg ${
                   selected ? 'bg-[#C6EF3A] text-[#07194A]' : 'text-white'
                 }`}
               >
-                <Icon className="h-4 w-4 shrink-0 max-[359px]:h-3.5 max-[359px]:w-3.5" strokeWidth={2.25} aria-hidden="true" />
+                <Icon className="h-4 w-4 shrink-0 max-[359px]:h-3.5 max-[359px]:w-3.5 md:h-5 md:w-5" strokeWidth={2.25} aria-hidden="true" />
                 {option.label}
               </button>
             );
           })}
         </div>
 
+        <div className="grid gap-3 md:grid-cols-2">
         <label className="relative block">
           <span className="sr-only">Tipo de imóvel</span>
-          <Home className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/70" aria-hidden="true" />
+          <Home className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/70 md:left-4 md:h-5 md:w-5" aria-hidden="true" />
           <select
             value={propertyType}
             onChange={(event) => setPropertyType(event.target.value)}
-            className="h-12 w-full appearance-none rounded-xl border border-white/15 bg-[#0c2458] pl-10 pr-10 text-sm font-semibold text-white outline-none"
+            className="h-12 w-full appearance-none rounded-xl border border-white/15 bg-[#0c2458] pl-10 pr-10 text-sm font-semibold text-white outline-none md:h-14 md:pl-12 md:text-base"
           >
             {propertyTypes.map((type) => (
               <option key={type || 'todos'} value={type}>
@@ -135,18 +136,18 @@ export default function MobileHome() {
               </option>
             ))}
           </select>
-          <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/70" aria-hidden="true" />
+          <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/70 md:right-4 md:h-5 md:w-5" aria-hidden="true" />
         </label>
 
         <label className="relative block">
           <span className="sr-only">Cidade ou bairro</span>
-          <MapPin className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/70" aria-hidden="true" />
+          <MapPin className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/70 md:left-4 md:h-5 md:w-5" aria-hidden="true" />
           <input
             list="mobile-rn-cities"
             value={city}
             onChange={(event) => setCity(event.target.value)}
             placeholder="Onde você quer buscar?"
-            className="h-12 w-full rounded-xl border border-white/15 bg-[#0c2458] pl-10 pr-4 text-sm font-semibold text-white outline-none placeholder:font-medium placeholder:text-white/45"
+            className="h-12 w-full rounded-xl border border-white/15 bg-[#0c2458] pl-10 pr-4 text-sm font-semibold text-white outline-none placeholder:font-medium placeholder:text-white/45 md:h-14 md:pl-12 md:text-base"
           />
           <datalist id="mobile-rn-cities">
             {cities.map((cityName) => (
@@ -154,11 +155,12 @@ export default function MobileHome() {
             ))}
           </datalist>
         </label>
+        </div>
 
         <button
           type="button"
           onClick={handleSearch}
-          className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#C6EF3A] text-base font-bold text-[#07194A]"
+          className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#C6EF3A] text-base font-bold text-[#07194A] md:h-14 md:text-lg"
         >
           <Search className="h-5 w-5" aria-hidden="true" />
           Buscar imóveis
@@ -166,7 +168,7 @@ export default function MobileHome() {
 
         <Link
           href="/anunciar"
-          className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full border border-[#C6EF3A]/80 text-sm font-bold text-[#C6EF3A]"
+          className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full border border-[#C6EF3A]/80 text-sm font-bold text-[#C6EF3A] md:h-14 md:text-base"
         >
           + Publique seu anúncio
         </Link>
@@ -179,7 +181,7 @@ export default function MobileHome() {
           ].map(({ label, Icon }) => (
             <div key={label} className="px-1">
               <Icon className="mx-auto h-5 w-5 text-[#C6EF3A]" aria-hidden="true" />
-              <p className="mt-1 text-[11px] font-semibold leading-tight text-white/85 max-[359px]:text-[10px]">{label}</p>
+              <p className="mt-1 text-[11px] font-semibold leading-tight text-white/85 max-[359px]:text-[10px] md:text-sm">{label}</p>
             </div>
           ))}
         </div>
