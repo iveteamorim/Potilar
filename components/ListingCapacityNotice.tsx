@@ -33,10 +33,10 @@ export default function ListingCapacityNotice({ snapshot, onChooseAvulso }: Prop
         <p className="font-semibold text-slate-950 dark:text-white">
           {snapshot.hasPlan
             ? `Seu plano cobre ${snapshot.paidLimit} imóveis. Você pode adicionar este anúncio avulso sem mudar o tipo de conta.`
-            : 'Você já publicou seus 10 imóveis grátis.'}
+            : `Você já publicou seus ${snapshot.freeLimit} imóveis grátis.`}
         </p>
       ) : (
-        <p className="font-semibold text-slate-950 dark:text-white">Você já publicou seus 2 imóveis grátis.</p>
+        <p className="font-semibold text-slate-950 dark:text-white">{`Você já publicou seus ${snapshot.freeLimit} imóveis grátis.`}</p>
       )}
 
       {snapshot.extraActiveCount > 0 && snapshot.accountType !== 'particular' && !snapshot.hasPlan && (

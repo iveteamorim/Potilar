@@ -293,7 +293,7 @@ export default async function CityListingsPage({ params }: { params: { city: str
             <li>Portal focado no Rio Grande do Norte, com busca por cidade e mapa.</li>
             <li>Contato direto com proprietários, corretores e imobiliárias.</li>
             <li>Aluguel, compra e temporada em um só lugar.</li>
-            <li>Primeiro anúncio de particular gratuito para ajudar o mercado local.</li>
+            <li>{`Até ${freeLimit} anúncios grátis para particulares, cada um por 60 dias.`}</li>
           </ul>
           <p className="mt-4 text-xs text-slate-500 dark:text-slate-400">
             Você também pode explorar{' '}

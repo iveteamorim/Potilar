@@ -13,7 +13,7 @@ export function generateMetadata(): Metadata {
   const title = 'Anunciar imóvel grátis no Rio Grande do Norte';
   const description = promoActive
     ? `Anuncie imóvel grátis no Rio Grande do Norte (RN). Até ${freeLimit} anúncios grátis por 60 dias na Potilar, promoção até ${promoDeadline}. Casas, apartamentos, terrenos e temporada com contato direto.`
-    : 'Anuncie imóvel grátis no Rio Grande do Norte (RN). Primeiro anúncio gratuito por 60 dias na Potilar. Casas, apartamentos, terrenos e temporada com contato direto.';
+    : `Anuncie imóvel grátis no Rio Grande do Norte (RN). Até ${freeLimit} anúncios grátis por 60 dias na Potilar. Casas, apartamentos, terrenos e temporada com contato direto.`;
 
   return {
     title,

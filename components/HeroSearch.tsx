@@ -32,9 +32,9 @@ export default function HeroSearch() {
 
       <div className="relative mx-auto flex min-h-[76vh] max-w-7xl flex-col justify-center px-4 py-12 sm:px-6 lg:min-h-[82vh] lg:px-8 lg:py-20">
         <div className="max-w-5xl">
-          <p className="inline-flex items-center gap-2 rounded-full bg-white/95 px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] text-ocean-800 shadow-sm">
+          <p className="inline-flex items-center gap-2 rounded-full bg-white/95 px-4 py-2 text-xs font-bold tracking-[0.02em] text-ocean-800 shadow-sm">
             <MapPin className="h-4 w-4" aria-hidden="true" />
-            Potilar: o maior portal de imóveis do Rio Grande do Norte
+            PotiLar — O portal de imóveis feito para o RN.
           </p>
           <h1 className="mt-7 max-w-[1040px] font-display text-4xl font-semibold leading-[0.98] tracking-normal text-white sm:text-6xl lg:text-7xl">
             Encontre o imóvel

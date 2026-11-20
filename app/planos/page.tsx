@@ -41,7 +41,7 @@ const particularPlans = [
     name: `Até ${getFreeListingLimit()} anúncios grátis`,
     price: 'R$ 0',
     description: 'Para casas, apartamentos e terrenos de compra ou aluguel.',
-    details: `Cada anúncio comum fica ativo por ${PLANS.listing.additionalDurationDays} dias.`
+    details: `Cada anúncio grátis fica ativo por ${PLANS.listing.standardDurationDays} dias.`
   },
   {
     name: 'Anúncio comum adicional',
