@@ -34,7 +34,7 @@ export default function HeroSearch() {
         <div className="max-w-5xl">
           <p className="inline-flex items-center gap-2 rounded-full bg-white/95 px-4 py-2 text-xs font-bold tracking-[0.02em] text-ocean-800 shadow-sm">
             <MapPin className="h-4 w-4" aria-hidden="true" />
-            PotiLar — O portal de imóveis feito para o RN.
+            O portal de imóveis do RN
           </p>
           <h1 className="mt-7 max-w-[1040px] font-display text-4xl font-semibold leading-[0.98] tracking-normal text-white sm:text-6xl lg:text-7xl">
             Encontre o imóvel
